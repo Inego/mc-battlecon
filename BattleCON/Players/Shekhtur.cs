@@ -65,6 +65,38 @@ namespace BattleCON
 
         protected override void OnHit(Player p)
         {
+            // Move the opponent 1 space
+            p.UniversalMove(false, Direction.Both, 1, 1);
+        }
+
+        protected override void EndOfBeat(Player p)
+        {
+            // Gain or lose Malice Tokens until you have exactly 3.
+            p.availableTokens = 3;
+            p.usedTokens = 2;
+        }
+    }
+
+    class Combination : Card
+    {
+        public Combination()
+        {
+            power = 2;
+        }
+
+        protected override void checkCanHit(Player p)
+        {
+            if (p.rangeToOpponent() >= 3)
+                p.canHit = false;
+        }
+
+        protected override bool ignoresSoak(Player p)
+        {
+            return (p.priority() >= 7);
+        }
+
+        protected override void OnHit(Player p)
+        {
             
         }
     }

@@ -195,6 +195,7 @@ namespace BattleCON
             return attackBase.priority + attackStyle.priority;
         }
 
+
         public void loseLife(int pts)
         {
             health -= pts;
@@ -204,6 +205,7 @@ namespace BattleCON
                 isDead = true;
             }
         }
+
 
         internal void spendTokens(int tokens)
         {
@@ -215,6 +217,12 @@ namespace BattleCON
         {
             health += p;
             opponent.loseLife(p);
+        }
+
+        internal int rangeToOpponent()
+        {
+            int d = position - opponent.position;
+            return d < 0 ? -d : d;
         }
     }
 
@@ -303,6 +311,15 @@ namespace BattleCON
         virtual protected bool ignoresStunGuard(Player p)
         {
             return false;
+        }
+
+        virtual protected bool ignoresSoak(Player p)
+        {
+            return false;
+        }
+
+        virtual protected void checkCanHit(Player p)
+        {
         }
 
     }
