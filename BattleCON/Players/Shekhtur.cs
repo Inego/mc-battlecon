@@ -55,4 +55,17 @@ namespace BattleCON
 
     }
 
+    class Jugular : Card
+    {
+        public Jugular()
+        {
+            power = 1;
+            priority = 2;
+        }
+
+        protected override void OnHit(Player p)
+        {
+            
+        }
+    }
 }

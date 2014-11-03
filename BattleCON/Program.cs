@@ -7,6 +7,27 @@ using System.Threading.Tasks;
 namespace BattleCON
 {
 
+    enum Direction { Forward, Backward, Both };
+
+    class MovementResult
+    {
+        public bool advance; // false if retreat
+        public int distance;
+        public bool pastOpponent;
+
+        public static MovementResult noMovement = new MovementResult(true, 0, false);
+
+        public MovementResult(bool advance, int distance, bool pastOpponent)
+        {
+            this.advance = advance;
+            this.distance = distance;
+            this.pastOpponent = pastOpponent;
+
+        }
+
+
+    }
+
     class Player
     {
         public int health;
@@ -53,7 +74,7 @@ namespace BattleCON
             resetBeat();
         }
 
-        public bool Advance(int i)
+        public MovementResult Advance(int i)
         {
             bool result;
             if (opponent.position > position)
@@ -66,23 +87,23 @@ namespace BattleCON
                 result = position - i <= opponent.position;
                 position -= i + (result ? 1 : 0);
             }
-            return result;
+            return new MovementResult(true, i, result);
         }
 
-        public void Retreat(int i)
+        public MovementResult Retreat(int i)
         {
             if (opponent.position > position)
                 position -= i;
             else
                 position += i;
+            return new MovementResult(false, i, false);
         }
 
-        public bool MoveSelf(int i)
+        public MovementResult MoveSelf(int i)
         {
             if (i < 0)
             {
-                Retreat(-i);
-                return false;
+                return Retreat(-i);
             }
 
             return Advance(i);
@@ -111,6 +132,63 @@ namespace BattleCON
         {
             opponent.MoveSelf(i);
         }
+
+
+        internal MovementResult UniversalMove(bool self, Direction direction, int loRange, int hiRange)
+        {
+            List<int> moves = new List<int>(13);
+
+            Player p = self ? this : opponent;
+
+            int maxMoves;
+            int maxPossible;
+            int i;
+
+            if (direction == Direction.Both || direction == Direction.Forward)
+            {
+                maxPossible = p.GetPossibleAdvance();
+
+                if (maxPossible >= loRange)
+                {
+                    maxMoves = Math.Min(maxPossible, hiRange);
+                    for (i = loRange; i <= maxMoves; i++)
+                        moves.Add(i);
+                }
+            }
+
+            if (direction == Direction.Both || direction == Direction.Backward)
+            {
+                maxPossible = p.GetPossibleRetreat();
+
+                if (maxPossible >= loRange)
+                {
+                    maxMoves = Math.Min(maxPossible, hiRange);
+                    for (i = loRange; i <= maxMoves; i++)
+                    {
+                        if (direction == Direction.Both && i == 0)
+                            continue;
+                        moves.Add(-i);
+                    }
+                }
+            }
+
+            if (moves.Count > 0)
+            {
+                int moveNumber;
+                if (moves.Count == 1)
+                    moveNumber = 0;
+                else
+                    moveNumber = this.g.rnd.Next(moves.Count);
+
+                return p.MoveSelf(moveNumber);
+
+            }
+
+            return MovementResult.noMovement;
+
+
+        }
+
 
         public int priority()
         {
@@ -141,24 +219,7 @@ namespace BattleCON
     }
 
 
-    class Action
-    {
-        public Player p;
-    }
-
-
-    class Advance : Action
-    {
-        public int spaces;
-
-        public Advance(Player p, int spaces)
-        {
-            this.p = p;
-            this.spaces = spaces;
-        }
-    }
-
-
+  
     class GameState
     {
         Player p1;
@@ -261,25 +322,7 @@ namespace BattleCON
         protected override void BeforeActivating(Player p)
         {
             // Advance 1 or 2 spaces
-
-            int possibleAdvance = p.GetPossibleAdvance();
-
-            if (possibleAdvance > 0)
-            {
-
-                int toAdvance;
-
-                if (possibleAdvance == 1)
-                    toAdvance = 1;
-                else
-                    // !!!
-                    // Choose 1 or  2
-                    toAdvance = p.g.rnd.Next(1, 3);
-
-                p.Advance(toAdvance);
-                
-            }
-
+            p.UniversalMove(true, Direction.Forward, 1, 2);
         }
 
     }
@@ -322,38 +365,11 @@ namespace BattleCON
 
         protected override void AfterActivating(Player p)
         {
-            List<int> moves = new List<int>(5);
+            MovementResult mr = p.UniversalMove(true, Direction.Both, 1, 3);
 
-            int toAdv = p.GetPossibleAdvance();
-            int toRetr = p.GetPossibleRetreat();
+            if (mr.pastOpponent)
+                p.opponent.canHit = false;
 
-            for (int i = 1; i <= toAdv; i++)
-            {
-                moves.Add(i);
-            }
-
-            for (int i = 1; i <= toRetr; i++)
-            {
-                moves.Add(-i);
-            }
-
-            
-
-            if (moves.Count > 0)
-            {
-                int move = 0;
-
-                if (moves.Count > 1)
-                    move = p.g.rnd.Next(0, moves.Count);
-
-                bool movedPast = p.MoveSelf(moves[move]);
-
-                if (movedPast)
-                {
-                    p.opponent.canHit = false;
-                }
-
-            }
         }
 
 
@@ -396,24 +412,7 @@ namespace BattleCON
         protected override void StartOfBeat(Player p)
         {
             // Retreat 1 or 2 spaces
-
-            int possibleRetreat = p.GetPossibleRetreat();
-
-            if (possibleRetreat > 0)
-            {
-
-                int toRetreat;
-
-                if (possibleRetreat == 1)
-                    toRetreat = 1;
-                else
-                    // !!!
-                    // Choose 1 or  2
-                    toRetreat = p.g.rnd.Next(1, 3);
-
-                p.Advance(toRetreat);
-
-            }
+            p.UniversalMove(true, Direction.Backward, 1, 2);
 
         }
 
@@ -436,38 +435,12 @@ namespace BattleCON
         {
             // Move opponent 1 space
 
-            List<int> moves = new List<int>(5);
-
-            int toAdv = p.opponent.GetPossibleAdvance();
-            int toRetr = p.opponent.GetPossibleRetreat();
-
-            if (toAdv > 0)
-            {
-                moves.Add(1);
-            }
-
-            if (toRetr > 0)
-            {
-                moves.Add(-1);
-            }
-
-            if (moves.Count > 0)
-            {
-                int move = 0;
-
-                if (moves.Count > 1)
-                    move = p.g.rnd.Next(0, moves.Count);
-
-                p.MoveOpponent(moves[move]);
-
-            }
+            p.UniversalMove(false, Direction.Both, 1, 1);
 
         }
 
 
     }
-
-
 
 
     class Character
@@ -490,10 +463,7 @@ namespace BattleCON
         }
     }
 
-    
-
-
-
+   
     class Program
     {
         static void Main(string[] args)
