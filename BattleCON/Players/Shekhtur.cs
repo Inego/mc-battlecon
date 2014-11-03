@@ -97,7 +97,64 @@ namespace BattleCON
 
         protected override void OnHit(Player p)
         {
-            
+            if (p.hitOpponentLastBeat)
+                p.powerModifier += 2;            
+        }
+
+    }
+
+
+    class Spiral : Card
+    {
+        public Spiral()
+        {
+            priority = -1;
+        }
+
+        protected override void BeforeActivating(Player p)
+        {
+            MovementResult mr = p.UniversalMove(true, Direction.Forward, 0, 3);
+            p.powerModifier -= mr.distance;
         }
     }
+
+
+    class Reaver : Card
+    {
+        public Reaver()
+        {
+            hiRange = 1;
+        }
+
+        protected override void OnDamage(Player p)
+        {
+            p.UniversalMove(false, Direction.Backward, p.damageDealt, p.damageDealt);
+        }
+
+        protected override void EndOfBeat(Player p)
+        {
+            p.UniversalMove(true, Direction.Forward, 1, 2);
+        }
+    }
+
+    class Unleashed : Card
+    {
+        public Unleashed()
+        {
+            hiRange = 1;
+            power = -1;
+        }
+
+        protected override void AfterActivating(Player p)
+        {
+            p.UniversalMove(true, Direction.Backward, 1, 2);
+        }
+
+        protected override void EndOfBeat(Player p)
+        {
+            p.gainTokens(2);
+            p.nextBeatPowerModifier += 2;
+        }
+    }
+
 }

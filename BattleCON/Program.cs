@@ -43,8 +43,15 @@ namespace BattleCON
         public bool canHit;
 
         public bool hasHit;
+        public bool hitOpponentLastBeat;
+
+        public int damageDealt;
 
         public int soak;
+
+        public int powerModifier;
+
+        public int nextBeatPowerModifier;
 
         public Card attackStyle;
         public Card attackBase;
@@ -57,12 +64,21 @@ namespace BattleCON
             antedTokens = 0;
             soak = 0;
 
+            hitOpponentLastBeat = hasHit;
             hasHit = false;
+
+            damageDealt = 0;
+
+            powerModifier = nextBeatPowerModifier;
+            nextBeatPowerModifier = 0;
+            
         }
 
         public GameState g;
 
         public Character c;
+        
+        
         
 
         public Player(Character c, int position)
@@ -70,6 +86,9 @@ namespace BattleCON
             health = 20;
             this.c = c;
             this.position = position;
+            this.hasHit = false;
+
+            this.nextBeatPowerModifier = 0;
 
             resetBeat();
         }
@@ -224,6 +243,16 @@ namespace BattleCON
             int d = position - opponent.position;
             return d < 0 ? -d : d;
         }
+
+        internal void gainTokens(int number)
+        {
+            int toGain = Math.Min(usedTokens, number);
+            if (toGain > 0)
+            {
+                availableTokens += toGain;
+                usedTokens -= toGain;
+            }
+        }
     }
 
 
@@ -321,6 +350,8 @@ namespace BattleCON
         virtual protected void checkCanHit(Player p)
         {
         }
+
+
 
     }
 
