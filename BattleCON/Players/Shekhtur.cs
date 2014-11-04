@@ -59,6 +59,7 @@ namespace BattleCON
     {
         public Jugular()
         {
+            name = "Jugular";
             power = 1;
             priority = 2;
         }
@@ -81,6 +82,7 @@ namespace BattleCON
     {
         public Combination()
         {
+            name = "Combination";
             power = 2;
         }
 
@@ -108,6 +110,7 @@ namespace BattleCON
     {
         public Spiral()
         {
+            name = "Spiral";
             priority = -1;
         }
 
@@ -123,6 +126,7 @@ namespace BattleCON
     {
         public Reaver()
         {
+            name = "Reaver";
             hiRange = 1;
         }
 
@@ -141,6 +145,7 @@ namespace BattleCON
     {
         public Unleashed()
         {
+            name = "Unleashed";
             hiRange = 1;
             power = -1;
         }

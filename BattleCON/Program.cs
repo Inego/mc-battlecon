@@ -40,12 +40,19 @@ namespace BattleCON
         public int usedTokens;
 
         public int stunGuard;
+        public bool isStunned;
         public bool canHit;
 
+        public bool ignoresAppliedMovement;
+
         public bool hasHit;
+        public bool wasHit;
         public bool hitOpponentLastBeat;
 
+        public int soakedDamage;
+
         public int damageDealt;
+        public int damageTaken;
 
         public int soak;
 
@@ -66,8 +73,12 @@ namespace BattleCON
 
             hitOpponentLastBeat = hasHit;
             hasHit = false;
+            wasHit = false;
+
+            ignoresAppliedMovement = false;
 
             damageDealt = 0;
+            damageTaken = 0;
 
             powerModifier = nextBeatPowerModifier;
             nextBeatPowerModifier = 0;
@@ -77,6 +88,8 @@ namespace BattleCON
         public GameState g;
 
         public Character c;
+        
+        
         
         
         
@@ -155,6 +168,10 @@ namespace BattleCON
 
         internal MovementResult UniversalMove(bool self, Direction direction, int loRange, int hiRange)
         {
+            if (!self && opponent.ignoresAppliedMovement)
+                return MovementResult.noMovement;
+
+
             List<int> moves = new List<int>(13);
 
             Player p = self ? this : opponent;
@@ -284,7 +301,7 @@ namespace BattleCON
 
     class Card
     {
-        protected string name;
+        internal string name;
 
         protected int lowRange = 0;
         protected int hiRange = 0;
@@ -315,6 +332,10 @@ namespace BattleCON
         virtual protected void OnHit(Player p)
         {
 
+        }
+
+        virtual protected void OnSoak(Player p)
+        {
         }
 
         virtual protected void OnDamage(Player p)
