@@ -1,6 +1,45 @@
 ﻿using System.Collections.Generic;
 namespace BattleCON
 {
+
+    public class Shekhtur : Character
+    {
+        public Shekhtur()
+        {
+            name = "Shekhtur";
+
+        }
+
+        public override void init(Player p)
+        {
+            p.bases.Add(new Brand());
+
+            p.styles.Add(new Reaver());
+            p.styles.Add(new Jugular());
+            p.styles.Add(new Spiral());
+
+            p.CooldownStyle1 = new Unleashed();
+            p.CooldownStyle2 = new Combination();
+
+            p.availableTokens = 3;
+            p.usedTokens = 2;
+        }
+
+
+        public override void OnDamage(Player p)
+        {
+            p.gainTokens(p.damageDealt);
+        }
+
+        public override void AnteEffects(Player p)
+        {
+            p.priorityModifier += p.antedTokens;
+        }
+
+
+    }
+
+
     class Brand : Card
     {
         public Brand()
@@ -13,13 +52,13 @@ namespace BattleCON
         }
 
 
-        protected override bool ignoresStunGuard(Player p)
+        public override bool ignoresStunGuard(Player p)
         {
             return (p.priority() >= 6);
             
         }
 
-        protected override void AfterActivating(Player p)
+        public override void AfterActivating(Player p)
         {
             if (p.hasHit)
             {
@@ -64,13 +103,13 @@ namespace BattleCON
             priority = 2;
         }
 
-        protected override void OnHit(Player p)
+        public override void OnHit(Player p)
         {
             // Move the opponent 1 space
             p.UniversalMove(false, Direction.Both, 1, 1);
         }
 
-        protected override void EndOfBeat(Player p)
+        public override void EndOfBeat(Player p)
         {
             // Gain or lose Malice Tokens until you have exactly 3.
             p.availableTokens = 3;
@@ -86,18 +125,18 @@ namespace BattleCON
             power = 2;
         }
 
-        protected override void checkCanHit(Player p)
+        public override void checkCanHit(Player p)
         {
             if (p.rangeToOpponent() >= 3)
                 p.canHit = false;
         }
 
-        protected override bool ignoresSoak(Player p)
+        public override bool ignoresSoak(Player p)
         {
             return (p.priority() >= 7);
         }
 
-        protected override void OnHit(Player p)
+        public override void OnHit(Player p)
         {
             if (p.hitOpponentLastBeat)
                 p.powerModifier += 2;            
@@ -114,7 +153,7 @@ namespace BattleCON
             priority = -1;
         }
 
-        protected override void BeforeActivating(Player p)
+        public override void BeforeActivating(Player p)
         {
             MovementResult mr = p.UniversalMove(true, Direction.Forward, 0, 3);
             p.powerModifier -= mr.distance;
@@ -130,12 +169,12 @@ namespace BattleCON
             hiRange = 1;
         }
 
-        protected override void OnDamage(Player p)
+        public override void OnDamage(Player p)
         {
             p.UniversalMove(false, Direction.Backward, p.damageDealt, p.damageDealt);
         }
 
-        protected override void EndOfBeat(Player p)
+        public override void EndOfBeat(Player p)
         {
             p.UniversalMove(true, Direction.Forward, 1, 2);
         }
@@ -150,12 +189,12 @@ namespace BattleCON
             power = -1;
         }
 
-        protected override void AfterActivating(Player p)
+        public override void AfterActivating(Player p)
         {
             p.UniversalMove(true, Direction.Backward, 1, 2);
         }
 
-        protected override void EndOfBeat(Player p)
+        public override void EndOfBeat(Player p)
         {
             p.gainTokens(2);
             p.nextBeatPowerModifier += 2;

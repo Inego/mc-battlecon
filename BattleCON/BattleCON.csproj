@@ -41,6 +41,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommonBases.cs" />
+    <Compile Include="GameState.cs" />
+    <Compile Include="Player.cs" />
     <Compile Include="Players\Eligor.cs" />
     <Compile Include="Players\Shekhtur.cs" />
     <Compile Include="Program.cs" />

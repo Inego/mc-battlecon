@@ -9,7 +9,7 @@ namespace BattleCON
 
     enum Direction { Forward, Backward, Both };
 
-    class MovementResult
+    public class MovementResult
     {
         public bool advance; // false if retreat
         public int distance;
@@ -28,278 +28,11 @@ namespace BattleCON
 
     }
 
-    class Player
-    {
-        public int health;
-        public bool isDead = false;
-        public int position;
-        public Player opponent;
-
-        public int antedTokens;
-        public int availableTokens;
-        public int usedTokens;
-
-        public int stunGuard;
-        public bool isStunned;
-        public bool canHit;
-
-        public bool ignoresAppliedMovement;
-
-        public bool hasHit;
-        public bool wasHit;
-        public bool hitOpponentLastBeat;
-
-        public int soakedDamage;
-
-        public int damageDealt;
-        public int damageTaken;
-
-        public int soak;
-
-        public int powerModifier;
-
-        public int nextBeatPowerModifier;
-
-        public Card attackStyle;
-        public Card attackBase;
-
-
-        public void resetBeat()
-        {
-            stunGuard = 0;
-            canHit = true;
-            antedTokens = 0;
-            soak = 0;
-
-            hitOpponentLastBeat = hasHit;
-            hasHit = false;
-            wasHit = false;
-
-            ignoresAppliedMovement = false;
-
-            damageDealt = 0;
-            damageTaken = 0;
-
-            powerModifier = nextBeatPowerModifier;
-            nextBeatPowerModifier = 0;
-            
-        }
-
-        public GameState g;
-
-        public Character c;
-        
-        
-        
-        
-        
-
-        public Player(Character c, int position)
-        {
-            health = 20;
-            this.c = c;
-            this.position = position;
-            this.hasHit = false;
-
-            this.nextBeatPowerModifier = 0;
-
-            resetBeat();
-        }
-
-        public MovementResult Advance(int i)
-        {
-            bool result;
-            if (opponent.position > position)
-            {
-                result = position + i >= opponent.position;
-                position += i + (result ? 1 : 0);
-            }
-            else
-            {
-                result = position - i <= opponent.position;
-                position -= i + (result ? 1 : 0);
-            }
-            return new MovementResult(true, i, result);
-        }
-
-        public MovementResult Retreat(int i)
-        {
-            if (opponent.position > position)
-                position -= i;
-            else
-                position += i;
-            return new MovementResult(false, i, false);
-        }
-
-        public MovementResult MoveSelf(int i)
-        {
-            if (i < 0)
-            {
-                return Retreat(-i);
-            }
-
-            return Advance(i);
-
-        }
-
-
-        public int GetPossibleAdvance()
-        {
-            if (opponent.position > position)
-                return 6 - position;
-            else
-                return position - 2;
-        }
-
-        public int GetPossibleRetreat()
-        {
-            if (opponent.position > position)
-                return position - 1;
-            else
-                return 7 - position;
-        }
-
-
-        internal void MoveOpponent(int i)
-        {
-            opponent.MoveSelf(i);
-        }
-
-
-        internal MovementResult UniversalMove(bool self, Direction direction, int loRange, int hiRange)
-        {
-            if (!self && opponent.ignoresAppliedMovement)
-                return MovementResult.noMovement;
-
-
-            List<int> moves = new List<int>(13);
-
-            Player p = self ? this : opponent;
-
-            int maxMoves;
-            int maxPossible;
-            int i;
-
-            if (direction == Direction.Both || direction == Direction.Forward)
-            {
-                maxPossible = p.GetPossibleAdvance();
-
-                if (maxPossible >= loRange)
-                {
-                    maxMoves = Math.Min(maxPossible, hiRange);
-                    for (i = loRange; i <= maxMoves; i++)
-                        moves.Add(i);
-                }
-            }
-
-            if (direction == Direction.Both || direction == Direction.Backward)
-            {
-                maxPossible = p.GetPossibleRetreat();
-
-                if (maxPossible >= loRange)
-                {
-                    maxMoves = Math.Min(maxPossible, hiRange);
-                    for (i = loRange; i <= maxMoves; i++)
-                    {
-                        if (direction == Direction.Both && i == 0)
-                            continue;
-                        moves.Add(-i);
-                    }
-                }
-            }
-
-            if (moves.Count > 0)
-            {
-                int moveNumber;
-                if (moves.Count == 1)
-                    moveNumber = 0;
-                else
-                    moveNumber = this.g.rnd.Next(moves.Count);
-
-                return p.MoveSelf(moveNumber);
-
-            }
-
-            return MovementResult.noMovement;
-
-
-        }
-
-
-        public int priority()
-        {
-            return attackBase.priority + attackStyle.priority;
-        }
-
-
-        public void loseLife(int pts)
-        {
-            health -= pts;
-
-            if (health <= 0 && !opponent.isDead)
-            {
-                isDead = true;
-            }
-        }
-
-
-        internal void spendTokens(int tokens)
-        {
-            availableTokens -= tokens;
-            usedTokens += tokens;
-        }
-
-        internal void drainLife(int p)
-        {
-            health += p;
-            opponent.loseLife(p);
-        }
-
-        internal int rangeToOpponent()
-        {
-            int d = position - opponent.position;
-            return d < 0 ? -d : d;
-        }
-
-        internal void gainTokens(int number)
-        {
-            int toGain = Math.Min(usedTokens, number);
-            if (toGain > 0)
-            {
-                availableTokens += toGain;
-                usedTokens -= toGain;
-            }
-        }
-    }
-
+    
 
   
-    class GameState
-    {
-        Player p1;
-        Player p2;
-
-        int beat;
-
-        public Random rnd = new Random();
-
-        public GameState(Character c1, Character c2)
-        {
-            beat = 0;
-
-            p1 = new Player(c1, 2);
-            p2 = new Player(c2, 6);
-
-            p1.opponent = p2;
-            p2.opponent = p1;
-
-            p1.g = this;
-            p2.g = this;
-        }
-    }
-
-
-    class Card
+    
+    public class Card
     {
         internal string name;
 
@@ -308,67 +41,67 @@ namespace BattleCON
         public int power = 0;
         public int priority = 0;
 
-        virtual protected void CommonProperties(Player p)
+        virtual public void CommonProperties(Player p)
         {
 
         }
 
-        virtual protected void Reveal(Player p)
+        virtual public void Reveal(Player p)
         {
 
         }
 
-        virtual protected void StartOfBeat(Player p)
+        virtual public void StartOfBeat(Player p)
         {
 
         }
 
-        virtual protected void BeforeActivating(Player p)
+        virtual public void BeforeActivating(Player p)
         {
 
         }
 
 
-        virtual protected void OnHit(Player p)
+        virtual public void OnHit(Player p)
         {
 
         }
 
-        virtual protected void OnSoak(Player p)
+        virtual public void OnSoak(Player p)
         {
         }
 
-        virtual protected void OnDamage(Player p)
-        {
-
-        }
-
-        virtual protected void AfterActivating(Player p)
+        virtual public void OnDamage(Player p)
         {
 
         }
 
-        virtual protected void EndOfBeat(Player p)
+        virtual public void AfterActivating(Player p)
         {
 
         }
 
-        virtual protected int getAttackPower(Player p)
+        virtual public void EndOfBeat(Player p)
+        {
+
+        }
+
+        virtual public int getAttackPower(Player p)
         {
             return this.power;
         }
 
-        virtual protected bool ignoresStunGuard(Player p)
+        virtual public bool ignoresStunGuard(Player p)
         {
             return false;
         }
 
-        virtual protected bool ignoresSoak(Player p)
+        virtual public bool ignoresSoak(Player p)
         {
             return false;
         }
 
-        virtual protected void checkCanHit(Player p)
+        virtual public void checkCanHit(Player p)
         {
         }
 
@@ -376,160 +109,40 @@ namespace BattleCON
 
     }
 
-    class Drive : Card
+    
+
+    public class Character
     {
-
-        public Drive()
-        {
-            name = "Drive";
-            lowRange = 1;
-            hiRange = 1;
-            power = 3;
-            priority = 4;
-        }
-
-        protected override void BeforeActivating(Player p)
-        {
-            // Advance 1 or 2 spaces
-            p.UniversalMove(true, Direction.Forward, 1, 2);
-        }
-
-    }
-
-
-    class Strike : Card
-    {
-
-        public Strike()
-        {
-            name = "Strike";
-            lowRange = 1;
-            hiRange = 1;
-            power = 4;
-            priority = 3;
-        }
-
-        protected override void CommonProperties(Player p)
-        {
-            p.stunGuard += 5;
-        }
-
-
-    }
-
-
-    class Dash : Card
-    {
-
-        public Dash()
-        {
-            name = "Dash";
-            priority = 9;
-        }
-
-        protected override void CommonProperties(Player p)
-        {
-            p.canHit = false;
-        }
-
-        protected override void AfterActivating(Player p)
-        {
-            MovementResult mr = p.UniversalMove(true, Direction.Both, 1, 3);
-
-            if (mr.pastOpponent)
-                p.opponent.canHit = false;
-
-        }
-
-
-    }
-
-
-    class Shot : Card
-    {
-
-        public Shot()
-        {
-            name = "Shot";
-            lowRange = 1;
-            hiRange = 4;
-            power = 3;
-            priority = 2;
-        }
-
-        protected override void CommonProperties(Player p)
-        {
-            p.stunGuard += 2;
-        }
-
-
-    }
-
-
-    class Burst : Card
-    {
-
-        public Burst()
-        {
-            name = "Burst";
-            lowRange = 2;
-            hiRange = 3;
-            power = 3;
-            priority = 1;
-        }
-
-        protected override void StartOfBeat(Player p)
-        {
-            // Retreat 1 or 2 spaces
-            p.UniversalMove(true, Direction.Backward, 1, 2);
-
-        }
-
-    }
-
-
-    class Grasp : Card
-    {
-
-        public Grasp()
-        {
-            name = "Grasp";
-            lowRange = 1;
-            hiRange = 1;
-            power = 2;
-            priority = 5;
-        }
-
-        protected override void OnHit(Player p)
-        {
-            // Move opponent 1 space
-
-            p.UniversalMove(false, Direction.Both, 1, 1);
-
-        }
-
-
-    }
-
-
-    class Character
-    {
-        string name;
+        public string name;
 
         public static Character shekhtur;
         public static Character eligor;
         
         static Character() {
 
-            shekhtur = new Character("Shekhtur");
-            eligor = new Character("Eligor");
+            shekhtur = new Shekhtur();
+            eligor = new Eligor();
             
         }
 
-        public Character(string name)
+        virtual public void init(Player p)
         {
-            this.name = name;
         }
+
+        virtual public void OnDamage(Player p)
+        {
+        }
+
+        virtual public void OnDamageTaken(Player p)
+        {
+        }
+
+        virtual public void AnteEffects(Player p)
+        {
+        }
+
+
+
     }
 
    
@@ -537,6 +150,11 @@ namespace BattleCON
     {
         static void Main(string[] args)
         {
+            GameState g = new GameState(Character.shekhtur, Character.eligor);
+
+            g.playout();
+            
+
             Console.WriteLine("Hi!");
             Console.ReadLine();
         }
