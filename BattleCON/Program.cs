@@ -36,8 +36,8 @@ namespace BattleCON
     {
         internal string name;
 
-        protected int lowRange = 0;
-        protected int hiRange = 0;
+        public int lowRange = 0;
+        public int hiRange = 0;
         public int power = 0;
         public int priority = 0;
 

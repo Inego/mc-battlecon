@@ -98,13 +98,28 @@ namespace BattleCON
                 Player activePlayer = p1.priority() > p2.priority() ? p1 : p2;
                 Player reactivePlayer = activePlayer.opponent;
 
+                activePlayer.applyCommonProperties();
+                reactivePlayer.applyCommonProperties();
+
                 activePlayer.resolveStartOfBeat();
                 reactivePlayer.resolveStartOfBeat();
 
-                //........
+
+                if (!activePlayer.isStunned)
+                {
+                    activePlayer.attack();
+
+                    if (!reactivePlayer.isDead && !reactivePlayer.isStunned)
+                    {
+                        reactivePlayer.attack();
+                    }
+                }
 
                 // End of beat
-                firstToAnte = p1.priority() > p2.priority() ? p1 : p2;
+                firstToAnte = activePlayer;
+
+                activePlayer.resolveEndOfBeat();
+                reactivePlayer.resolveEndOfBeat();
 
             }
 

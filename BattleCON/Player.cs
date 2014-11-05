@@ -187,7 +187,7 @@ namespace BattleCON
                 if (maxPossible >= loRange)
                 {
                     maxMoves = Math.Min(maxPossible, hiRange);
-                    for (i = loRange; i <= maxMoves; i++)
+                    for (i = Math.Min(loRange, maxPossible); i <= maxMoves; i++)
                         moves.Add(i);
                 }
             }
@@ -199,7 +199,7 @@ namespace BattleCON
                 if (maxPossible >= loRange)
                 {
                     maxMoves = Math.Min(maxPossible, hiRange);
-                    for (i = loRange; i <= maxMoves; i++)
+                    for (i = Math.Min(loRange, maxPossible); i <= maxMoves; i++)
                     {
                         if (direction == Direction.Both && i == 0)
                             continue;
@@ -363,6 +363,100 @@ namespace BattleCON
         {
             attackBase.StartOfBeat(this);
             attackStyle.StartOfBeat(this);
+        }
+
+        internal void attack()
+        {
+            if (isStunned)
+                return;
+
+            attackBase.BeforeActivating(this);
+            attackStyle.BeforeActivating(this);
+
+
+            // Check can hit
+            attackStyle.checkCanHit(this);
+
+            if (canHit && attackBase.lowRange > 0)
+            {
+
+                // Check opponent in range
+                int dst = rangeToOpponent();
+
+                if (dst >= attackBase.lowRange + attackStyle.lowRange
+                    && dst <= attackBase.hiRange + attackStyle.hiRange)
+                {
+                    // Hit.
+                    hasHit = true;
+                    opponent.wasHit = true;
+
+                    attackBase.OnHit(this);
+                    attackStyle.OnHit(this);
+
+                    int power = getTotalPower();
+
+                    if (power > 0)
+                    {
+                        // Soak.
+                        if (!attackStyle.ignoresSoak(this))
+                        {
+                            opponent.soakedDamage = Math.Min(power, opponent.soak);
+                            if (opponent.soakedDamage > 0)
+                            {
+                                opponent.attackStyle.OnSoak(opponent);
+                            }
+                        }
+                        damageDealt = power - opponent.soakedDamage;
+                        opponent.damageTaken = damageDealt;
+
+                        if (damageDealt > 0)
+                        {
+                            attackBase.OnDamage(this);
+                            attackStyle.OnDamage(this);
+
+                            if (!opponent.isStunned && !opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this)))
+                            {
+                                opponent.isStunned = true;
+                            }
+
+                            opponent.health -= damageDealt;
+
+                            if (opponent.health < 0 && !isDead)
+                                opponent.isDead = true;
+                        }
+
+                    }
+
+                }
+
+            }
+
+            attackBase.AfterActivating(this);
+            attackStyle.AfterActivating(this);
+            
+        }
+
+        private int getTotalPower()
+        {
+            int basePower = attackBase.getAttackPower(this);
+
+            if (basePower == 0)
+                return 0;
+
+            return basePower + attackStyle.power + powerModifier;
+        }
+
+
+        internal void resolveEndOfBeat()
+        {
+            attackBase.EndOfBeat(this);
+            attackStyle.EndOfBeat(this);
+        }
+
+        internal void applyCommonProperties()
+        {
+            attackBase.CommonProperties(this);
+            attackStyle.CommonProperties(this);
         }
     }
 
