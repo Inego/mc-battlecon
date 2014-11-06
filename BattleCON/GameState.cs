@@ -15,6 +15,7 @@ namespace BattleCON
 
         public int beat;
 
+        //public Random rnd = new Random(9);
         public Random rnd = new Random();
 
         public GameState(Character c1, Character c2)
@@ -38,6 +39,8 @@ namespace BattleCON
 
             while (beat <= 15)
             {
+                Console.WriteLine("BEAT " + beat);
+                
                 this.nextBeat();
 
                 if (p1.isDead)
@@ -61,6 +64,10 @@ namespace BattleCON
 
         private void nextBeat()
         {
+            Console.WriteLine(p1 + " " + p1.health);
+            Console.WriteLine(p2 + " " + p2.health);
+
+
             // Select random style
 
             p1.selectAttackingPair();
@@ -80,8 +87,13 @@ namespace BattleCON
 
             bool normalPlay = true;
 
+            Console.WriteLine("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
+
             while (p1.priority() == p2.priority())
             {
+
+                Console.WriteLine("CLASH!");
+
                 if (p1.bases.Count == 0 || p2.bases.Count == 0)
                 {
                     normalPlay = false;
@@ -98,6 +110,8 @@ namespace BattleCON
                 Player activePlayer = p1.priority() > p2.priority() ? p1 : p2;
                 Player reactivePlayer = activePlayer.opponent;
 
+                Console.WriteLine(activePlayer + " goes first");
+
                 activePlayer.applyCommonProperties();
                 reactivePlayer.applyCommonProperties();
 
@@ -113,7 +127,16 @@ namespace BattleCON
                     {
                         reactivePlayer.attack();
                     }
+                    else {
+                        Console.WriteLine(reactivePlayer + " is stunned and can't respond.");
+                    }
                 }
+                else
+                {
+                    Console.WriteLine(activePlayer + " cannot attack since (s)he is stunned!");
+
+                }
+
 
                 // End of beat
                 firstToAnte = activePlayer;

@@ -105,6 +105,10 @@ namespace BattleCON
         {
         }
 
+        public override string ToString()
+        {
+            return name;
+        }
 
 
     }
@@ -150,12 +154,15 @@ namespace BattleCON
     {
         static void Main(string[] args)
         {
-            GameState g = new GameState(Character.shekhtur, Character.eligor);
+            for (int i = 0; i <= 1000; i++)
+            {
+                GameState g = new GameState(Character.shekhtur, Character.eligor);
 
-            g.playout();
+                g.playout();
+            }
+            
             
 
-            Console.WriteLine("Hi!");
             Console.ReadLine();
         }
         

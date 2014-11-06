@@ -64,6 +64,7 @@ namespace BattleCON
             hasHit = false;
             wasHit = false;
             stunImmunity = false;
+            isStunned = false;
 
             ignoresAppliedMovement = false;
 
@@ -71,6 +72,10 @@ namespace BattleCON
             damageTaken = 0;
 
             powerModifier = nextBeatPowerModifier;
+            if (nextBeatPowerModifier > 0)
+            {
+                Console.WriteLine(this + " has " + powerModifier + "next beat.");
+            }
             nextBeatPowerModifier = 0;
 
             priorityModifier = 0;
@@ -184,28 +189,25 @@ namespace BattleCON
             {
                 maxPossible = p.GetPossibleAdvance();
 
-                if (maxPossible >= loRange)
-                {
-                    maxMoves = Math.Min(maxPossible, hiRange);
-                    for (i = Math.Min(loRange, maxPossible); i <= maxMoves; i++)
-                        moves.Add(i);
-                }
+                maxMoves = Math.Min(maxPossible, hiRange);
+                for (i = Math.Min(loRange, maxPossible); i <= maxMoves; i++)
+                    moves.Add(i);
+                
             }
 
             if (direction == Direction.Both || direction == Direction.Backward)
             {
                 maxPossible = p.GetPossibleRetreat();
 
-                if (maxPossible >= loRange)
+                
+                maxMoves = Math.Min(maxPossible, hiRange);
+                for (i = Math.Min(loRange, maxPossible); i <= maxMoves; i++)
                 {
-                    maxMoves = Math.Min(maxPossible, hiRange);
-                    for (i = Math.Min(loRange, maxPossible); i <= maxMoves; i++)
-                    {
-                        if (direction == Direction.Both && i == 0)
-                            continue;
-                        moves.Add(-i);
-                    }
+                    if (direction == Direction.Both && i == 0)
+                        continue;
+                    moves.Add(-i);
                 }
+                
             }
 
             if (moves.Count > 0)
@@ -216,7 +218,7 @@ namespace BattleCON
                 else
                     moveNumber = this.g.rnd.Next(moves.Count);
 
-                return p.MoveSelf(moveNumber);
+                return p.MoveSelf(moves[moveNumber]);
 
             }
 
@@ -281,17 +283,24 @@ namespace BattleCON
 
             attackBase = bases[i];
             bases.RemoveAt(i);
+
+            Console.WriteLine(this + " selected " + attackStyle + ' ' + attackBase);
         }
 
         internal virtual bool ante()
         {
             if (availableTokens == 0)
+            {
+                Console.WriteLine(this + " has no tokens.");
                 return false;
+            }
 
             int toAnte = g.rnd.Next(availableTokens + 1);
 
             if (toAnte > 0)
             {
+                Console.WriteLine(this + " antes " + toAnte + " tokens.");
+
                 antedTokens += toAnte;
                 availableTokens -= toAnte;
                 usedTokens += toAnte;
@@ -299,6 +308,8 @@ namespace BattleCON
                 return true;
 
             }
+
+            Console.WriteLine(this + " antes no tokens.");
 
             return false;
         }
@@ -386,6 +397,8 @@ namespace BattleCON
                 if (dst >= attackBase.lowRange + attackStyle.lowRange
                     && dst <= attackBase.hiRange + attackStyle.hiRange)
                 {
+                    Console.WriteLine(this + " hits.");
+
                     // Hit.
                     hasHit = true;
                     opponent.wasHit = true;
@@ -394,6 +407,8 @@ namespace BattleCON
                     attackStyle.OnHit(this);
 
                     int power = getTotalPower();
+
+                    Console.WriteLine(this + "'s power is " + power);
 
                     if (power > 0)
                     {
@@ -405,6 +420,10 @@ namespace BattleCON
                             {
                                 opponent.attackStyle.OnSoak(opponent);
                             }
+                        }
+                        else
+                        {
+                            Console.WriteLine(this + "'s attack style ignores Soak.");
                         }
                         damageDealt = power - opponent.soakedDamage;
                         opponent.damageTaken = damageDealt;
@@ -422,13 +441,26 @@ namespace BattleCON
                             opponent.health -= damageDealt;
 
                             if (opponent.health < 0 && !isDead)
+                            {
+                                Console.WriteLine(opponent + " IS DEAD!");
                                 opponent.isDead = true;
+                            }
                         }
 
                     }
 
                 }
 
+                else
+                {
+                    Console.WriteLine(this + " missed: opponent out of range.");
+                }
+
+            }
+
+            else
+            {
+                Console.WriteLine(this + "'s attack cannot hit.");
             }
 
             attackBase.AfterActivating(this);
@@ -457,6 +489,14 @@ namespace BattleCON
         {
             attackBase.CommonProperties(this);
             attackStyle.CommonProperties(this);
+        }
+
+        public override string ToString()
+        {
+            if (c == null)
+                return "<no character>";
+            else
+                return c.name;
         }
     }
 

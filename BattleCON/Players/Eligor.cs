@@ -194,6 +194,7 @@ namespace BattleCON
     {
         public Martial()
         {
+            name = "Martial";
             hiRange = 1;
             power = 1;
             priority = -1;

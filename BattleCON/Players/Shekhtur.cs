@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 namespace BattleCON
 {
 
@@ -128,7 +129,10 @@ namespace BattleCON
         public override void checkCanHit(Player p)
         {
             if (p.rangeToOpponent() >= 3)
+            {
+                Console.WriteLine(name + " is too far from opponent, can't hit.");
                 p.canHit = false;
+            }
         }
 
         public override bool ignoresSoak(Player p)
@@ -139,7 +143,10 @@ namespace BattleCON
         public override void OnHit(Player p)
         {
             if (p.hitOpponentLastBeat)
-                p.powerModifier += 2;            
+            {
+                Console.WriteLine("Combination: +2 power since hit opponent last beat.");
+                p.powerModifier += 2;
+            }
         }
 
     }
@@ -157,6 +164,10 @@ namespace BattleCON
         {
             MovementResult mr = p.UniversalMove(true, Direction.Forward, 0, 3);
             p.powerModifier -= mr.distance;
+            if (mr.distance > 0)
+            {
+                Console.WriteLine(this + " lost " + mr.distance + " power because of advance");
+            }
         }
     }
 
@@ -197,7 +208,7 @@ namespace BattleCON
         public override void EndOfBeat(Player p)
         {
             p.gainTokens(2);
-            p.nextBeatPowerModifier += 2;
+            p.nextBeatPowerModifier += 1;
         }
     }
 

@@ -1,4 +1,5 @@
-﻿namespace BattleCON
+﻿using System;
+namespace BattleCON
 {
     class Drive : Card
     {
@@ -61,7 +62,10 @@
             MovementResult mr = p.UniversalMove(true, Direction.Both, 1, 3);
 
             if (mr.pastOpponent)
+            {
+                Console.WriteLine(p + " dashed past " + p.opponent);
                 p.opponent.canHit = false;
+            }
 
         }
 
