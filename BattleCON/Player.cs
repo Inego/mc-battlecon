@@ -265,6 +265,7 @@ namespace BattleCON
             int toGain = Math.Min(usedTokens, number);
             if (toGain > 0)
             {
+                Console.WriteLine(this + " gains " + toGain + " tokens.");
                 availableTokens += toGain;
                 usedTokens -= toGain;
             }
@@ -376,7 +377,7 @@ namespace BattleCON
             attackStyle.StartOfBeat(this);
         }
 
-        internal void attack()
+        internal void attack(bool active)
         {
             if (isStunned)
                 return;
@@ -418,6 +419,7 @@ namespace BattleCON
                             opponent.soakedDamage = Math.Min(power, opponent.soak);
                             if (opponent.soakedDamage > 0)
                             {
+                                Console.WriteLine(opponent + " soaked " + opponent.soakedDamage);
                                 opponent.attackStyle.OnSoak(opponent);
                             }
                         }
@@ -430,12 +432,27 @@ namespace BattleCON
 
                         if (damageDealt > 0)
                         {
+                            Console.WriteLine(this + " deals " + damageDealt + " damage to " + opponent + '.');
+
+
                             attackBase.OnDamage(this);
                             attackStyle.OnDamage(this);
 
-                            if (!opponent.isStunned && !opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this)))
+                            if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this)))
                             {
+                                
+                                if (opponent.stunGuard > 0 && attackBase.ignoresStunGuard(this))
+                                    Console.WriteLine(this + "'s " + attackBase + " ignores " + opponent + "'s Stun Guard of " + opponent.stunGuard + ".");
+
                                 opponent.isStunned = true;
+                            }
+                            else
+                            {
+                                if (opponent.stunImmunity)
+                                    Console.WriteLine(opponent + " has Stun Immunity.");
+                                if (opponent.stunGuard >= damageDealt)
+                                    Console.WriteLine(opponent + "'s Stun Guard of " + opponent.stunGuard + " saves from being stunned.");
+                                
                             }
 
                             opponent.health -= damageDealt;

@@ -103,6 +103,11 @@ namespace BattleCON
                 p1.selectNextForClash();
                 p2.selectNextForClash();
 
+                Console.WriteLine(p1 + " selected " + p1.attackStyle + ' ' + p1.attackBase);
+                Console.WriteLine(p2 + " selected " + p2.attackStyle + ' ' + p2.attackBase);
+                Console.WriteLine("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
+
+
             }
 
             if (normalPlay)
@@ -121,11 +126,11 @@ namespace BattleCON
 
                 if (!activePlayer.isStunned)
                 {
-                    activePlayer.attack();
+                    activePlayer.attack(true);
 
                     if (!reactivePlayer.isDead && !reactivePlayer.isStunned)
                     {
-                        reactivePlayer.attack();
+                        reactivePlayer.attack(false);
                     }
                     else {
                         Console.WriteLine(reactivePlayer + " is stunned and can't respond.");
