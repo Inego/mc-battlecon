@@ -72,10 +72,10 @@ namespace BattleCON
             damageTaken = 0;
 
             powerModifier = nextBeatPowerModifier;
-            if (nextBeatPowerModifier > 0)
-            {
-                Console.WriteLine(this + " has " + powerModifier + "next beat.");
-            }
+
+            if (g.isMainGame && nextBeatPowerModifier > 0)
+                g.writeToConsole(this + " has " + powerModifier + "next beat.");
+
             nextBeatPowerModifier = 0;
 
             priorityModifier = 0;
@@ -89,8 +89,10 @@ namespace BattleCON
         public Character c;
 
 
-        public Player(Character c, int position)
+        public Player(Character c, int position, GameState gs)
         {
+            this.g = gs;
+
             health = 20;
             this.c = c;
             c.init(this);
@@ -265,7 +267,8 @@ namespace BattleCON
             int toGain = Math.Min(usedTokens, number);
             if (toGain > 0)
             {
-                Console.WriteLine(this + " gains " + toGain + " tokens.");
+                if (g.isMainGame)
+                    g.writeToConsole(this + " gains " + toGain + " tokens.");
                 availableTokens += toGain;
                 usedTokens -= toGain;
             }
@@ -285,14 +288,16 @@ namespace BattleCON
             attackBase = bases[i];
             bases.RemoveAt(i);
 
-            Console.WriteLine(this + " selected " + attackStyle + ' ' + attackBase);
+            if (g.isMainGame)
+                g.writeToConsole(this + " selected " + attackStyle + ' ' + attackBase);
         }
 
         internal virtual bool ante()
         {
             if (availableTokens == 0)
             {
-                Console.WriteLine(this + " has no tokens.");
+                if (g.isMainGame)
+                    g.writeToConsole(this + " has no tokens.");
                 return false;
             }
 
@@ -300,7 +305,8 @@ namespace BattleCON
 
             if (toAnte > 0)
             {
-                Console.WriteLine(this + " antes " + toAnte + " tokens.");
+                if (g.isMainGame)
+                    g.writeToConsole(this + " antes " + toAnte + " tokens.");
 
                 antedTokens += toAnte;
                 availableTokens -= toAnte;
@@ -310,7 +316,8 @@ namespace BattleCON
 
             }
 
-            Console.WriteLine(this + " antes no tokens.");
+            if (g.isMainGame)
+                g.writeToConsole(this + " antes no tokens.");
 
             return false;
         }
@@ -398,7 +405,8 @@ namespace BattleCON
                 if (dst >= attackBase.lowRange + attackStyle.lowRange
                     && dst <= attackBase.hiRange + attackStyle.hiRange)
                 {
-                    Console.WriteLine(this + " hits.");
+                    if (g.isMainGame)
+                        g.writeToConsole(this + " hits.");
 
                     // Hit.
                     hasHit = true;
@@ -409,7 +417,8 @@ namespace BattleCON
 
                     int power = getTotalPower();
 
-                    Console.WriteLine(this + "'s power is " + power);
+                    if (g.isMainGame)
+                        g.writeToConsole(this + "'s power is " + power);
 
                     if (power > 0)
                     {
@@ -419,20 +428,24 @@ namespace BattleCON
                             opponent.soakedDamage = Math.Min(power, opponent.soak);
                             if (opponent.soakedDamage > 0)
                             {
-                                Console.WriteLine(opponent + " soaked " + opponent.soakedDamage);
+                                if (g.isMainGame)
+                                    g.writeToConsole(opponent + " soaked " + opponent.soakedDamage);
+                                
                                 opponent.attackStyle.OnSoak(opponent);
                             }
                         }
                         else
                         {
-                            Console.WriteLine(this + "'s attack style ignores Soak.");
+                            if (g.isMainGame)
+                                g.writeToConsole(this + "'s attack style ignores Soak.");
                         }
                         damageDealt = power - opponent.soakedDamage;
                         opponent.damageTaken = damageDealt;
 
                         if (damageDealt > 0)
                         {
-                            Console.WriteLine(this + " deals " + damageDealt + " damage to " + opponent + '.');
+                            if (g.isMainGame)
+                                g.writeToConsole(this + " deals " + damageDealt + " damage to " + opponent + '.');
 
 
                             attackBase.OnDamage(this);
@@ -441,17 +454,21 @@ namespace BattleCON
                             if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this)))
                             {
                                 
-                                if (opponent.stunGuard > 0 && attackBase.ignoresStunGuard(this))
-                                    Console.WriteLine(this + "'s " + attackBase + " ignores " + opponent + "'s Stun Guard of " + opponent.stunGuard + ".");
+                                if (g.isMainGame && opponent.stunGuard > 0 && attackBase.ignoresStunGuard(this))
+                                    g.writeToConsole(this + "'s " + attackBase + " ignores " + opponent + "'s Stun Guard of " + opponent.stunGuard + ".");
 
                                 opponent.isStunned = true;
                             }
                             else
                             {
-                                if (opponent.stunImmunity)
-                                    Console.WriteLine(opponent + " has Stun Immunity.");
-                                if (opponent.stunGuard >= damageDealt)
-                                    Console.WriteLine(opponent + "'s Stun Guard of " + opponent.stunGuard + " saves from being stunned.");
+                                if (g.isMainGame)
+                                {
+                                    if (opponent.stunImmunity)
+                                        g.writeToConsole(opponent + " has Stun Immunity.");
+                                    if (opponent.stunGuard >= damageDealt)
+                                        g.writeToConsole(opponent + "'s Stun Guard of " + opponent.stunGuard + " saves from being stunned.");
+
+                                }
                                 
                             }
 
@@ -459,7 +476,8 @@ namespace BattleCON
 
                             if (opponent.health < 0 && !isDead)
                             {
-                                Console.WriteLine(opponent + " IS DEAD!");
+                                if (g.isMainGame)
+                                    g.writeToConsole(opponent + " IS DEAD!");
                                 opponent.isDead = true;
                             }
                         }
@@ -470,14 +488,16 @@ namespace BattleCON
 
                 else
                 {
-                    Console.WriteLine(this + " missed: opponent out of range.");
+                    if (g.isMainGame)
+                        g.writeToConsole(this + " missed: opponent out of range.");
                 }
 
             }
 
             else
             {
-                Console.WriteLine(this + "'s attack cannot hit.");
+                if (g.isMainGame)
+                    g.writeToConsole(this + "'s attack cannot hit.");
             }
 
             attackBase.AfterActivating(this);

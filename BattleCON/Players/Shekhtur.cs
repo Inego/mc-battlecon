@@ -130,7 +130,8 @@ namespace BattleCON
         {
             if (p.rangeToOpponent() >= 3)
             {
-                Console.WriteLine(name + " is too far from opponent, can't hit.");
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(name + " is too far from opponent, can't hit.");
                 p.canHit = false;
             }
         }
@@ -144,7 +145,8 @@ namespace BattleCON
         {
             if (p.hitOpponentLastBeat)
             {
-                Console.WriteLine("Combination: +2 power since hit opponent last beat.");
+                if (p.g.isMainGame)
+                    p.g.writeToConsole("Combination: +2 power since hit opponent last beat.");
                 p.powerModifier += 2;
             }
         }
@@ -164,10 +166,8 @@ namespace BattleCON
         {
             MovementResult mr = p.UniversalMove(true, Direction.Forward, 0, 3);
             p.powerModifier -= mr.distance;
-            if (mr.distance > 0)
-            {
-                Console.WriteLine(this + " lost " + mr.distance + " power because of advance");
-            }
+            if (p.g.isMainGame && mr.distance > 0)
+                p.g.writeToConsole(this + " lost " + mr.distance + " power because of advance");
         }
     }
 

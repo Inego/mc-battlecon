@@ -63,7 +63,8 @@ namespace BattleCON
 
             if (mr.pastOpponent)
             {
-                Console.WriteLine(p + " dashed past " + p.opponent);
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + " dashed past " + p.opponent);
                 p.opponent.canHit = false;
             }
 

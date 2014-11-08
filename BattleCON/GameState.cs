@@ -2,12 +2,19 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
+using System.ComponentModel;
 
 namespace BattleCON
 {
     public class GameState
     {
+        public bool isMainGame;
+        public List<string> consoleBuffer;
+        public BackgroundWorker bw;
+        public EventWaitHandle waitHandle;
+
+
         Player p1;
         Player p2;
 
@@ -18,20 +25,23 @@ namespace BattleCON
         //public Random rnd = new Random(9);
         public Random rnd = new Random();
 
-        public GameState(Character c1, Character c2)
+        public GameState(Character c1, Character c2,  BackgroundWorker bw, EventWaitHandle waitHandle)
         {
             beat = 1;
 
-            p1 = new Player(c1, 2);
-            p2 = new Player(c2, 6);
+            p1 = new Player(c1, 2, this);
+            p2 = new Player(c2, 6, this);
 
             firstToAnte = p1;
 
             p1.opponent = p2;
             p2.opponent = p1;
 
-            p1.g = this;
-            p2.g = this;
+            isMainGame = true;
+            consoleBuffer = new List<string>();
+
+            this.bw = bw;
+            this.waitHandle = waitHandle;
         }
 
         internal int playout()
@@ -39,9 +49,12 @@ namespace BattleCON
 
             while (beat <= 15)
             {
-                Console.WriteLine("BEAT " + beat);
+                if (isMainGame)
+                    writeToConsole("BEAT " + beat);
                 
                 this.nextBeat();
+
+                flushConsole();
 
                 if (p1.isDead)
                     return 2;
@@ -62,11 +75,25 @@ namespace BattleCON
 
         }
 
+        private void flushConsole()
+        {
+            bw.ReportProgress(0);
+            waitHandle.WaitOne();
+
+        }
+
+        public void writeToConsole(string p)
+        {
+            consoleBuffer.Add(p);
+        }
+
         private void nextBeat()
         {
-            Console.WriteLine(p1 + " " + p1.health);
-            Console.WriteLine(p2 + " " + p2.health);
-
+            if (isMainGame)
+            {
+                writeToConsole(p1 + " " + p1.health);
+                writeToConsole(p2 + " " + p2.health);
+            }
 
             // Select random style
 
@@ -87,12 +114,14 @@ namespace BattleCON
 
             bool normalPlay = true;
 
-            Console.WriteLine("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
+            if (isMainGame)
+                writeToConsole("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
 
             while (p1.priority() == p2.priority())
             {
 
-                Console.WriteLine("CLASH!");
+                if (isMainGame)
+                    writeToConsole("CLASH!");
 
                 if (p1.bases.Count == 0 || p2.bases.Count == 0)
                 {
@@ -103,9 +132,12 @@ namespace BattleCON
                 p1.selectNextForClash();
                 p2.selectNextForClash();
 
-                Console.WriteLine(p1 + " selected " + p1.attackStyle + ' ' + p1.attackBase);
-                Console.WriteLine(p2 + " selected " + p2.attackStyle + ' ' + p2.attackBase);
-                Console.WriteLine("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
+                if (isMainGame)
+                {
+                    writeToConsole(p1 + " selected " + p1.attackStyle + ' ' + p1.attackBase);
+                    writeToConsole(p2 + " selected " + p2.attackStyle + ' ' + p2.attackBase);
+                    writeToConsole("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
+                }
 
 
             }
@@ -115,7 +147,8 @@ namespace BattleCON
                 Player activePlayer = p1.priority() > p2.priority() ? p1 : p2;
                 Player reactivePlayer = activePlayer.opponent;
 
-                Console.WriteLine(activePlayer + " goes first");
+                if (isMainGame)
+                    writeToConsole(activePlayer + " goes first");
 
                 activePlayer.applyCommonProperties();
                 reactivePlayer.applyCommonProperties();
@@ -133,12 +166,14 @@ namespace BattleCON
                         reactivePlayer.attack(false);
                     }
                     else {
-                        Console.WriteLine(reactivePlayer + " is stunned and can't respond.");
+                        if (isMainGame)
+                            writeToConsole(reactivePlayer + " is stunned and can't respond.");
                     }
                 }
                 else
                 {
-                    Console.WriteLine(activePlayer + " cannot attack since (s)he is stunned!");
+                    if (isMainGame)
+                        writeToConsole(activePlayer + " cannot attack since (s)he is stunned!");
 
                 }
 
