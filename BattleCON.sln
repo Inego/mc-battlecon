@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Express 2012 for Windows Desktop
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BattleCON", "BattleCON\BattleCON.csproj", "{CF129DA3-0350-4016-9B06-8B8F2C4543F3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BattleCON", "BattleCON\BattleCON.csproj", "{B1CB967F-1388-493C-973E-BD75D0FFEA76}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +9,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CF129DA3-0350-4016-9B06-8B8F2C4543F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CF129DA3-0350-4016-9B06-8B8F2C4543F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CF129DA3-0350-4016-9B06-8B8F2C4543F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CF129DA3-0350-4016-9B06-8B8F2C4543F3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1CB967F-1388-493C-973E-BD75D0FFEA76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1CB967F-1388-493C-973E-BD75D0FFEA76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1CB967F-1388-493C-973E-BD75D0FFEA76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1CB967F-1388-493C-973E-BD75D0FFEA76}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

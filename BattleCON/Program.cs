@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace BattleCON
 {
@@ -113,7 +113,7 @@ namespace BattleCON
 
     }
 
-    
+
 
     public class Character
     {
@@ -121,12 +121,13 @@ namespace BattleCON
 
         public static Character shekhtur;
         public static Character eligor;
-        
-        static Character() {
+
+        static Character()
+        {
 
             shekhtur = new Shekhtur();
             eligor = new Eligor();
-            
+
         }
 
         virtual public void init(Player p)
@@ -144,27 +145,20 @@ namespace BattleCON
         virtual public void AnteEffects(Player p)
         {
         }
-
-
-
     }
 
-   
-    class Program
+
+    static class Program
     {
-        static void Main(string[] args)
+        /// <summary>
+        /// The main entry point for the application.
+        /// </summary>
+        [STAThread]
+        static void Main()
         {
-            for (int i = 0; i <= 1000; i++)
-            {
-                GameState g = new GameState(Character.shekhtur, Character.eligor);
-
-                g.playout();
-            }
-            
-            
-
-            Console.ReadLine();
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new MainForm());
         }
-        
     }
 }
