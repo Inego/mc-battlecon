@@ -10,6 +10,9 @@ using System.Windows.Forms;
 
 namespace BattleCON
 {
+    
+
+
     public partial class MainForm : Form
     {
 
@@ -31,6 +34,7 @@ namespace BattleCON
             if (currentGame == null)
             {
                 currentGame = new GameState(Character.shekhtur, Character.eligor, backgroundWorker1, _waitHandle);
+                battleBoard.gs = currentGame;
                 backgroundWorker1.RunWorkerAsync();
             }
             else
@@ -48,6 +52,7 @@ namespace BattleCON
         {
 
             currentGame.playout();
+            currentGame.flushConsole();
 
         }
 
@@ -63,8 +68,17 @@ namespace BattleCON
 
             listBox1.SelectedIndex = listBox1.Items.Count - 1;
 
+            battleBoard.Redraw(true);
+
             waitingForButton = true;
 
         }
+
+        private void battleBoard_MouseMove(object sender, MouseEventArgs e)
+        {
+            battleBoard.checkMouseMove(e.X, e.Y);
+
+        }
+        
     }
 }

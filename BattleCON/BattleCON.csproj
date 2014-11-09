@@ -44,6 +44,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BattleBoard.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="BattleBoard.Designer.cs">
+      <DependentUpon>BattleBoard.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Cards.cs" />
     <Compile Include="CommonBases.cs" />
     <Compile Include="Players\Eligor.cs" />
     <Compile Include="MainForm.cs">

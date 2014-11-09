@@ -1,7 +1,7 @@
 ﻿using System;
 namespace BattleCON
 {
-    class Drive : Card
+    class Drive : BaseCard
     {
 
         public Drive()
@@ -19,10 +19,15 @@ namespace BattleCON
             p.UniversalMove(true, Direction.Forward, 1, 2);
         }
 
+        internal override string getDescription()
+        {
+            return "Before Activating: Advance 1 or 2 spaces.";
+        }
+
     }
 
 
-    class Strike : Card
+    class Strike : BaseCard
     {
 
         public Strike()
@@ -39,11 +44,16 @@ namespace BattleCON
             p.stunGuard += 5;
         }
 
+        internal override string getDescription()
+        {
+            return "Stun Guard 5";
+        }
+
 
     }
 
 
-    class Dash : Card
+    class Dash : BaseCard
     {
 
         public Dash()
@@ -70,11 +80,26 @@ namespace BattleCON
 
         }
 
+        public override string getRangeText()
+        {
+            return "N/A";
+        }
+
+        public override string getPowerText()
+        {
+            return "N/A";
+        }
+
+        internal override string getDescription()
+        {
+            return "This attack does not hit opponents.\nAfter Activating: Move 1, 2 or 3 spaces. If you moved past an opponent during this movement, this opponent cannot hit you during this beat.";
+        }
+
 
     }
 
 
-    class Shot : Card
+    class Shot : BaseCard
     {
 
         public Shot()
@@ -91,11 +116,16 @@ namespace BattleCON
             p.stunGuard += 2;
         }
 
+        internal override string getDescription()
+        {
+            return "Stun Guard 2";
+        }
+
 
     }
 
 
-    class Burst : Card
+    class Burst : BaseCard
     {
 
         public Burst()
@@ -114,10 +144,15 @@ namespace BattleCON
 
         }
 
+        internal override string getDescription()
+        {
+            return "Start of Beat: Retreat 1 or 2 spaces.";
+        }
+
     }
 
 
-    class Grasp : Card
+    class Grasp : BaseCard
     {
 
         public Grasp()
@@ -132,9 +167,12 @@ namespace BattleCON
         public override void OnHit(Player p)
         {
             // Move opponent 1 space
-
             p.UniversalMove(false, Direction.Both, 1, 1);
+        }
 
+        internal override string getDescription()
+        {
+            return "On Hit: Move the opponent 1 space.";
         }
 
 

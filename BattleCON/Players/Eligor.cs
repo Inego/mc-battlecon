@@ -43,7 +43,7 @@ namespace BattleCON
     }
 
 
-    class Aegis : Card
+    class Aegis : BaseCard
     {
         public Aegis()
         {
@@ -66,10 +66,20 @@ namespace BattleCON
             return 0;
         }
 
+        public override string getPowerText()
+        {
+            return "X";
+        }
+
+        internal override string getDescription()
+        {
+            return "Reveal: Soak 1 for each Vengeance Token you anted during this beat.\nThe power of this base is equal to the printed power of the nearest opponent's attack pair.\n(This is 0 if the opponent has X or N/A power on his base.)";
+        }
+
     }
 
 
-    class Vengeful : Card
+    class Vengeful : StyleCard
     {
         public Vengeful()
         {
@@ -92,10 +102,15 @@ namespace BattleCON
         {
             p.gainTokens(2);
         }
+
+        internal override string getDescription()
+        {
+            return "Stun Guard 3\nEligor ignores all movement applied to him by opponents during this beat.\nBefore Activating: Advance 1 space.\nOn Hit: Gain 2 Vengeance Tokens.";
+        }
     }
 
 
-    class Counter : Card
+    class Counter : StyleCard
     {
         public Counter()
         {
@@ -118,10 +133,15 @@ namespace BattleCON
             }
         }
 
+        internal override string getDescription()
+        {
+            return "Start of Beat: If an opponent's base has the same name as yours, that opponent is stunned.\nBefore Activating: If you took damage this beat, advance up to 1 space for each point of damage taken.";
+        }
+
     }
 
 
-    class Retribution : Card
+    class Retribution : StyleCard
     {
         public Retribution()
         {
@@ -161,10 +181,15 @@ namespace BattleCON
                 }
             }
         }
+
+        internal override string getDescription()
+        {
+            return "Soak 2, gain a Vengeance Token for each point of damage soaked (max 2).\nBefore Activating: If you were hit during this beat, you may move directly to any space adjacent to an opponent who hit you.";
+        }
     }
 
 
-    class Chained : Card
+    class Chained : StyleCard
     {
         public Chained()
         {
@@ -186,11 +211,16 @@ namespace BattleCON
                 }
             }
         }
+
+        internal override string getDescription()
+        {
+            return "Before Activating: Discard any number of Vengeance tokens to pull the opponent 1 space per token discarded.";
+        }
             
     }
 
 
-    class Martial : Card
+    class Martial : StyleCard
     {
         public Martial()
         {
@@ -207,6 +237,13 @@ namespace BattleCON
             if (p.availableTokens == 5)
                 p.powerModifier += 2;
         }
+
+        internal override string getDescription()
+        {
+            return "Before Activating: This attack has +2 Power if you have taken damage during this beat and +2 additional Power if you have 5 Vengeance Tokens in your token pool.";
+        }
+        
+
     }
 
 }

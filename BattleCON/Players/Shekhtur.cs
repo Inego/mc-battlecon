@@ -41,7 +41,7 @@ namespace BattleCON
     }
 
 
-    class Brand : Card
+    class Brand : BaseCard
     {
         public Brand()
         {
@@ -93,9 +93,15 @@ namespace BattleCON
             
         }
 
+        internal override string getDescription()
+        {
+            return "This attack ignores Stun Guard if your priority is 6 or greater.\nAfter Activating: If this attack hit, you may spend 2 or 4 Malice Tokens. For every 2 tokens you spent, the opponent you hit loses 1 life, and you gain 1 life.";
+        }
+        
+
     }
 
-    class Jugular : Card
+    class Jugular : StyleCard
     {
         public Jugular()
         {
@@ -116,9 +122,15 @@ namespace BattleCON
             p.availableTokens = 3;
             p.usedTokens = 2;
         }
+
+        internal override string getDescription()
+        {
+            return "On Hit: Move the opponent 1 space.\nEnd of Beat: Gain or lose Malice Tokens until you have exactly 3.";
+        }
+        
     }
 
-    class Combination : Card
+    class Combination : StyleCard
     {
         public Combination()
         {
@@ -151,10 +163,16 @@ namespace BattleCON
             }
         }
 
+        internal override string getDescription()
+        {
+            return "This attack does not hit opponents at range 3 or greater. This attack ignores Soak if your priority is 7 or greater.\nOn Hit: If you hit the opponent last beat, this attack has +2 Power.";
+        }
+        
+
     }
 
 
-    class Spiral : Card
+    class Spiral : StyleCard
     {
         public Spiral()
         {
@@ -169,10 +187,17 @@ namespace BattleCON
             if (p.g.isMainGame && mr.distance > 0)
                 p.g.writeToConsole(this + " lost " + mr.distance + " power because of advance");
         }
+
+        internal override string getDescription()
+        {
+            return "Before Activating: Advance up to 3 spaces. You have -1 Power for each space moved by this effect (to a minimum of 0).";
+        }
+        
+
     }
 
 
-    class Reaver : Card
+    class Reaver : StyleCard
     {
         public Reaver()
         {
@@ -189,9 +214,15 @@ namespace BattleCON
         {
             p.UniversalMove(true, Direction.Forward, 1, 2);
         }
+
+        internal override string getDescription()
+        {
+            return "On Damage: Push the opponent one space per point of damage dealt.\nEnd of Beat: Advance 1 or 2 spaces.";
+        }
+        
     }
 
-    class Unleashed : Card
+    class Unleashed : StyleCard
     {
         public Unleashed()
         {
@@ -210,6 +241,12 @@ namespace BattleCON
             p.gainTokens(2);
             p.nextBeatPowerModifier += 1;
         }
+
+        internal override string getDescription()
+        {
+            return "After Activating: Retreat 1 or 2 spaces.\nEnd of Beat: Gain 2 Malice Tokens. You have +1 Power next beat.";
+        }
+        
     }
 
 }

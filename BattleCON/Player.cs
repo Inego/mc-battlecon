@@ -13,6 +13,8 @@ namespace BattleCON
         public int position;
         public Player opponent;
 
+        public bool first;
+
         public int antedTokens;
         public int availableTokens;
         public int usedTokens;
@@ -89,9 +91,10 @@ namespace BattleCON
         public Character c;
 
 
-        public Player(Character c, int position, GameState gs)
+        public Player(Character c, int position, GameState gs, bool first)
         {
             this.g = gs;
+            this.first = first;
 
             health = 20;
             this.c = c;
@@ -220,7 +223,20 @@ namespace BattleCON
                 else
                     moveNumber = this.g.rnd.Next(moves.Count);
 
-                return p.MoveSelf(moves[moveNumber]);
+                int movement = moves[moveNumber];
+
+                MovementResult mr = p.MoveSelf(movement);
+
+                if (g.isMainGame && mr.distance > 0)
+                {
+                    if (self)
+                        g.writeToConsole(this + (mr.advance ? " advances " : " retreats ") + mr.distance);
+                    else
+                        g.writeToConsole(this + (mr.advance ? " pulls " : " pushes ") + opponent + ' ' + mr.distance);
+                    g.flushConsole();
+                }
+
+                return mr;
 
             }
 
@@ -375,6 +391,9 @@ namespace BattleCON
             CooldownBase1 = attackBase;
             CooldownStyle1 = attackStyle;
 
+            attackBase = null;
+            attackStyle = null;
+
 
         }
 
@@ -474,7 +493,7 @@ namespace BattleCON
 
                             opponent.health -= damageDealt;
 
-                            if (opponent.health < 0 && !isDead)
+                            if (opponent.health <= 0 && !isDead)
                             {
                                 if (g.isMainGame)
                                     g.writeToConsole(opponent + " IS DEAD!");

@@ -15,8 +15,8 @@ namespace BattleCON
         public EventWaitHandle waitHandle;
 
 
-        Player p1;
-        Player p2;
+        public Player p1;
+        public Player p2;
 
         Player firstToAnte;
 
@@ -29,8 +29,8 @@ namespace BattleCON
         {
             beat = 1;
 
-            p1 = new Player(c1, 2, this);
-            p2 = new Player(c2, 6, this);
+            p1 = new Player(c1, 2, this, true);
+            p2 = new Player(c2, 6, this, false);
 
             firstToAnte = p1;
 
@@ -46,7 +46,6 @@ namespace BattleCON
 
         internal int playout()
         {
-
             while (beat <= 15)
             {
                 if (isMainGame)
@@ -54,7 +53,7 @@ namespace BattleCON
                 
                 this.nextBeat();
 
-                flushConsole();
+                
 
                 if (p1.isDead)
                     return 2;
@@ -75,7 +74,7 @@ namespace BattleCON
 
         }
 
-        private void flushConsole()
+        public void flushConsole()
         {
             bw.ReportProgress(0);
             waitHandle.WaitOne();
@@ -94,6 +93,8 @@ namespace BattleCON
                 writeToConsole(p1 + " " + p1.health);
                 writeToConsole(p2 + " " + p2.health);
             }
+
+            flushConsole();
 
             // Select random style
 
@@ -121,7 +122,7 @@ namespace BattleCON
             {
 
                 if (isMainGame)
-                    writeToConsole("CLASH!");
+                    writeToConsole("CLASH! (both players " + p1.priority() + ')');
 
                 if (p1.bases.Count == 0 || p2.bases.Count == 0)
                 {
