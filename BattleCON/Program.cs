@@ -36,7 +36,7 @@ namespace BattleCON
 
 
 
-    public class Character
+    public abstract class Character
     {
         public string name;
 
@@ -50,6 +50,9 @@ namespace BattleCON
             eligor = new Eligor();
 
         }
+
+        public abstract string getDescription();
+
 
         virtual public void init(Player p)
         {

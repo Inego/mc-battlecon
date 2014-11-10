@@ -11,6 +11,11 @@ namespace BattleCON
 
         }
 
+        public override string getDescription()
+        {
+            return "Shekhtur begins a duel with 3 Malice Tokens. Each time she hits an opponent with an attack, she gains one Malice Token per point of damage dealt. She cannot possess more than 5 Malice Tokens at any time.\nShekhtur can ante Malice Tokens for +1 Priority each.";
+        }
+
         public override void init(Player p)
         {
             p.bases.Add(new Brand());

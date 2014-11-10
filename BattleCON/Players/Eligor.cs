@@ -27,6 +27,11 @@ namespace BattleCON
             p.usedTokens = 3;
         }
 
+        public override string getDescription()
+        {
+            return "Eligor begins a duel with 2 Vengeance Tokens. Whenever he takes damage from an attack, he gains Vengeance Tokens equal to the damage taken. He has a limit of 5 these tokens.\nEligor can ante Vengeance Tokens for Stun Guard 2 each. He gains Stun Immunity if he antes 5 tokens in a single beat.";
+        }
+
         public override void OnDamageTaken(Player p)
         {
             p.gainTokens(p.damageTaken);
