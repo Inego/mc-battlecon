@@ -28,19 +28,22 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.listBox1 = new System.Windows.Forms.ListBox();
+            this.gameLogListBox = new System.Windows.Forms.ListBox();
             this.startButton = new System.Windows.Forms.Button();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
+            this.userChoiceListBox = new System.Windows.Forms.ListBox();
+            this.userChoiceListLabel = new System.Windows.Forms.Label();
+            this.gameLogListBoxLabel = new System.Windows.Forms.Label();
             this.battleBoard = new BattleCON.BattleBoard();
             this.SuspendLayout();
             // 
-            // listBox1
+            // gameLogListBox
             // 
-            this.listBox1.FormattingEnabled = true;
-            this.listBox1.Location = new System.Drawing.Point(718, 51);
-            this.listBox1.Name = "listBox1";
-            this.listBox1.Size = new System.Drawing.Size(392, 654);
-            this.listBox1.TabIndex = 1;
+            this.gameLogListBox.FormattingEnabled = true;
+            this.gameLogListBox.Location = new System.Drawing.Point(718, 350);
+            this.gameLogListBox.Name = "gameLogListBox";
+            this.gameLogListBox.Size = new System.Drawing.Size(392, 355);
+            this.gameLogListBox.TabIndex = 1;
             // 
             // startButton
             // 
@@ -58,6 +61,34 @@
             this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
             this.backgroundWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker1_ProgressChanged);
             // 
+            // userChoiceListBox
+            // 
+            this.userChoiceListBox.FormattingEnabled = true;
+            this.userChoiceListBox.Location = new System.Drawing.Point(718, 55);
+            this.userChoiceListBox.Name = "userChoiceListBox";
+            this.userChoiceListBox.Size = new System.Drawing.Size(392, 277);
+            this.userChoiceListBox.TabIndex = 5;
+            this.userChoiceListBox.Click += new System.EventHandler(this.userChoiceListBox_Click);
+            // 
+            // userChoiceListLabel
+            // 
+            this.userChoiceListLabel.AutoSize = true;
+            this.userChoiceListLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.userChoiceListLabel.Location = new System.Drawing.Point(718, 42);
+            this.userChoiceListLabel.Name = "userChoiceListLabel";
+            this.userChoiceListLabel.Size = new System.Drawing.Size(114, 13);
+            this.userChoiceListLabel.TabIndex = 6;
+            this.userChoiceListLabel.Text = "<User Choice List>";
+            // 
+            // gameLogListBoxLabel
+            // 
+            this.gameLogListBoxLabel.AutoSize = true;
+            this.gameLogListBoxLabel.Location = new System.Drawing.Point(718, 335);
+            this.gameLogListBoxLabel.Name = "gameLogListBoxLabel";
+            this.gameLogListBoxLabel.Size = new System.Drawing.Size(56, 13);
+            this.gameLogListBoxLabel.TabIndex = 7;
+            this.gameLogListBoxLabel.Text = "Game Log";
+            // 
             // battleBoard
             // 
             this.battleBoard.Location = new System.Drawing.Point(12, 12);
@@ -71,21 +102,28 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1122, 712);
+            this.Controls.Add(this.gameLogListBoxLabel);
+            this.Controls.Add(this.userChoiceListLabel);
+            this.Controls.Add(this.userChoiceListBox);
             this.Controls.Add(this.startButton);
-            this.Controls.Add(this.listBox1);
+            this.Controls.Add(this.gameLogListBox);
             this.Controls.Add(this.battleBoard);
             this.Name = "MainForm";
             this.Text = "BattleCON Monte Carlo Engine";
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.ListBox listBox1;
+        private System.Windows.Forms.ListBox gameLogListBox;
         private System.Windows.Forms.Button startButton;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private BattleBoard battleBoard;
+        private System.Windows.Forms.ListBox userChoiceListBox;
+        private System.Windows.Forms.Label userChoiceListLabel;
+        private System.Windows.Forms.Label gameLogListBoxLabel;
     }
 }
 

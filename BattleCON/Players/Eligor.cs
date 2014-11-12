@@ -100,6 +100,8 @@ namespace BattleCON
 
         public override void BeforeActivating(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Vengeful Before Activating: Advance 1 space.");
             p.UniversalMove(true, Direction.Forward, 1, 1);
         }
 
@@ -134,6 +136,8 @@ namespace BattleCON
         {
             if (p.damageTaken > 0)
             {
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Counter Before Activating: Since " + p.damageTaken + "damage taken, advance up to " + p.damageTaken + ".");
                 p.UniversalMove(true, Direction.Forward, 0, p.damageTaken);
             }
         }
@@ -168,6 +172,9 @@ namespace BattleCON
         {
             if (p.wasHit)
             {
+                if (p.g.isMainGame)
+                    p.g.writeToConsole("Since " + p + " was hit, he may move directly to any space adjacent to an opponent who hit him.");
+
                 // May move to any adjacent space to an opponent who hit
                 List<int> newPos = new List<int>(3);
                 newPos.Add(-1);

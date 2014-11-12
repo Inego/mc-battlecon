@@ -15,6 +15,10 @@ namespace BattleCON
 
         public override void BeforeActivating(Player p)
         {
+
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Drive Before Activating: Advance 1 or 2 spaces.");
+
             // Advance 1 or 2 spaces
             p.UniversalMove(true, Direction.Forward, 1, 2);
         }
@@ -69,6 +73,9 @@ namespace BattleCON
 
         public override void AfterActivating(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Dash After Activating: Move 1, 2 or 3 spaces.");
+
             MovementResult mr = p.UniversalMove(true, Direction.Both, 1, 3);
 
             if (mr.pastOpponent)
@@ -139,6 +146,10 @@ namespace BattleCON
 
         public override void StartOfBeat(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Burst at Start of Beat: Retreat 1 or 2 spaces");
+
+
             // Retreat 1 or 2 spaces
             p.UniversalMove(true, Direction.Backward, 1, 2);
 
@@ -166,6 +177,9 @@ namespace BattleCON
 
         public override void OnHit(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Grasp On Hit: Move the opponent 1 space.");
+
             // Move opponent 1 space
             p.UniversalMove(false, Direction.Both, 1, 1);
         }

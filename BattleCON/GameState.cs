@@ -7,6 +7,7 @@ using System.ComponentModel;
 
 namespace BattleCON
 {
+    
     public class GameState
     {
         public bool isMainGame;
@@ -25,12 +26,19 @@ namespace BattleCON
         //public Random rnd = new Random(9);
         public Random rnd = new Random();
 
+
+        // Game - Interface interaction
+        public string selectionHeader;
+        public List<string> selectionItems = new List<string>();
+        public int selectionResult;
+
+
         public GameState(Character c1, Character c2,  BackgroundWorker bw, EventWaitHandle waitHandle)
         {
             beat = 1;
 
-            p1 = new Player(c1, 2, this, true);
-            p2 = new Player(c2, 6, this, false);
+            p1 = new Player(c1, 2, this, true, true);
+            p2 = new Player(c2, 6, this, false, false);
 
             firstToAnte = p1;
 
@@ -217,6 +225,12 @@ namespace BattleCON
             }
 
 
+        }
+
+        internal void getUserChoice()
+        {
+            bw.ReportProgress(1);
+            waitHandle.WaitOne();
         }
     }
 

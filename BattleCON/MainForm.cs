@@ -10,7 +10,13 @@ using System.Windows.Forms;
 
 namespace BattleCON
 {
-    
+
+    public enum UserInteractionTypes
+    {
+        None,
+        Wait,
+        Choice
+    }
 
 
     public partial class MainForm : Form
@@ -20,7 +26,7 @@ namespace BattleCON
 
         static EventWaitHandle _waitHandle = new AutoResetEvent(false);
 
-        bool waitingForButton = false;
+        UserInteractionTypes userInteractionType = UserInteractionTypes.None;
 
 
         public MainForm()
@@ -39,13 +45,39 @@ namespace BattleCON
             }
             else
             {
-                if (waitingForButton)
+                switch (userInteractionType)
                 {
-                    waitingForButton = false;
-                    _waitHandle.Set();
+                    case UserInteractionTypes.Wait:
+                        userInteractionType = UserInteractionTypes.None;
+                        _waitHandle.Set();
+                        break;
+
+                    case UserInteractionTypes.Choice:
+                        processUserChoice();
+                        break;
+
                 }
+
+
+                
             }
 
+        }
+
+        private void processUserChoice()
+        {
+            if (userChoiceListBox.SelectedIndex < 0)
+                return;
+
+            currentGame.selectionResult = userChoiceListBox.SelectedIndex;
+
+
+            currentGame.selectionItems.Clear();
+            userChoiceListBox.Items.Clear();
+            userChoiceListLabel.Text = "";
+
+            userInteractionType = UserInteractionTypes.None;
+            _waitHandle.Set();
         }
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
@@ -59,18 +91,34 @@ namespace BattleCON
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
 
-            foreach(string s in currentGame.consoleBuffer)
+            foreach (string s in currentGame.consoleBuffer)
             {
-                listBox1.Items.Add(s);
+                gameLogListBox.Items.Add(s);
             }
 
             currentGame.consoleBuffer.Clear();
 
-            listBox1.SelectedIndex = listBox1.Items.Count - 1;
+            gameLogListBox.SelectedIndex = gameLogListBox.Items.Count - 1;
 
             battleBoard.Redraw(true);
 
-            waitingForButton = true;
+            int eventType = e.ProgressPercentage;
+
+            if (eventType == 1)
+            {
+                userInteractionType = UserInteractionTypes.Choice;
+                userChoiceListLabel.Text = currentGame.selectionHeader;
+                foreach (string s in currentGame.selectionItems)
+                {
+                    userChoiceListBox.Items.Add(s);
+                }
+            }
+            else if (eventType == 0)
+            {
+                userInteractionType = UserInteractionTypes.Wait;
+            }
+
+            
 
         }
 
@@ -78,6 +126,19 @@ namespace BattleCON
         {
             battleBoard.checkMouseMove(e.X, e.Y);
 
+        }
+
+
+
+        private void userChoiceListBox_DoubleClick(object sender, EventArgs e)
+        {
+
+        }
+
+        private void userChoiceListBox_Click(object sender, EventArgs e)
+        {
+            if (userChoiceListBox.SelectedIndex >= 0)
+                startButton.PerformClick();
         }
         
     }

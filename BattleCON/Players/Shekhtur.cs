@@ -83,14 +83,31 @@ namespace BattleCON
 
                 if (toSpend.Count > 1)
                 {
-                    int tokens = toSpend[p.g.rnd.Next(0, toSpend.Count)];
+
+                    int i;
+                    int tokens;
+
+                    if (p.g.isMainGame && p.isHuman)
+                    {
+                        p.g.selectionHeader = "Spend tokens to drain life from the opponent:";
+                        for (int j = 0; j < toSpend.Count; j++)
+                        {
+                            tokens = toSpend[j];
+                            p.g.selectionItems.Add(tokens == 0 ? "Do nothing" : "Spend " + tokens + " tokens to drain " + j + " life");
+                        }
+                        p.g.getUserChoice();
+                        i = p.g.selectionResult;
+                    }
+                    else
+                        i = p.g.rnd.Next(0, toSpend.Count);
+
+                    tokens = toSpend[i];
 
                     if (tokens > 0)
                     {
                         p.spendTokens(tokens);
                         p.drainLife(tokens / 2);
                     }
-
 
                 }
             }
@@ -117,6 +134,9 @@ namespace BattleCON
 
         public override void OnHit(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Jugular On Hit: Move " + p.opponent + " 1 space.");
+
             // Move the opponent 1 space
             p.UniversalMove(false, Direction.Both, 1, 1);
         }
@@ -187,6 +207,8 @@ namespace BattleCON
 
         public override void BeforeActivating(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Spiral Before Activating: Advance up to 3 spaces.");
             MovementResult mr = p.UniversalMove(true, Direction.Forward, 0, 3);
             p.powerModifier -= mr.distance;
             if (p.g.isMainGame && mr.distance > 0)
@@ -212,11 +234,15 @@ namespace BattleCON
 
         public override void OnDamage(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Reaver On Damage: Push " + p.opponent + " " + p.damageDealt + " space for damage dealt.");
             p.UniversalMove(false, Direction.Backward, p.damageDealt, p.damageDealt);
         }
 
         public override void EndOfBeat(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Reaver at End of Beat: Advance 1 or 2 spaces");
             p.UniversalMove(true, Direction.Forward, 1, 2);
         }
 
@@ -238,6 +264,8 @@ namespace BattleCON
 
         public override void AfterActivating(Player p)
         {
+            if (p.g.isMainGame)
+                p.g.writeToConsole(p + "'s Unleashed After Activating: Retreat 1 or 2 spaces");
             p.UniversalMove(true, Direction.Backward, 1, 2);
         }
 

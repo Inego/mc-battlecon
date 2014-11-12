@@ -54,6 +54,42 @@ namespace BattleCON
         public Card CooldownStyle1;
         public Card CooldownStyle2;
 
+        
+
+        public GameState g;
+
+        public Character c;
+
+        public bool isHuman;
+
+
+        public Player(Character c, int position, GameState gs, bool first, bool isHuman)
+        {
+            this.g = gs;
+            this.first = first;
+            this.isHuman = isHuman;
+
+            health = 20;
+            this.c = c;
+            c.init(this);
+            this.position = position;
+            this.hasHit = false;
+
+            this.nextBeatPowerModifier = 0;
+
+            // Six standard bases
+            bases.Add(new Burst());
+            bases.Add(new Drive());
+            bases.Add(new Strike());
+            bases.Add(new Shot());
+
+            CooldownBase1 = new Dash();
+            CooldownBase2 = new Grasp();
+
+            resetBeat();
+        }
+
+
         public void resetBeat()
         {
 
@@ -84,36 +120,6 @@ namespace BattleCON
 
             antedTokens = 0;
 
-        }
-
-        public GameState g;
-
-        public Character c;
-
-
-        public Player(Character c, int position, GameState gs, bool first)
-        {
-            this.g = gs;
-            this.first = first;
-
-            health = 20;
-            this.c = c;
-            c.init(this);
-            this.position = position;
-            this.hasHit = false;
-
-            this.nextBeatPowerModifier = 0;
-
-            // Six standard bases
-            bases.Add(new Burst());
-            bases.Add(new Drive());
-            bases.Add(new Strike());
-            bases.Add(new Shot());
-
-            CooldownBase1 = new Dash();
-            CooldownBase2 = new Grasp();
-
-            resetBeat();
         }
 
         public MovementResult Advance(int i)
@@ -221,7 +227,18 @@ namespace BattleCON
                 if (moves.Count == 1)
                     moveNumber = 0;
                 else
-                    moveNumber = this.g.rnd.Next(moves.Count);
+                {
+                    if (g.isMainGame && isHuman)
+                    {
+                        g.selectionHeader = "Select " + (self ? "your" : "opponent") + " movement:";
+                        for (int j = 0; j < moves.Count; j++)
+                            g.selectionItems.Add(movementText(moves[j], self));
+                        g.getUserChoice();
+                        moveNumber = g.selectionResult;
+                    }
+                    else
+                        moveNumber = this.g.rnd.Next(moves.Count);
+                }
 
                 int movement = moves[moveNumber];
 
@@ -243,6 +260,16 @@ namespace BattleCON
             return MovementResult.noMovement;
 
 
+        }
+
+        private string movementText(int p, bool self)
+        {
+            if (p == 0)
+                return "Don't move";
+            if (p > 0)
+                return (self ? "Advance " : "Pull ") + p;
+            else
+                return (self ? "Retreat " : "Push ") + (-p);
         }
 
 
@@ -294,12 +321,34 @@ namespace BattleCON
         {
             int i;
 
-            i = g.rnd.Next(styles.Count);
+            // Select style
+
+            if (g.isMainGame && isHuman)
+            {
+                g.selectionHeader = "Select attacking style:";
+                for (int j = 0; j < styles.Count; j++)
+                    g.selectionItems.Add(styles[j].name);
+                g.getUserChoice();
+                i = g.selectionResult;
+            }
+            else
+                i = g.rnd.Next(styles.Count);
 
             attackStyle = styles[i];
             styles.RemoveAt(i);
 
-            i = g.rnd.Next(bases.Count);
+            // Select base
+
+            if (g.isMainGame && isHuman)
+            {
+                g.selectionHeader = "Select attacking base:";
+                for (int j = 0; j < bases.Count; j++)
+                    g.selectionItems.Add(bases[j].name);
+                g.getUserChoice();
+                i = g.selectionResult;
+            }
+            else
+                i = g.rnd.Next(bases.Count);
 
             attackBase = bases[i];
             bases.RemoveAt(i);
@@ -317,7 +366,18 @@ namespace BattleCON
                 return false;
             }
 
-            int toAnte = g.rnd.Next(availableTokens + 1);
+            int toAnte;
+
+            if (g.isMainGame && isHuman)
+            {
+                g.selectionHeader = "Make you ante:";
+                for (int j = 0; j < availableTokens + 1; j++)
+                    g.selectionItems.Add(j == 0 ? "Ante nothing" : "Ante " + j + " tokens");
+                g.getUserChoice();
+                toAnte = g.selectionResult;
+            }
+            else
+                toAnte = g.rnd.Next(availableTokens + 1);
 
             if (toAnte > 0)
             {
