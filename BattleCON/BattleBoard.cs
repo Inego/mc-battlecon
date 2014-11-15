@@ -81,6 +81,8 @@ namespace BattleCON
     {
         public Card c;
 
+        public bool highlightable;
+
         private static int screenCardWidth = 250;
         private static int screenCardHeight = 280;
 
@@ -88,9 +90,10 @@ namespace BattleCON
         private static Brush powerBrush    = new SolidBrush(Color.FromArgb(150, Color.Red));
         private static Brush priorityBrush = new SolidBrush(Color.FromArgb(150, Color.Orange));
 
-        public CardOnScreen(int x1, int y1, int width, int height, Card c) : base(x1, y1, width, height)
+        public CardOnScreen(int x1, int y1, int width, int height, Card c, bool highlightable) : base(x1, y1, width, height)
         {
             this.c = c;
+            this.highlightable = highlightable;
         }
 
         static int stripeOffset = 30;
@@ -117,6 +120,10 @@ namespace BattleCON
 
             Graphics g = bb.drawingGraphics2;
 
+
+            if (highlightable)
+                g.DrawRectangle(Pens.Green, x1 - 2, y1 - 2, width + 4, height + 4);
+
             g.FillRectangle(alphaWhite, x, y, screenCardWidth, screenCardHeight);
             
             g.DrawString(c.name, regionCaptionFont, Brushes.Black, x + 5, y + 5);
@@ -132,7 +139,6 @@ namespace BattleCON
 
             Rectangle descRect = new Rectangle(x + 5, y + descYBegin, screenCardWidth - 10, screenCardHeight - descYBegin - 5);
 
-            //g.FillRectangle(Brushes.Wheat, descRect);
 
             TextRenderer.DrawText(g, c.getDescription(), SystemFonts.SmallCaptionFont, descRect, Color.Black, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
             
@@ -239,7 +245,7 @@ namespace BattleCON
         
         public int mouseX = -1;
         public int mouseY = -1;
-        private SomethingOnScreen currentRegion = null;
+        public SomethingOnScreen currentRegion = null;
 
 
         private void DrawPlayer(Player p, int y)
@@ -258,19 +264,23 @@ namespace BattleCON
 
             drawingGraphics.DrawString("Tokens " + p.availableTokens.ToString() + '/' + p.usedTokens.ToString(), SystemFonts.CaptionFont, Brushes.Black, 5, y + 55);
 
+            bool highlightToSelect = (p == p.g.selectionPlayer && p.g.sss == SpecialSelectionStyle.Styles);
+
             for (int i = 1; i <= p.styles.Count; i++)
-                drawCard(p.styles[i - 1], 100 + (i - 1) * (cardWidth + cardSpacing), y + 10, CardBorderStyle.available);
+                drawCard(p.styles[i - 1], 100 + (i - 1) * (cardWidth + cardSpacing), y + 10, CardBorderStyle.available, highlightToSelect);
+
+            highlightToSelect = (p == p.g.selectionPlayer && p.g.sss == SpecialSelectionStyle.Bases);
 
             for (int i = 1; i <= p.bases.Count; i++)
-                drawCard(p.bases[i - 1], 100 + (i - 1) * (cardWidth + cardSpacing), y + 40, CardBorderStyle.available);
+                drawCard(p.bases[i - 1], 100 + (i - 1) * (cardWidth + cardSpacing), y + 40, CardBorderStyle.available, highlightToSelect);
 
             // Cooldown 2
-            drawCard(p.CooldownStyle2, cooldownOffset, y + 80, CardBorderStyle.cooldown);
-            drawCard(p.CooldownBase2, cooldownOffset, y + 100, CardBorderStyle.cooldown);
+            drawCard(p.CooldownStyle2, cooldownOffset, y + 80, CardBorderStyle.cooldown, false);
+            drawCard(p.CooldownBase2, cooldownOffset, y + 100, CardBorderStyle.cooldown, false);
 
             // Cooldown 1
-            drawCard(p.CooldownStyle1, cooldownOffset + cardSpacing + cardWidth, y + 80, CardBorderStyle.cooldown);
-            drawCard(p.CooldownBase1, cooldownOffset + cardSpacing + cardWidth, y + 100, CardBorderStyle.cooldown);
+            drawCard(p.CooldownStyle1, cooldownOffset + cardSpacing + cardWidth, y + 80, CardBorderStyle.cooldown, false);
+            drawCard(p.CooldownBase1, cooldownOffset + cardSpacing + cardWidth, y + 100, CardBorderStyle.cooldown, false);
 
         }
 
@@ -282,7 +292,7 @@ namespace BattleCON
             player2
         }
 
-        private void drawCard(Card card, int x, int y, CardBorderStyle cbs)
+        private void drawCard(Card card, int x, int y, CardBorderStyle cbs, bool highlightToSelect)
         {
 
             if (card == null)
@@ -311,10 +321,14 @@ namespace BattleCON
                     break;
 
             }
+
+            if (highlightToSelect)
+                drawingGraphics.FillRectangle(Brushes.PaleGreen, x, y, cardWidth, cardHeight);
+
             drawingGraphics.DrawRectangle(p, x, y, cardWidth, cardHeight);
             drawingGraphics.DrawString(card.name, SystemFonts.CaptionFont, b, x + 5, y);
 
-            regionsOnScreen.Add(new CardOnScreen(x, y, cardWidth, cardHeight, card));
+            regionsOnScreen.Add(new CardOnScreen(x, y, cardWidth, cardHeight, card, highlightToSelect));
 
         }
 
@@ -351,8 +365,8 @@ namespace BattleCON
         private void DrawPlayerAttackPair(Player player, int y)
         {
             CardBorderStyle cbs = player.first ? CardBorderStyle.player1 : CardBorderStyle.player2;
-            drawCard(player.attackStyle, 200, y, cbs);
-            drawCard(player.attackBase, 200 + cardSpacing + cardWidth, y, cbs);
+            drawCard(player.attackStyle, 200, y, cbs, false);
+            drawCard(player.attackBase, 200 + cardSpacing + cardWidth, y, cbs, false);
         }
 
 
@@ -422,7 +436,6 @@ namespace BattleCON
 
             if (currentRegion != null)
                 currentRegion.highlight(this);
-                //drawingGraphics2.FillRectangle(Brushes.White, mouseX, mouseY, 100, 200);
 
             Refresh();
         }

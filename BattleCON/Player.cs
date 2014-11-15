@@ -112,7 +112,7 @@ namespace BattleCON
             powerModifier = nextBeatPowerModifier;
 
             if (g.isMainGame && nextBeatPowerModifier > 0)
-                g.writeToConsole(this + " has " + powerModifier + "next beat.");
+                g.writeToConsole(this + " has " + powerModifier + " power next beat.");
 
             nextBeatPowerModifier = 0;
 
@@ -323,9 +323,13 @@ namespace BattleCON
 
             // Select style
 
+            // Supposedly here are always > 1 cards to choose from
+
             if (g.isMainGame && isHuman)
             {
                 g.selectionHeader = "Select attacking style:";
+                g.selectionPlayer = this;
+                g.sss = SpecialSelectionStyle.Styles;
                 for (int j = 0; j < styles.Count; j++)
                     g.selectionItems.Add(styles[j].name);
                 g.getUserChoice();
@@ -342,6 +346,7 @@ namespace BattleCON
             if (g.isMainGame && isHuman)
             {
                 g.selectionHeader = "Select attacking base:";
+                g.sss = SpecialSelectionStyle.Bases;
                 for (int j = 0; j < bases.Count; j++)
                     g.selectionItems.Add(bases[j].name);
                 g.getUserChoice();
@@ -370,7 +375,7 @@ namespace BattleCON
 
             if (g.isMainGame && isHuman)
             {
-                g.selectionHeader = "Make you ante:";
+                g.selectionHeader = "Make your ante:";
                 for (int j = 0; j < availableTokens + 1; j++)
                     g.selectionItems.Add(j == 0 ? "Ante nothing" : "Ante " + j + " tokens");
                 g.getUserChoice();
@@ -417,7 +422,21 @@ namespace BattleCON
             if (bases.Count == 1)
                 selected = 0;
             else
-                selected = g.rnd.Next(bases.Count);
+            {
+
+                if (g.isMainGame && isHuman)
+                {
+                    g.selectionHeader = "CLASH - select another base:";
+                    g.sss = SpecialSelectionStyle.Bases;
+                    for (int j = 0; j < bases.Count; j++)
+                        g.selectionItems.Add(bases[j].name);
+                    g.getUserChoice();
+                    selected = g.selectionResult;
+                }
+                else
+                    selected = g.rnd.Next(bases.Count);
+                
+            }
 
             attackBase = bases[selected];
             bases.RemoveAt(selected);
@@ -533,14 +552,14 @@ namespace BattleCON
                             if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this)))
                             {
                                 
-                                if (g.isMainGame && opponent.stunGuard > 0 && attackBase.ignoresStunGuard(this))
+                                if (g.isMainGame && active && opponent.stunGuard > 0 && attackBase.ignoresStunGuard(this))
                                     g.writeToConsole(this + "'s " + attackBase + " ignores " + opponent + "'s Stun Guard of " + opponent.stunGuard + ".");
 
                                 opponent.isStunned = true;
                             }
                             else
                             {
-                                if (g.isMainGame)
+                                if (g.isMainGame && active)
                                 {
                                     if (opponent.stunImmunity)
                                         g.writeToConsole(opponent + " has Stun Immunity.");

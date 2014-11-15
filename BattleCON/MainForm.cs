@@ -39,7 +39,8 @@ namespace BattleCON
 
             if (currentGame == null)
             {
-                currentGame = new GameState(Character.shekhtur, Character.eligor, backgroundWorker1, _waitHandle);
+                //currentGame = new GameState(Character.shekhtur, Character.eligor, backgroundWorker1, _waitHandle);
+                currentGame = new GameState(Character.eligor, Character.shekhtur, backgroundWorker1, _waitHandle);
                 battleBoard.gs = currentGame;
                 backgroundWorker1.RunWorkerAsync();
             }
@@ -77,6 +78,9 @@ namespace BattleCON
             userChoiceListLabel.Text = "";
 
             userInteractionType = UserInteractionTypes.None;
+
+            currentGame.sss = SpecialSelectionStyle.None;
+
             _waitHandle.Set();
         }
 
@@ -139,6 +143,36 @@ namespace BattleCON
         {
             if (userChoiceListBox.SelectedIndex >= 0)
                 startButton.PerformClick();
+        }
+
+        private void battleBoard_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (battleBoard.currentRegion != null)
+            {
+                CardOnScreen card = battleBoard.currentRegion as CardOnScreen;
+
+                if (card != null && card.highlightable)
+                {
+                    // Look for the corresponding item in the list and select it
+                    for (int i = 0; i < userChoiceListBox.Items.Count; i++)
+                    {
+                        if (userChoiceListBox.Items[i].ToString() == card.c.name)
+                        {
+                            userChoiceListBox.SelectedIndex = i;
+                            startButton.PerformClick();
+                            break;
+                        }
+                    }
+                }
+            }
+                
+
+        }
+
+        private void MainForm_Shown(object sender, EventArgs e)
+        {
+            // save 1 click
+            startButton.PerformClick();
         }
         
     }

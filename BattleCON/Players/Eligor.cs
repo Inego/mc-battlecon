@@ -187,7 +187,22 @@ namespace BattleCON
 
                 if (newPos.Count > 1)
                 {
-                    int selected = p.g.rnd.Next(newPos.Count);
+                    int selected;
+                    if (p.g.isMainGame && p.isHuman)
+                    {
+                        p.g.selectionHeader = "Select Retribution movement:";
+                        int newposj;
+                        for (int j = 0; j < newPos.Count; j++)
+                        {
+                            newposj = newPos[j];
+                            p.g.selectionItems.Add(newposj == -1 ? "Don't move" : (newposj == p.opponent.position - 1 ? "Move to the left side of opponent" : "Move to the right side of opponent"));
+                        }
+                        p.g.getUserChoice();
+                        selected = p.g.selectionResult;
+                    }
+                    else
+                        selected = p.g.rnd.Next(newPos.Count);
+
                     if (selected > 0)
                         p.position = newPos[selected];
                 }
@@ -215,7 +230,21 @@ namespace BattleCON
             int maxNumber = Math.Min(p.availableTokens, p.opponent.GetPossibleAdvance());
             if (maxNumber > 0)
             {
-                int number = p.g.rnd.Next(maxNumber + 1);
+
+                int number;
+
+                if (p.g.isMainGame && p.isHuman)
+                {
+                    p.g.selectionHeader = "Spend tokens to pull the opponent:";
+                    for (int j = 0; j <= maxNumber; j++)
+                    {
+                        p.g.selectionItems.Add(j == 0 ? "None" : "Spend " + 1 + " tokens to pull " + j + " space");
+                    }
+                    p.g.getUserChoice();
+                    number = p.g.selectionResult;
+                }
+                else number = p.g.rnd.Next(maxNumber + 1);
+
                 if (number > 0)
                 {
                     p.opponent.Advance(number);

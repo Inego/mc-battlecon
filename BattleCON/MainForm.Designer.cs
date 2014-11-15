@@ -95,6 +95,7 @@
             this.battleBoard.Name = "battleBoard";
             this.battleBoard.Size = new System.Drawing.Size(700, 688);
             this.battleBoard.TabIndex = 4;
+            this.battleBoard.MouseClick += new System.Windows.Forms.MouseEventHandler(this.battleBoard_MouseClick);
             this.battleBoard.MouseMove += new System.Windows.Forms.MouseEventHandler(this.battleBoard_MouseMove);
             // 
             // MainForm
@@ -110,6 +111,7 @@
             this.Controls.Add(this.battleBoard);
             this.Name = "MainForm";
             this.Text = "BattleCON Monte Carlo Engine";
+            this.Shown += new System.EventHandler(this.MainForm_Shown);
             this.ResumeLayout(false);
             this.PerformLayout();
 

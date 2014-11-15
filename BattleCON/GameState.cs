@@ -7,6 +7,13 @@ using System.ComponentModel;
 
 namespace BattleCON
 {
+
+    public enum SpecialSelectionStyle
+    {
+        None,
+        Styles,
+        Bases
+    }
     
     public class GameState
     {
@@ -23,7 +30,7 @@ namespace BattleCON
 
         public int beat;
 
-        //public Random rnd = new Random(9);
+        //public Random rnd = new Random(2);
         public Random rnd = new Random();
 
 
@@ -31,6 +38,9 @@ namespace BattleCON
         public string selectionHeader;
         public List<string> selectionItems = new List<string>();
         public int selectionResult;
+        public SpecialSelectionStyle sss;
+        public Player selectionPlayer;
+        
 
 
         public GameState(Character c1, Character c2,  BackgroundWorker bw, EventWaitHandle waitHandle)
@@ -100,9 +110,12 @@ namespace BattleCON
             {
                 writeToConsole(p1 + " " + p1.health);
                 writeToConsole(p2 + " " + p2.health);
+
+                if (!(p1.isHuman || p2.isHuman))
+                    flushConsole();
             }
 
-            flushConsole();
+            
 
             // Select random style
 
@@ -170,20 +183,23 @@ namespace BattleCON
                 {
                     activePlayer.attack(true);
 
-                    if (!reactivePlayer.isDead && !reactivePlayer.isStunned)
-                    {
-                        reactivePlayer.attack(false);
-                    }
-                    else {
-                        if (isMainGame)
-                            writeToConsole(reactivePlayer + " is stunned and can't respond.");
-                    }
+                    
                 }
                 else
                 {
                     if (isMainGame)
                         writeToConsole(activePlayer + " cannot attack since (s)he is stunned!");
 
+                }
+
+                if (!reactivePlayer.isDead && !reactivePlayer.isStunned)
+                {
+                    reactivePlayer.attack(false);
+                }
+                else
+                {
+                    if (isMainGame && reactivePlayer.isStunned)
+                        writeToConsole(reactivePlayer + " is stunned and can't respond.");
                 }
 
 
@@ -220,6 +236,11 @@ namespace BattleCON
                     break;
 
                 anteingPlayer = anteingPlayer.opponent;
+
+                // Short way for a special case
+                if (anteingPlayer.availableTokens == 0)
+                    break;
+
                 previous = current;
 
             }
