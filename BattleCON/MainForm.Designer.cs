@@ -40,18 +40,18 @@
             // gameLogListBox
             // 
             this.gameLogListBox.FormattingEnabled = true;
-            this.gameLogListBox.Location = new System.Drawing.Point(718, 350);
+            this.gameLogListBox.Location = new System.Drawing.Point(718, 22);
             this.gameLogListBox.Name = "gameLogListBox";
-            this.gameLogListBox.Size = new System.Drawing.Size(392, 355);
+            this.gameLogListBox.Size = new System.Drawing.Size(392, 303);
             this.gameLogListBox.TabIndex = 1;
             // 
             // startButton
             // 
-            this.startButton.Location = new System.Drawing.Point(718, 12);
+            this.startButton.Location = new System.Drawing.Point(721, 345);
             this.startButton.Name = "startButton";
             this.startButton.Size = new System.Drawing.Size(75, 23);
             this.startButton.TabIndex = 2;
-            this.startButton.Text = "Start";
+            this.startButton.Text = "Next";
             this.startButton.UseVisualStyleBackColor = true;
             this.startButton.Click += new System.EventHandler(this.startButton_Click);
             // 
@@ -64,9 +64,9 @@
             // userChoiceListBox
             // 
             this.userChoiceListBox.FormattingEnabled = true;
-            this.userChoiceListBox.Location = new System.Drawing.Point(718, 55);
+            this.userChoiceListBox.Location = new System.Drawing.Point(721, 388);
             this.userChoiceListBox.Name = "userChoiceListBox";
-            this.userChoiceListBox.Size = new System.Drawing.Size(392, 277);
+            this.userChoiceListBox.Size = new System.Drawing.Size(392, 316);
             this.userChoiceListBox.TabIndex = 5;
             this.userChoiceListBox.Click += new System.EventHandler(this.userChoiceListBox_Click);
             // 
@@ -74,7 +74,7 @@
             // 
             this.userChoiceListLabel.AutoSize = true;
             this.userChoiceListLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.userChoiceListLabel.Location = new System.Drawing.Point(718, 42);
+            this.userChoiceListLabel.Location = new System.Drawing.Point(721, 375);
             this.userChoiceListLabel.Name = "userChoiceListLabel";
             this.userChoiceListLabel.Size = new System.Drawing.Size(114, 13);
             this.userChoiceListLabel.TabIndex = 6;
@@ -83,7 +83,7 @@
             // gameLogListBoxLabel
             // 
             this.gameLogListBoxLabel.AutoSize = true;
-            this.gameLogListBoxLabel.Location = new System.Drawing.Point(718, 335);
+            this.gameLogListBoxLabel.Location = new System.Drawing.Point(718, 7);
             this.gameLogListBoxLabel.Name = "gameLogListBoxLabel";
             this.gameLogListBoxLabel.Size = new System.Drawing.Size(56, 13);
             this.gameLogListBoxLabel.TabIndex = 7;

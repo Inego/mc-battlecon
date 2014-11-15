@@ -6,6 +6,20 @@ using System.Threading.Tasks;
 
 namespace BattleCON
 {
+
+    public class AttackingPair
+    {
+        public int styleNumber;
+        public int baseNumber;
+
+        public AttackingPair(int styleCard, int baseCard)
+        {
+            this.styleNumber = styleCard;
+            this.baseNumber = baseCard;
+        }
+    }
+
+
     public class Player
     {
         public int health;
@@ -63,6 +77,61 @@ namespace BattleCON
         public bool isHuman;
 
 
+        public void fillFromPlayer(Player player)
+        {
+            health = player.health;
+            isDead = player.isDead;
+            position = player.position;
+            first = player.first;
+            antedTokens = player.antedTokens;
+            availableTokens = player.availableTokens;
+            usedTokens = player.usedTokens;
+            stunGuard = player.stunGuard;
+            stunImmunity = player.stunImmunity;
+            isStunned = player.isStunned;
+            canHit = player.canHit;
+            ignoresAppliedMovement = player.ignoresAppliedMovement;
+            hasHit = player.hasHit;
+            wasHit = player.wasHit;
+            hitOpponentLastBeat = player.hitOpponentLastBeat;
+            soakedDamage = player.soakedDamage;
+            damageDealt = player.damageDealt;
+            damageTaken = player.damageTaken;
+            soak = player.soak;
+            powerModifier = player.powerModifier;
+            priorityModifier = player.priorityModifier;
+            nextBeatPowerModifier = player.nextBeatPowerModifier;
+            
+            bases.Clear();
+            foreach (Card z in player.bases)
+                bases.Add(z);
+
+            styles.Clear();
+            foreach (Card z in player.styles)
+                styles.Add(z);
+
+            clashPool.Clear();
+            foreach (Card z in player.clashPool)
+                clashPool.Add(z);
+
+            attackStyle = player.attackStyle;
+            attackBase = player.attackBase;
+            CooldownBase1 = player.CooldownBase1;
+            CooldownBase2 = player.CooldownBase2;
+            CooldownStyle1 = player.CooldownStyle1;
+            CooldownStyle2 = player.CooldownStyle2;
+
+        }
+
+        
+        // For cloning
+        public Player(Character c, GameState gs)
+        {
+            this.g = gs;
+            this.c = c;
+        }
+
+
         public Player(Character c, int position, GameState gs, bool first, bool isHuman)
         {
             this.g = gs;
@@ -117,8 +186,6 @@ namespace BattleCON
             nextBeatPowerModifier = 0;
 
             priorityModifier = 0;
-
-            antedTokens = 0;
 
         }
 
@@ -319,27 +386,39 @@ namespace BattleCON
 
         internal void selectAttackingPair()
         {
-            int i;
+            int styleNumber;
+            int baseNumber;
+            
 
             // Select style
 
             // Supposedly here are always > 1 cards to choose from
 
-            if (g.isMainGame && isHuman)
+            if (g.isMainGame)
             {
-                g.selectionHeader = "Select attacking style:";
-                g.selectionPlayer = this;
-                g.sss = SpecialSelectionStyle.Styles;
-                for (int j = 0; j < styles.Count; j++)
-                    g.selectionItems.Add(styles[j].name);
-                g.getUserChoice();
-                i = g.selectionResult;
+                if (isHuman)
+                {
+                    g.selectionHeader = "Select attacking style:";
+                    g.selectionPlayer = this;
+                    g.sss = SpecialSelectionStyle.Styles;
+                    for (int j = 0; j < styles.Count; j++)
+                        g.selectionItems.Add(styles[j].name);
+                    g.getUserChoice();
+                    styleNumber = g.selectionResult;
+                }
+                else
+                    {
+                        AttackingPair ap = g.MCTS_attackingPair(this);
+                        styleNumber = ap.styleNumber;
+                        baseNumber = ap.baseNumber;
+                     }
+                
             }
             else
-                i = g.rnd.Next(styles.Count);
+                styleNumber = g.rnd.Next(styles.Count);
 
-            attackStyle = styles[i];
-            styles.RemoveAt(i);
+            attackStyle = styles[styleNumber];
+            styles.RemoveAt(styleNumber);
 
             // Select base
 
@@ -350,13 +429,13 @@ namespace BattleCON
                 for (int j = 0; j < bases.Count; j++)
                     g.selectionItems.Add(bases[j].name);
                 g.getUserChoice();
-                i = g.selectionResult;
+                baseNumber = g.selectionResult;
             }
             else
-                i = g.rnd.Next(bases.Count);
+                baseNumber = g.rnd.Next(bases.Count);
 
-            attackBase = bases[i];
-            bases.RemoveAt(i);
+            attackBase = bases[baseNumber];
+            bases.RemoveAt(baseNumber);
 
             if (g.isMainGame)
                 g.writeToConsole(this + " selected " + attackStyle + ' ' + attackBase);
@@ -632,6 +711,14 @@ namespace BattleCON
                 return "<no character>";
             else
                 return c.name;
+        }
+
+        internal void returnAttackingPair()
+        {
+            styles.Add(attackStyle);
+            bases.Add(attackBase);
+            attackStyle = null;
+            attackBase = null;
         }
     }
 

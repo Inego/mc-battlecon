@@ -8,6 +8,18 @@ using System.ComponentModel;
 namespace BattleCON
 {
 
+    public class MCTS_Node
+    {
+        public int games = 0;
+        public int wins = 0;
+        public MCTS_Node[] children;
+        public MCTS_Node parent = null;
+    }
+
+
+    
+
+
     public enum SpecialSelectionStyle
     {
         None,
@@ -17,6 +29,10 @@ namespace BattleCON
     
     public class GameState
     {
+
+        
+
+
         public bool isMainGame;
         public List<string> consoleBuffer;
         public BackgroundWorker bw;
@@ -41,7 +57,13 @@ namespace BattleCON
         public SpecialSelectionStyle sss;
         public Player selectionPlayer;
         
+        
+        // Monte Carlo Tree Search
 
+        public static int MAX_PLAYOUTS = 10000;
+
+        private MCTS_Node rootNode;
+        
 
         public GameState(Character c1, Character c2,  BackgroundWorker bw, EventWaitHandle waitHandle)
         {
@@ -60,6 +82,25 @@ namespace BattleCON
 
             this.bw = bw;
             this.waitHandle = waitHandle;
+        }
+
+        public void fillFromGameState(GameState g)
+        {
+            p1.fillFromPlayer(g.p1);
+            p2.fillFromPlayer(g.p2);
+            firstToAnte = g.firstToAnte;
+            beat = g.beat;
+            
+        }
+
+        // Cloning
+        public GameState(GameState gameState)
+        {
+            p1 = new Player(gameState.p1.c, this);
+            p2 = new Player(gameState.p2.c, this);
+
+            rnd = gameState.rnd;
+
         }
 
         internal int playout()
@@ -253,6 +294,35 @@ namespace BattleCON
             bw.ReportProgress(1);
             waitHandle.WaitOne();
         }
+
+
+        internal AttackingPair MCTS_attackingPair(Player player)
+        {
+
+            AttackingPair result = null;
+
+            GameState copy = new GameState(this);
+
+            copy.rootNode = new MCTS_Node();
+
+            
+
+            for (int i = 0; i < MAX_PLAYOUTS; i++)
+            {
+                copy.fillFromGameState(this);
+
+                // Remove attacking pair if it has been selected
+                if (p1.attackBase != null)
+                    p1.returnAttackingPair();
+                
+
+            }
+
+            return result;
+            
+        }
+
+        
     }
 
 
