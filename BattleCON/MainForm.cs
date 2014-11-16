@@ -96,6 +96,17 @@ namespace BattleCON
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
 
+            int eventType = e.ProgressPercentage;
+
+            if (eventType == 2)
+            {
+                playoutNumberLabel.Text = currentGame.playoutsDone.ToString();
+                bestWinrateLabel.Text = currentGame.bestWinrate.ToString();
+
+                return;
+            }
+
+
             foreach (string s in currentGame.consoleBuffer)
             {
                 gameLogListBox.Items.Add(s);
@@ -107,7 +118,7 @@ namespace BattleCON
 
             battleBoard.Redraw(true);
 
-            int eventType = e.ProgressPercentage;
+            
 
             if (eventType == 1)
             {
@@ -161,6 +172,7 @@ namespace BattleCON
                         {
                             userChoiceListBox.SelectedIndex = i;
                             startButton.PerformClick();
+                            battleBoard.Redraw(true);
                             break;
                         }
                     }

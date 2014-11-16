@@ -24,6 +24,10 @@
                     backbufferGraphics.Dispose();
                 if (backbufferContext != null)
                     backbufferContext.Dispose();
+                if (boldFont != null)
+                    boldFont.Dispose();
+                if (playerFont != null)
+                    playerFont.Dispose();
             }
             base.Dispose(disposing);
         }

@@ -60,6 +60,10 @@ namespace BattleCON
         public List<Card> styles = new List<Card>(3);
         public List<Card> clashPool = new List<Card>(4);
 
+
+        public int selectedStyle;
+        public int selectedBase;
+
         public Card attackStyle;
         public Card attackBase;
 
@@ -116,6 +120,8 @@ namespace BattleCON
 
             attackStyle = player.attackStyle;
             attackBase = player.attackBase;
+            selectedStyle = player.selectedStyle;
+            selectedBase = player.selectedBase;
             CooldownBase1 = player.CooldownBase1;
             CooldownBase2 = player.CooldownBase2;
             CooldownStyle1 = player.CooldownStyle1;
@@ -417,8 +423,8 @@ namespace BattleCON
             else
                 styleNumber = g.UCTSelect(styles.Count, this);
 
-            attackStyle = styles[styleNumber];
-            styles.RemoveAt(styleNumber);
+            selectedStyle = styleNumber;
+            //styles.RemoveAt(styleNumber);
 
             // Select base
 
@@ -440,11 +446,11 @@ namespace BattleCON
             else
                 baseNumber = g.UCTSelect(bases.Count, this);
 
-            attackBase = bases[baseNumber];
-            bases.RemoveAt(baseNumber);
+            selectedBase = baseNumber;
+            //bases.RemoveAt(baseNumber);
 
-            if (g.isMainGame)
-                g.writeToConsole(this + " selected " + attackStyle + ' ' + attackBase);
+            //if (g.isMainGame)
+            //    g.writeToConsole(this + " selected " + attackStyle + ' ' + attackBase);
         }
 
         internal virtual bool ante()
@@ -458,16 +464,36 @@ namespace BattleCON
 
             int toAnte;
 
-            if (g.isMainGame && isHuman)
+            if (g.isMainGame)
             {
-                g.selectionHeader = "Make your ante:";
-                for (int j = 0; j < availableTokens + 1; j++)
-                    g.selectionItems.Add(j == 0 ? "Ante nothing" : "Ante " + j + " tokens");
-                g.getUserChoice();
-                toAnte = g.selectionResult;
+
+                if (isHuman)
+                {
+                    g.selectionHeader = "Make your ante:";
+                    for (int j = 0; j < availableTokens + 1; j++)
+                        g.selectionItems.Add(j == 0 ? "Ante nothing" : "Ante " + j + " tokens");
+                    g.getUserChoice();
+                    toAnte = g.selectionResult;
+                }
+                else
+                {
+                    toAnte = g.MCTS_ante(this);
+                    // Honesty
+                    
+                    
+                }
             }
             else
+            {
                 toAnte = g.UCTSelect(availableTokens + 1, this);
+
+                if (g.pst == PlayoutStartType.AnteSelection)
+                {
+                    opponent.selectAttackingPair();
+                    g.pst = PlayoutStartType.Normal;
+                }
+                                
+            }
 
             if (toAnte > 0)
             {
@@ -500,7 +526,7 @@ namespace BattleCON
 
         internal void selectNextForClash()
         {
-            clashPool.Add(attackBase);
+            
 
             int selected;
 
@@ -509,22 +535,34 @@ namespace BattleCON
             else
             {
 
-                if (g.isMainGame && isHuman)
+                if (g.isMainGame)
                 {
-                    g.selectionHeader = "CLASH - select another base:";
-                    g.sss = SpecialSelectionStyle.Bases;
-                    for (int j = 0; j < bases.Count; j++)
-                        g.selectionItems.Add(bases[j].name);
-                    g.getUserChoice();
-                    selected = g.selectionResult;
+                    if (isHuman)
+                    {
+                        g.selectionHeader = "CLASH - select another base:";
+                        g.sss = SpecialSelectionStyle.Bases;
+                        for (int j = 0; j < bases.Count; j++)
+                            g.selectionItems.Add(bases[j].name);
+                        g.getUserChoice();
+                        selected = g.selectionResult;
+                    }
+                    else
+                    {
+                        selected = g.MCTS_clash(this);
+                    }
                 }
                 else
+                {
                     selected = g.UCTSelect(bases.Count, this);
+                }
                 
             }
 
-            attackBase = bases[selected];
-            bases.RemoveAt(selected);
+            selectedBase = selected;
+
+            //clashPool.Add(attackBase);
+            //attackBase = bases[selected];
+            //bases.RemoveAt(selected);
         }
 
         internal void recycle()
@@ -725,6 +763,38 @@ namespace BattleCON
             bases.Add(attackBase);
             attackStyle = null;
             attackBase = null;
+        }
+
+        internal void selectNextForClash_MCTS()
+        {
+            selectNextForClash();
+
+            g.pst = PlayoutStartType.Normal;
+
+            
+
+            // Honesty
+
+            // Try to guess his base
+
+            opponent.selectedBase = g.UCTSelect(opponent.bases.Count, opponent);
+            
+        }
+
+        internal void revealAttack()
+        {
+            attackStyle = styles[selectedStyle];
+            styles.RemoveAt(selectedStyle);
+
+            attackBase = bases[selectedBase];
+            bases.RemoveAt(selectedBase);
+        }
+
+        internal void revealClash()
+        {
+            clashPool.Add(attackBase);
+            attackBase = bases[selectedBase];
+            bases.RemoveAt(selectedBase);
         }
     }
 

@@ -35,6 +35,8 @@
             this.userChoiceListLabel = new System.Windows.Forms.Label();
             this.gameLogListBoxLabel = new System.Windows.Forms.Label();
             this.battleBoard = new BattleCON.BattleBoard();
+            this.playoutNumberLabel = new System.Windows.Forms.Label();
+            this.bestWinrateLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // gameLogListBox
@@ -98,11 +100,31 @@
             this.battleBoard.MouseClick += new System.Windows.Forms.MouseEventHandler(this.battleBoard_MouseClick);
             this.battleBoard.MouseMove += new System.Windows.Forms.MouseEventHandler(this.battleBoard_MouseMove);
             // 
+            // playoutNumberLabel
+            // 
+            this.playoutNumberLabel.AutoSize = true;
+            this.playoutNumberLabel.Location = new System.Drawing.Point(802, 338);
+            this.playoutNumberLabel.Name = "playoutNumberLabel";
+            this.playoutNumberLabel.Size = new System.Drawing.Size(35, 13);
+            this.playoutNumberLabel.TabIndex = 8;
+            this.playoutNumberLabel.Text = "label1";
+            // 
+            // bestWinrateLabel
+            // 
+            this.bestWinrateLabel.AutoSize = true;
+            this.bestWinrateLabel.Location = new System.Drawing.Point(802, 355);
+            this.bestWinrateLabel.Name = "bestWinrateLabel";
+            this.bestWinrateLabel.Size = new System.Drawing.Size(35, 13);
+            this.bestWinrateLabel.TabIndex = 9;
+            this.bestWinrateLabel.Text = "label2";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1122, 712);
+            this.Controls.Add(this.bestWinrateLabel);
+            this.Controls.Add(this.playoutNumberLabel);
             this.Controls.Add(this.gameLogListBoxLabel);
             this.Controls.Add(this.userChoiceListLabel);
             this.Controls.Add(this.userChoiceListBox);
@@ -126,6 +148,8 @@
         private System.Windows.Forms.ListBox userChoiceListBox;
         private System.Windows.Forms.Label userChoiceListLabel;
         private System.Windows.Forms.Label gameLogListBoxLabel;
+        private System.Windows.Forms.Label playoutNumberLabel;
+        private System.Windows.Forms.Label bestWinrateLabel;
     }
 }
 

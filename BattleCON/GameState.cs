@@ -15,10 +15,23 @@ namespace BattleCON
         public int wins = 0;
         public MCTS_Node[] children;
         public MCTS_Node parent = null;
+        public double winrate;
+
+        internal double bestWinrate()
+        {
+            if (children != null)
+            {
+                double best = 0;
+                foreach (MCTS_Node child in children)
+                    if (child != null)
+                        if (child.winrate > best)
+                            best = child.winrate;
+                return best;
+            }
+            else
+                return 0;
+        }
     }
-
-
-    
 
 
     public enum SpecialSelectionStyle
@@ -64,18 +77,28 @@ namespace BattleCON
         public int selectionResult;
         public SpecialSelectionStyle sss;
         public Player selectionPlayer;
+
+        // MC updates
+        public double bestWinrate;
+        public int playoutsDone;
         
         
         // Monte Carlo Tree Search
 
-        public static int MAX_PLAYOUTS = 10000;
+        public static int MAX_PLAYOUTS = 100000;
 
         public MCTS_Node rootNode;
         public MCTS_Node currentNode;
 
-        PlayoutStartType pst = PlayoutStartType.Normal;
-        Player playoutStartPlayer = null;
+        public PlayoutStartType pst = PlayoutStartType.Normal;
+        public Player playoutStartPlayer = null;
+        public bool playoutPreviousAnte;
+
         public bool pureRandom;
+        private static double EXPLORATION_WEIGHT = 0.7;
+        
+        
+        
         
         
 
@@ -104,6 +127,8 @@ namespace BattleCON
             p2.fillFromPlayer(g.p2);
             firstToAnte = g.firstToAnte.first ? p1 : p2;
             beat = g.beat;
+
+            playoutPreviousAnte = g.playoutPreviousAnte;
 
             // MCTS
             this.pst = pst;
@@ -185,27 +210,31 @@ namespace BattleCON
             }
             else if (pst == PlayoutStartType.AttackPairSelection)
             {
-                if (p1.attackStyle != null)
-                    p1.returnAttackingPair();
-
                 playoutStartPlayer.selectAttackingPair();
                 playoutStartPlayer.opponent.selectAttackingPair();
 
                 pst = PlayoutStartType.Normal;
 
             }
-            
+           
 
-            
-            antePhase();
+            if (pst != PlayoutStartType.ClashResolution)
+            {
 
-            p1.AnteEffects();
-            p2.AnteEffects();
+                antePhase();
 
-            // Reveal cards
+                p1.AnteEffects();
+                p2.AnteEffects();
 
-            p1.RevealEffects();
-            p2.RevealEffects();
+                p1.revealAttack();
+                p2.revealAttack();
+
+                // Reveal cards
+
+                p1.RevealEffects();
+                p2.RevealEffects();
+
+            }
 
             // Determine a clash
 
@@ -213,6 +242,15 @@ namespace BattleCON
 
             if (isMainGame)
                 writeToConsole("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
+
+
+            if (pst == PlayoutStartType.ClashResolution)
+            {
+                playoutStartPlayer.selectNextForClash_MCTS();
+
+                revealClash();
+            }
+                
 
             while (p1.priority() == p2.priority())
             {
@@ -228,6 +266,8 @@ namespace BattleCON
 
                 p1.selectNextForClash();
                 p2.selectNextForClash();
+
+                revealClash();
 
                 if (isMainGame)
                 {
@@ -257,8 +297,6 @@ namespace BattleCON
                 if (!activePlayer.isStunned)
                 {
                     activePlayer.attack(true);
-
-                    
                 }
                 else
                 {
@@ -295,15 +333,22 @@ namespace BattleCON
             beat++;
         }
 
+        private void revealClash()
+        {
+            p1.revealClash();
+            p2.revealClash();
+        }
+
         private void antePhase()
         {
-            bool previous = true;
+            bool previous = (pst == PlayoutStartType.AnteSelection ? playoutPreviousAnte : true);
 
-            Player anteingPlayer = firstToAnte;
+            Player anteingPlayer = (pst == PlayoutStartType.AnteSelection ? playoutStartPlayer : firstToAnte);
 
 
             while (true)
             {
+                playoutPreviousAnte = previous;
                 bool current = anteingPlayer.ante();
 
                 if (!current && !previous)
@@ -333,8 +378,6 @@ namespace BattleCON
         internal AttackingPair MCTS_attackingPair(Player player)
         {
 
-            AttackingPair result = null;
-
             GameState copy = new GameState(this);
 
             copy.rootNode = new MCTS_Node();
@@ -343,6 +386,13 @@ namespace BattleCON
 
             for (int i = 0; i < MAX_PLAYOUTS; i++)
             {
+                if (i % 1000 == 0)
+                {
+                    playoutsDone = i;
+                    bestWinrate = copy.rootNode.bestWinrate();
+                    bw.ReportProgress(2);
+                }
+
                 copy.fillFromGameState(this, PlayoutStartType.AttackPairSelection, player);
                 
                 Player winner = copy.playout();
@@ -352,9 +402,122 @@ namespace BattleCON
 
             }
 
-            return result;
+            int styleNumber = -1;
+            int baseNumber = -1;
+
+            double best = -1;
+
+            for (int i = 0; i < copy.rootNode.children.Length; i++)
+                if (copy.rootNode.children[i].winrate > best)
+                {
+                    best = copy.rootNode.children[i].winrate;
+                    styleNumber = i;
+                }
+
+            MCTS_Node styleNode = copy.rootNode.children[styleNumber];
+
+            best = -1;
+
+            for (int i = 0; i < styleNode.children.Length; i++)
+                if (styleNode.children[i].winrate > best)
+                {
+                    best = styleNode.children[i].winrate;
+                    baseNumber = i;
+                }
+
+            return new AttackingPair(styleNumber, baseNumber);
+
             
         }
+
+
+        internal int MCTS_ante(Player player)
+        {
+
+            GameState copy = new GameState(this);
+
+            copy.rootNode = new MCTS_Node();
+            copy.rootNode.games = 1; // to not waste the first game
+
+
+            for (int i = 0; i < MAX_PLAYOUTS; i++)
+            {
+                if (i % 1000 == 0)
+                {
+                    playoutsDone = i;
+                    bestWinrate = copy.rootNode.bestWinrate();
+                    bw.ReportProgress(2);
+                }
+
+                copy.fillFromGameState(this, PlayoutStartType.AnteSelection, player);
+
+                Player winner = copy.playout();
+
+                copy.updateStats(winner);
+
+            }
+
+            int styleNumber = -1;
+            
+            double best = -1;
+
+            for (int i = 0; i < copy.rootNode.children.Length; i++)
+                if (copy.rootNode.children[i].winrate > best)
+                {
+                    best = copy.rootNode.children[i].winrate;
+                    styleNumber = i;
+                }
+
+            
+
+            return styleNumber;
+
+
+        }
+
+
+        internal int MCTS_clash(Player player)
+        {
+
+            GameState copy = new GameState(this);
+
+            copy.rootNode = new MCTS_Node();
+            copy.rootNode.games = 1; // to not waste the first game
+
+            for (int i = 0; i < MAX_PLAYOUTS; i++)
+            {
+                if (i % 1000 == 0)
+                {
+                    playoutsDone = i;
+                    bestWinrate = copy.rootNode.bestWinrate();
+                    bw.ReportProgress(2);
+                }
+
+                copy.fillFromGameState(this, PlayoutStartType.ClashResolution, player);
+
+                Player winner = copy.playout();
+
+                copy.updateStats(winner);
+
+            }
+
+            int styleNumber = -1;
+
+            double best = -1;
+
+            for (int i = 0; i < copy.rootNode.children.Length; i++)
+                if (copy.rootNode.children[i].winrate > best)
+                {
+                    best = copy.rootNode.children[i].winrate;
+                    styleNumber = i;
+                }
+
+            return styleNumber;
+
+
+        }
+
+
 
         private void updateStats(Player winner)
         {
@@ -365,6 +528,8 @@ namespace BattleCON
                 n.games++;
                 if (n.player == winner)
                     n.wins++;
+
+                n.winrate = (double)n.wins / n.games; 
 
                 n = n.parent;
             }
@@ -401,7 +566,7 @@ namespace BattleCON
                     else
                     {
                         child = currentNode.children[i];
-                        UCTvalue = child.wins / child.games + Math.Sqrt(Math.Log(currentNode.games) / (5 * child.games));
+                        UCTvalue = (double) child.wins / child.games + EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(currentNode.games) / child.games);
                     }
 
                     if (UCTvalue > bestUCT)
