@@ -310,7 +310,10 @@ namespace BattleCON
                         moveNumber = g.selectionResult;
                     }
                     else
-                        moveNumber = g.UCTSelect(moves.Count, this);
+                        moveNumber = g.UCTSelect(moves.Count, this, true);
+
+                    if (p.g.isMainGame)
+                        p.g.registeredChoices.Add(moveNumber);
                 }
 
                 int movement = moves[moveNumber];
@@ -414,14 +417,19 @@ namespace BattleCON
                 }
                 else
                 {
+                    g.writeToConsole(this + " is selecting the attack pair...");
+
                     AttackingPair ap = g.MCTS_attackingPair(this);
+
+                    g.writeToConsole(this + " has selected the attack pair.");
+
                     styleNumber = ap.styleNumber;
                     baseNumber = ap.baseNumber;
                 }
 
             }
             else
-                styleNumber = g.UCTSelect(styles.Count, this);
+                styleNumber = g.UCTSelect(styles.Count, this, false);
 
             selectedStyle = styleNumber;
             //styles.RemoveAt(styleNumber);
@@ -444,7 +452,7 @@ namespace BattleCON
 
             }
             else
-                baseNumber = g.UCTSelect(bases.Count, this);
+                baseNumber = g.UCTSelect(bases.Count, this, false);
 
             selectedBase = baseNumber;
             //bases.RemoveAt(baseNumber);
@@ -477,6 +485,7 @@ namespace BattleCON
                 }
                 else
                 {
+                    g.writeToConsole(this + " is selecting ante...");
                     toAnte = g.MCTS_ante(this);
                     // Honesty
                     
@@ -485,7 +494,7 @@ namespace BattleCON
             }
             else
             {
-                toAnte = g.UCTSelect(availableTokens + 1, this);
+                toAnte = g.UCTSelect(availableTokens + 1, this, false);
 
                 if (g.pst == PlayoutStartType.AnteSelection)
                 {
@@ -553,7 +562,7 @@ namespace BattleCON
                 }
                 else
                 {
-                    selected = g.UCTSelect(bases.Count, this);
+                    selected = g.UCTSelect(bases.Count, this, false);
                 }
                 
             }
@@ -777,7 +786,7 @@ namespace BattleCON
 
             // Try to guess his base
 
-            opponent.selectedBase = g.UCTSelect(opponent.bases.Count, opponent);
+            opponent.selectedBase = g.UCTSelect(opponent.bases.Count, opponent, false);
             
         }
 

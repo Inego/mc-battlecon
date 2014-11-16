@@ -99,7 +99,10 @@ namespace BattleCON
                         i = p.g.selectionResult;
                     }
                     else
-                        i = p.g.UCTSelect(toSpend.Count, p);
+                        i = p.g.UCTSelect(toSpend.Count, p, true);
+
+                    if (p.g.isMainGame)
+                        p.g.registeredChoices.Add(i);
                         
 
                     tokens = toSpend[i];

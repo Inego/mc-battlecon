@@ -86,6 +86,7 @@ namespace BattleCON
         // Monte Carlo Tree Search
 
         public static int MAX_PLAYOUTS = 100000;
+        public static int PLAYOUT_SCREEN_UPDATE_RATE = 10000;
 
         public MCTS_Node rootNode;
         public MCTS_Node currentNode;
@@ -94,8 +95,13 @@ namespace BattleCON
         public Player playoutStartPlayer = null;
         public bool playoutPreviousAnte;
 
+        public List<int> registeredChoices;
+        public int currentRegisteredChoice;
+
+        public GameState checkPoint;
+
         public bool pureRandom;
-        private static double EXPLORATION_WEIGHT = 0.7;
+        private static double EXPLORATION_WEIGHT = 0.6;
         
         
         
@@ -115,6 +121,11 @@ namespace BattleCON
             p2.opponent = p1;
 
             isMainGame = true;
+
+            registeredChoices = new List<int>();
+
+            checkPoint = new GameState(this);
+
             consoleBuffer = new List<string>();
 
             this.bw = bw;
@@ -129,6 +140,8 @@ namespace BattleCON
             beat = g.beat;
 
             playoutPreviousAnte = g.playoutPreviousAnte;
+
+            registeredChoices = g.registeredChoices;
 
             // MCTS
             this.pst = pst;
@@ -162,6 +175,7 @@ namespace BattleCON
 
                 if (p1.isDead)
                     return p2;
+                
 
                 if (p2.isDead)
                     return p1;
@@ -191,6 +205,7 @@ namespace BattleCON
             consoleBuffer.Add(p);
         }
 
+
         private void nextBeat()
         {
             if (isMainGame)
@@ -205,8 +220,9 @@ namespace BattleCON
             if (pst == PlayoutStartType.Normal)
             {
                 // Select random style
-                p1.selectAttackingPair();
                 p2.selectAttackingPair();
+                p1.selectAttackingPair();
+                
             }
             else if (pst == PlayoutStartType.AttackPairSelection)
             {
@@ -217,70 +233,87 @@ namespace BattleCON
 
             }
            
-
-            if (pst != PlayoutStartType.ClashResolution)
-            {
-
-                antePhase();
-
-                p1.AnteEffects();
-                p2.AnteEffects();
-
-                p1.revealAttack();
-                p2.revealAttack();
-
-                // Reveal cards
-
-                p1.RevealEffects();
-                p2.RevealEffects();
-
-            }
-
-            // Determine a clash
-
             bool normalPlay = true;
 
-            if (isMainGame)
-                writeToConsole("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
-
-
-            if (pst == PlayoutStartType.ClashResolution)
-            {
-                playoutStartPlayer.selectNextForClash_MCTS();
-
-                revealClash();
-            }
-                
-
-            while (p1.priority() == p2.priority())
+            if (pst != PlayoutStartType.BeatResolution)
             {
 
-                if (isMainGame)
-                    writeToConsole("CLASH! (both players " + p1.priority() + ')');
-
-                if (p1.bases.Count == 0 || p2.bases.Count == 0)
+                if (pst != PlayoutStartType.ClashResolution)
                 {
-                    normalPlay = false;
-                    break;
+
+                    antePhase();
+
+                    p1.AnteEffects();
+                    p2.AnteEffects();
+
+                    p1.revealAttack();
+                    p2.revealAttack();
+
+                    // Reveal cards
+
+                    p1.RevealEffects();
+                    p2.RevealEffects();
+
+                    if (isMainGame)
+                        flushConsole();
+
                 }
 
-                p1.selectNextForClash();
-                p2.selectNextForClash();
+                // Determine a clash
 
-                revealClash();
+
 
                 if (isMainGame)
-                {
-                    writeToConsole(p1 + " selected " + p1.attackStyle + ' ' + p1.attackBase);
-                    writeToConsole(p2 + " selected " + p2.attackStyle + ' ' + p2.attackBase);
                     writeToConsole("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
+
+
+                if (pst == PlayoutStartType.ClashResolution)
+                {
+                    playoutStartPlayer.selectNextForClash_MCTS();
+
+                    revealClash();
                 }
 
+
+                while (p1.priority() == p2.priority())
+                {
+
+                    if (isMainGame)
+                        writeToConsole("CLASH! (both players " + p1.priority() + ')');
+
+                    if (p1.bases.Count == 0 || p2.bases.Count == 0)
+                    {
+                        normalPlay = false;
+                        break;
+                    }
+
+                    p2.selectNextForClash();
+                    p1.selectNextForClash();
+                    
+
+                    revealClash();
+
+                    if (isMainGame)
+                    {
+                        writeToConsole(p1 + " selected " + p1.attackStyle + ' ' + p1.attackBase);
+                        writeToConsole(p2 + " selected " + p2.attackStyle + ' ' + p2.attackBase);
+                        writeToConsole("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
+                    }
+
+                }
 
             }
 
             if (normalPlay)
             {
+
+                if (isMainGame)
+                {
+                    checkPoint.fillFromGameState(this, PlayoutStartType.BeatResolution, p1);
+                    registeredChoices.Clear();
+                }
+
+
                 Player activePlayer = p1.priority() > p2.priority() ? p1 : p2;
                 Player reactivePlayer = activePlayer.opponent;
 
@@ -302,7 +335,6 @@ namespace BattleCON
                 {
                     if (isMainGame)
                         writeToConsole(activePlayer + " cannot attack since (s)he is stunned!");
-
                 }
 
                 if (!reactivePlayer.isDead && !reactivePlayer.isStunned)
@@ -314,7 +346,6 @@ namespace BattleCON
                     if (isMainGame && reactivePlayer.isStunned)
                         writeToConsole(reactivePlayer + " is stunned and can't respond.");
                 }
-
 
                 // End of beat
                 firstToAnte = activePlayer;
@@ -382,11 +413,12 @@ namespace BattleCON
 
             copy.rootNode = new MCTS_Node();
             copy.rootNode.games = 1; // to not waste the first game
-            
 
-            for (int i = 0; i < MAX_PLAYOUTS; i++)
+            bw.ReportProgress(3);
+
+            for (int i = 1; i <= MAX_PLAYOUTS; i++)
             {
-                if (i % 1000 == 0)
+                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
                 {
                     playoutsDone = i;
                     bestWinrate = copy.rootNode.bestWinrate();
@@ -398,7 +430,6 @@ namespace BattleCON
                 Player winner = copy.playout();
 
                 copy.updateStats(winner);
-                
 
             }
 
@@ -426,7 +457,6 @@ namespace BattleCON
                 }
 
             return new AttackingPair(styleNumber, baseNumber);
-
             
         }
 
@@ -434,15 +464,17 @@ namespace BattleCON
         internal int MCTS_ante(Player player)
         {
 
+
             GameState copy = new GameState(this);
 
             copy.rootNode = new MCTS_Node();
             copy.rootNode.games = 1; // to not waste the first game
 
+            bw.ReportProgress(3);
 
-            for (int i = 0; i < MAX_PLAYOUTS; i++)
+            for (int i = 1; i <= MAX_PLAYOUTS; i++)
             {
-                if (i % 1000 == 0)
+                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
                 {
                     playoutsDone = i;
                     bestWinrate = copy.rootNode.bestWinrate();
@@ -468,10 +500,7 @@ namespace BattleCON
                     styleNumber = i;
                 }
 
-            
-
             return styleNumber;
-
 
         }
 
@@ -484,9 +513,11 @@ namespace BattleCON
             copy.rootNode = new MCTS_Node();
             copy.rootNode.games = 1; // to not waste the first game
 
-            for (int i = 0; i < MAX_PLAYOUTS; i++)
+            bw.ReportProgress(3);
+
+            for (int i = 1; i <= MAX_PLAYOUTS; i++)
             {
-                if (i % 1000 == 0)
+                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
                 {
                     playoutsDone = i;
                     bestWinrate = copy.rootNode.bestWinrate();
@@ -514,7 +545,6 @@ namespace BattleCON
 
             return styleNumber;
 
-
         }
 
 
@@ -537,8 +567,28 @@ namespace BattleCON
 
 
 
-        internal int UCTSelect(int number, Player p)
+        internal int UCTSelect(int number, Player p, bool beatResolution)
         {
+            if (beatResolution)
+            {
+                if (isMainGame)
+                    return MCTS_beatResolution(number, p);
+
+                if (pst == PlayoutStartType.BeatResolution)
+                {
+                    if (currentRegisteredChoice < registeredChoices.Count)
+                    {
+                        currentRegisteredChoice++;
+                        return registeredChoices[currentRegisteredChoice - 1];
+                    }
+
+                    pst = PlayoutStartType.Normal;
+
+                }
+
+            }
+
+
             if (pureRandom)
                 return rnd.Next(number);
 
@@ -589,6 +639,50 @@ namespace BattleCON
 
             }
 
+        }
+
+        private int MCTS_beatResolution(int number, Player p)
+        {
+
+            GameState copy = new GameState(this);
+
+            copy.rootNode = new MCTS_Node();
+            copy.rootNode.games = 1; // to not waste the first game
+
+            bw.ReportProgress(3);
+
+            for (int i = 1; i <= MAX_PLAYOUTS; i++)
+            {
+                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
+                {
+                    playoutsDone = i;
+                    bestWinrate = copy.rootNode.bestWinrate();
+                    bw.ReportProgress(2);
+                }
+
+                copy.fillFromGameState(checkPoint, PlayoutStartType.BeatResolution, p);
+
+                copy.currentRegisteredChoice = 0;
+
+                Player winner = copy.playout();
+
+                copy.updateStats(winner);
+
+            }
+
+            int choice = -1;
+
+            double best = -1;
+
+            for (int i = 0; i < copy.rootNode.children.Length; i++)
+                if (copy.rootNode.children[i].winrate > best)
+                {
+                    best = copy.rootNode.children[i].winrate;
+                    choice = i;
+                }
+
+            return choice;
+            
         }
     }
 

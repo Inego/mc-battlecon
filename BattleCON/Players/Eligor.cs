@@ -201,7 +201,10 @@ namespace BattleCON
                         selected = p.g.selectionResult;
                     }
                     else
-                        selected = p.g.UCTSelect(newPos.Count, p);
+                        selected = p.g.UCTSelect(newPos.Count, p, true);
+
+                    if (p.g.isMainGame)
+                        p.g.registeredChoices.Add(selected);
 
                     if (selected > 0)
                         p.position = newPos[selected];
@@ -244,12 +247,18 @@ namespace BattleCON
                     number = p.g.selectionResult;
                 }
                 else
-                    number = p.g.UCTSelect(maxNumber + 1, p);
+                    number = p.g.UCTSelect(maxNumber + 1, p, true);
+
+                if (p.g.isMainGame)
+                    p.g.registeredChoices.Add(number);
                     
                 if (number > 0)
                 {
                     p.opponent.Advance(number);
                     p.spendTokens(number);
+
+                    if (p.g.isMainGame)
+                        p.g.writeToConsole(p + " pulled " + p.opponent + " " + number + " spaces for " + number + " tokens.");
                 }
             }
         }
