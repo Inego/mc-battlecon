@@ -304,7 +304,7 @@ namespace BattleCON
                         moveNumber = g.selectionResult;
                     }
                     else
-                        moveNumber = this.g.rnd.Next(moves.Count);
+                        moveNumber = g.UCTSelect(moves.Count, this);
                 }
 
                 int movement = moves[moveNumber];
@@ -386,8 +386,8 @@ namespace BattleCON
 
         internal void selectAttackingPair()
         {
-            int styleNumber;
-            int baseNumber;
+            int styleNumber = -1;
+            int baseNumber = -1;
             
 
             // Select style
@@ -407,32 +407,38 @@ namespace BattleCON
                     styleNumber = g.selectionResult;
                 }
                 else
-                    {
-                        AttackingPair ap = g.MCTS_attackingPair(this);
-                        styleNumber = ap.styleNumber;
-                        baseNumber = ap.baseNumber;
-                     }
-                
+                {
+                    AttackingPair ap = g.MCTS_attackingPair(this);
+                    styleNumber = ap.styleNumber;
+                    baseNumber = ap.baseNumber;
+                }
+
             }
             else
-                styleNumber = g.rnd.Next(styles.Count);
+                styleNumber = g.UCTSelect(styles.Count, this);
 
             attackStyle = styles[styleNumber];
             styles.RemoveAt(styleNumber);
 
             // Select base
 
-            if (g.isMainGame && isHuman)
+            if (g.isMainGame)
             {
-                g.selectionHeader = "Select attacking base:";
-                g.sss = SpecialSelectionStyle.Bases;
-                for (int j = 0; j < bases.Count; j++)
-                    g.selectionItems.Add(bases[j].name);
-                g.getUserChoice();
-                baseNumber = g.selectionResult;
+
+                if (isHuman)
+                {
+                    g.selectionHeader = "Select attacking base:";
+                    g.sss = SpecialSelectionStyle.Bases;
+                    for (int j = 0; j < bases.Count; j++)
+                        g.selectionItems.Add(bases[j].name);
+                    g.getUserChoice();
+                    baseNumber = g.selectionResult;
+                }
+                // else it's AI and it's already selected the base, see above
+
             }
             else
-                baseNumber = g.rnd.Next(bases.Count);
+                baseNumber = g.UCTSelect(bases.Count, this);
 
             attackBase = bases[baseNumber];
             bases.RemoveAt(baseNumber);
@@ -461,7 +467,7 @@ namespace BattleCON
                 toAnte = g.selectionResult;
             }
             else
-                toAnte = g.rnd.Next(availableTokens + 1);
+                toAnte = g.UCTSelect(availableTokens + 1, this);
 
             if (toAnte > 0)
             {
@@ -513,7 +519,7 @@ namespace BattleCON
                     selected = g.selectionResult;
                 }
                 else
-                    selected = g.rnd.Next(bases.Count);
+                    selected = g.UCTSelect(bases.Count, this);
                 
             }
 

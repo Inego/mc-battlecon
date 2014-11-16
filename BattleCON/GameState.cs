@@ -10,6 +10,7 @@ namespace BattleCON
 
     public class MCTS_Node
     {
+        public Player player;
         public int games = 0;
         public int wins = 0;
         public MCTS_Node[] children;
@@ -26,12 +27,19 @@ namespace BattleCON
         Styles,
         Bases
     }
+
+    public enum PlayoutStartType
+    {
+        Normal,
+        AttackPairSelection,
+        AnteSelection,
+        ClashResolution,
+        BeatResolution
+    }
+
     
     public class GameState
     {
-
-        
-
 
         public bool isMainGame;
         public List<string> consoleBuffer;
@@ -62,7 +70,13 @@ namespace BattleCON
 
         public static int MAX_PLAYOUTS = 10000;
 
-        private MCTS_Node rootNode;
+        public MCTS_Node rootNode;
+        public MCTS_Node currentNode;
+
+        PlayoutStartType pst = PlayoutStartType.Normal;
+        Player playoutStartPlayer = null;
+        public bool pureRandom;
+        
         
 
         public GameState(Character c1, Character c2,  BackgroundWorker bw, EventWaitHandle waitHandle)
@@ -84,12 +98,18 @@ namespace BattleCON
             this.waitHandle = waitHandle;
         }
 
-        public void fillFromGameState(GameState g)
+        public void fillFromGameState(GameState g, PlayoutStartType pst, Player playoutStartPlayer)
         {
             p1.fillFromPlayer(g.p1);
             p2.fillFromPlayer(g.p2);
-            firstToAnte = g.firstToAnte;
+            firstToAnte = g.firstToAnte.first ? p1 : p2;
             beat = g.beat;
+
+            // MCTS
+            this.pst = pst;
+            this.playoutStartPlayer = playoutStartPlayer.first ? p1 : p2;
+            currentNode = rootNode;
+            pureRandom = false;
             
         }
 
@@ -99,11 +119,14 @@ namespace BattleCON
             p1 = new Player(gameState.p1.c, this);
             p2 = new Player(gameState.p2.c, this);
 
+            p1.opponent = p2;
+            p2.opponent = p1;
+
             rnd = gameState.rnd;
 
         }
 
-        internal int playout()
+        internal Player playout()
         {
             while (beat <= 15)
             {
@@ -112,24 +135,22 @@ namespace BattleCON
                 
                 this.nextBeat();
 
-                
-
                 if (p1.isDead)
-                    return 2;
+                    return p2;
 
                 if (p2.isDead)
-                    return 1;
+                    return p1;
 
             }
 
             if (p1.health < p2.health)
-                return 2;
+                return p2;
 
             if (p1.health > p2.health)
-                return 1;
+                return p1;
 
             // DRAW!
-            return 0;
+            return null;
 
         }
 
@@ -156,13 +177,26 @@ namespace BattleCON
                     flushConsole();
             }
 
+            if (pst == PlayoutStartType.Normal)
+            {
+                // Select random style
+                p1.selectAttackingPair();
+                p2.selectAttackingPair();
+            }
+            else if (pst == PlayoutStartType.AttackPairSelection)
+            {
+                if (p1.attackStyle != null)
+                    p1.returnAttackingPair();
+
+                playoutStartPlayer.selectAttackingPair();
+                playoutStartPlayer.opponent.selectAttackingPair();
+
+                pst = PlayoutStartType.Normal;
+
+            }
             
 
-            // Select random style
-
-            p1.selectAttackingPair();
-            p2.selectAttackingPair();
-
+            
             antePhase();
 
             p1.AnteEffects();
@@ -304,16 +338,16 @@ namespace BattleCON
             GameState copy = new GameState(this);
 
             copy.rootNode = new MCTS_Node();
-
+            copy.rootNode.games = 1; // to not waste the first game
             
 
             for (int i = 0; i < MAX_PLAYOUTS; i++)
             {
-                copy.fillFromGameState(this);
+                copy.fillFromGameState(this, PlayoutStartType.AttackPairSelection, player);
+                
+                Player winner = copy.playout();
 
-                // Remove attacking pair if it has been selected
-                if (p1.attackBase != null)
-                    p1.returnAttackingPair();
+                copy.updateStats(winner);
                 
 
             }
@@ -322,7 +356,75 @@ namespace BattleCON
             
         }
 
-        
+        private void updateStats(Player winner)
+        {
+            MCTS_Node n = currentNode;
+
+            while (n != null)
+            {
+                n.games++;
+                if (n.player == winner)
+                    n.wins++;
+
+                n = n.parent;
+            }
+        }
+
+
+
+        internal int UCTSelect(int number, Player p)
+        {
+            if (pureRandom)
+                return rnd.Next(number);
+
+            if (currentNode.games == 0)
+            {
+                pureRandom = true;
+                return rnd.Next(number);
+            }
+
+            else
+            {
+                double bestUCT = 0;
+                int result = -1;
+                double UCTvalue = 0;
+                MCTS_Node child;
+
+                if (currentNode.children == null)
+                    currentNode.children = new MCTS_Node[number];
+
+                for (int i = 0; i < number; i++)
+                {
+                    if (currentNode.children[i] == null)
+                        // Always play a random unexplored move first
+                        UCTvalue = 10000 + rnd.Next(1000);
+                    else
+                    {
+                        child = currentNode.children[i];
+                        UCTvalue = child.wins / child.games + Math.Sqrt(Math.Log(currentNode.games) / (5 * child.games));
+                    }
+
+                    if (UCTvalue > bestUCT)
+                    {
+                        result = i;
+                        bestUCT = UCTvalue;
+                    }
+                }
+
+                if (currentNode.children[result] == null)
+                {
+                    currentNode.children[result] = new MCTS_Node();
+                    currentNode.children[result].parent = currentNode;
+                    currentNode.children[result].player = p;
+                }
+
+                currentNode = currentNode.children[result];
+
+                return result;
+
+            }
+
+        }
     }
 
 

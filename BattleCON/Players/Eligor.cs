@@ -201,7 +201,7 @@ namespace BattleCON
                         selected = p.g.selectionResult;
                     }
                     else
-                        selected = p.g.rnd.Next(newPos.Count);
+                        selected = p.g.UCTSelect(newPos.Count, p);
 
                     if (selected > 0)
                         p.position = newPos[selected];
@@ -243,8 +243,9 @@ namespace BattleCON
                     p.g.getUserChoice();
                     number = p.g.selectionResult;
                 }
-                else number = p.g.rnd.Next(maxNumber + 1);
-
+                else
+                    number = p.g.UCTSelect(maxNumber + 1, p);
+                    
                 if (number > 0)
                 {
                     p.opponent.Advance(number);

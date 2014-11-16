@@ -41,6 +41,7 @@ namespace BattleCON
             {
                 //currentGame = new GameState(Character.shekhtur, Character.eligor, backgroundWorker1, _waitHandle);
                 currentGame = new GameState(Character.eligor, Character.shekhtur, backgroundWorker1, _waitHandle);
+                currentGame.pureRandom = true;
                 battleBoard.gs = currentGame;
                 backgroundWorker1.RunWorkerAsync();
             }
