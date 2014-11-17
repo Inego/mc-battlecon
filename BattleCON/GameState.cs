@@ -101,7 +101,7 @@ namespace BattleCON
         public GameState checkPoint;
 
         public bool pureRandom;
-        private static double EXPLORATION_WEIGHT = 0.6;
+        private static double EXPLORATION_WEIGHT = 0.1;
         
         
         
@@ -406,7 +406,7 @@ namespace BattleCON
         }
 
 
-        internal AttackingPair MCTS_attackingPair(Player player)
+        internal MCTS_Node MCTS_playouts(Player player, PlayoutStartType rpst, GameState fillOrigin)
         {
 
             GameState copy = new GameState(this);
@@ -425,7 +425,7 @@ namespace BattleCON
                     bw.ReportProgress(2);
                 }
 
-                copy.fillFromGameState(this, PlayoutStartType.AttackPairSelection, player);
+                copy.fillFromGameState(fillOrigin, rpst, player);
                 
                 Player winner = copy.playout();
 
@@ -433,19 +433,29 @@ namespace BattleCON
 
             }
 
+            return copy.rootNode;
+        }
+
+
+
+        internal AttackingPair MCTS_attackingPair(Player player)
+        {
+
+            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.AttackPairSelection, this);
+
             int styleNumber = -1;
             int baseNumber = -1;
 
             double best = -1;
 
-            for (int i = 0; i < copy.rootNode.children.Length; i++)
-                if (copy.rootNode.children[i].winrate > best)
+            for (int i = 0; i < copyRootNoode.children.Length; i++)
+                if (copyRootNoode.children[i].winrate > best)
                 {
-                    best = copy.rootNode.children[i].winrate;
+                    best = copyRootNoode.children[i].winrate;
                     styleNumber = i;
                 }
 
-            MCTS_Node styleNode = copy.rootNode.children[styleNumber];
+            MCTS_Node styleNode = copyRootNoode.children[styleNumber];
 
             best = -1;
 
@@ -464,39 +474,16 @@ namespace BattleCON
         internal int MCTS_ante(Player player)
         {
 
-
-            GameState copy = new GameState(this);
-
-            copy.rootNode = new MCTS_Node();
-            copy.rootNode.games = 1; // to not waste the first game
-
-            bw.ReportProgress(3);
-
-            for (int i = 1; i <= MAX_PLAYOUTS; i++)
-            {
-                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
-                {
-                    playoutsDone = i;
-                    bestWinrate = copy.rootNode.bestWinrate();
-                    bw.ReportProgress(2);
-                }
-
-                copy.fillFromGameState(this, PlayoutStartType.AnteSelection, player);
-
-                Player winner = copy.playout();
-
-                copy.updateStats(winner);
-
-            }
+            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.AnteSelection, this);
 
             int styleNumber = -1;
             
             double best = -1;
 
-            for (int i = 0; i < copy.rootNode.children.Length; i++)
-                if (copy.rootNode.children[i].winrate > best)
+            for (int i = 0; i < copyRootNoode.children.Length; i++)
+                if (copyRootNoode.children[i].winrate > best)
                 {
-                    best = copy.rootNode.children[i].winrate;
+                    best = copyRootNoode.children[i].winrate;
                     styleNumber = i;
                 }
 
@@ -506,6 +493,27 @@ namespace BattleCON
 
 
         internal int MCTS_clash(Player player)
+        {
+
+            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.ClashResolution, this);
+
+            int styleNumber = -1;
+
+            double best = -1;
+
+            for (int i = 0; i < copyRootNoode.children.Length; i++)
+                if (copyRootNoode.children[i].winrate > best)
+                {
+                    best = copyRootNoode.children[i].winrate;
+                    styleNumber = i;
+                }
+
+            return styleNumber;
+
+        }
+
+
+        private int MCTS_beatResolution(int number, Player p)
         {
 
             GameState copy = new GameState(this);
@@ -524,7 +532,9 @@ namespace BattleCON
                     bw.ReportProgress(2);
                 }
 
-                copy.fillFromGameState(this, PlayoutStartType.ClashResolution, player);
+                copy.fillFromGameState(checkPoint, PlayoutStartType.BeatResolution, p);
+
+                copy.currentRegisteredChoice = 0;
 
                 Player winner = copy.playout();
 
@@ -532,7 +542,7 @@ namespace BattleCON
 
             }
 
-            int styleNumber = -1;
+            int choice = -1;
 
             double best = -1;
 
@@ -540,10 +550,10 @@ namespace BattleCON
                 if (copy.rootNode.children[i].winrate > best)
                 {
                     best = copy.rootNode.children[i].winrate;
-                    styleNumber = i;
+                    choice = i;
                 }
 
-            return styleNumber;
+            return choice;
 
         }
 
@@ -641,49 +651,7 @@ namespace BattleCON
 
         }
 
-        private int MCTS_beatResolution(int number, Player p)
-        {
-
-            GameState copy = new GameState(this);
-
-            copy.rootNode = new MCTS_Node();
-            copy.rootNode.games = 1; // to not waste the first game
-
-            bw.ReportProgress(3);
-
-            for (int i = 1; i <= MAX_PLAYOUTS; i++)
-            {
-                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
-                {
-                    playoutsDone = i;
-                    bestWinrate = copy.rootNode.bestWinrate();
-                    bw.ReportProgress(2);
-                }
-
-                copy.fillFromGameState(checkPoint, PlayoutStartType.BeatResolution, p);
-
-                copy.currentRegisteredChoice = 0;
-
-                Player winner = copy.playout();
-
-                copy.updateStats(winner);
-
-            }
-
-            int choice = -1;
-
-            double best = -1;
-
-            for (int i = 0; i < copy.rootNode.children.Length; i++)
-                if (copy.rootNode.children[i].winrate > best)
-                {
-                    best = copy.rootNode.children[i].winrate;
-                    choice = i;
-                }
-
-            return choice;
-            
-        }
+        
     }
 
 

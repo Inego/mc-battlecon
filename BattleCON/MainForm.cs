@@ -39,8 +39,8 @@ namespace BattleCON
 
             if (currentGame == null)
             {
-                currentGame = new GameState(Character.shekhtur, Character.eligor, backgroundWorker1, _waitHandle);
-                //currentGame = new GameState(Character.eligor, Character.shekhtur, backgroundWorker1, _waitHandle);
+                //currentGame = new GameState(Character.shekhtur, Character.eligor, backgroundWorker1, _waitHandle);
+                currentGame = new GameState(Character.eligor, Character.shekhtur, backgroundWorker1, _waitHandle);
                 currentGame.pureRandom = true;
                 //currentGame.p1.health = 4;
                 battleBoard.gs = currentGame;
