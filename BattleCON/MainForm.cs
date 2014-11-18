@@ -40,7 +40,7 @@ namespace BattleCON
             if (currentGame == null)
             {
                 //currentGame = new GameState(Character.shekhtur, Character.eligor, backgroundWorker1, _waitHandle);
-                currentGame = new GameState(Character.eligor, Character.shekhtur, backgroundWorker1, _waitHandle);
+                currentGame = new GameState(Character.eligor, Character.shekhtur, GameVariant.Core, backgroundWorker1, _waitHandle);
                 currentGame.pureRandom = true;
                 //currentGame.p1.health = 4;
                 battleBoard.gs = currentGame;
@@ -133,8 +133,13 @@ namespace BattleCON
                 }
             }
             else if (eventType == 0)
+
             {
                 userInteractionType = UserInteractionTypes.Wait;
+
+
+                if (!(currentGame.p1.isHuman || currentGame.p2.isHuman))
+                    startButton.PerformClick();
             }
 
             

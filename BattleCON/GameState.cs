@@ -34,6 +34,31 @@ namespace BattleCON
     }
 
 
+    public class DebugNodeComparable : IComparable<DebugNodeComparable>
+    {
+        public double winrate;
+        public int games;
+        public string name;
+
+        public DebugNodeComparable(string name, int games, double winrate)
+        {
+            this.name = name;
+            this.games = games;
+            this.winrate = winrate;
+        }
+
+        public int CompareTo(DebugNodeComparable other)
+        {
+            return -winrate.CompareTo(other.winrate);
+        }
+
+        public override string ToString()
+        {
+            return name + " " + games + " " + winrate;
+        }
+    }
+
+
     public enum SpecialSelectionStyle
     {
         None,
@@ -50,15 +75,24 @@ namespace BattleCON
         BeatResolution
     }
 
+
+    public enum GameVariant
+    {
+        Core,
+        AnteFinishers
+    }
+
     
     public class GameState
     {
 
         public bool isMainGame;
+
         public List<string> consoleBuffer;
         public BackgroundWorker bw;
         public EventWaitHandle waitHandle;
 
+        GameVariant variant;
 
         public Player p1;
         public Player p2;
@@ -101,18 +135,16 @@ namespace BattleCON
         public GameState checkPoint;
 
         public bool pureRandom;
-        private static double EXPLORATION_WEIGHT = 0.1;
-        
-        
-        
-        
+        private static double EXPLORATION_WEIGHT;
         
 
-        public GameState(Character c1, Character c2,  BackgroundWorker bw, EventWaitHandle waitHandle)
+        public GameState(Character c1, Character c2, GameVariant variant,  BackgroundWorker bw, EventWaitHandle waitHandle)
         {
             beat = 1;
 
-            p1 = new Player(c1, 2, this, true, true);
+            this.variant = variant;
+
+            p1 = new Player(c1, 2, this, true, false);
             p2 = new Player(c2, 6, this, false, false);
 
             firstToAnte = p1;
@@ -156,6 +188,8 @@ namespace BattleCON
         {
             p1 = new Player(gameState.p1.c, this);
             p2 = new Player(gameState.p2.c, this);
+
+            variant = gameState.variant;
 
             p1.opponent = p2;
             p2.opponent = p1;
@@ -416,16 +450,26 @@ namespace BattleCON
 
             bw.ReportProgress(3);
 
+            // EXPLORATION_WEIGHT = 1.5;
+
             for (int i = 1; i <= MAX_PLAYOUTS; i++)
             {
                 if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
                 {
+                    //EXPLORATION_WEIGHT -= 0.1;
+
+                    //EXPLORATION_WEIGHT = (i < MAX_PLAYOUTS / 10 ? 2 : 0.6);
+
+                    EXPLORATION_WEIGHT = 0.8;
+
+
                     playoutsDone = i;
                     bestWinrate = copy.rootNode.bestWinrate();
                     bw.ReportProgress(2);
                 }
 
                 copy.fillFromGameState(fillOrigin, rpst, player);
+                copy.currentRegisteredChoice = 0;
                 
                 Player winner = copy.playout();
 
@@ -446,6 +490,45 @@ namespace BattleCON
             int styleNumber = -1;
             int baseNumber = -1;
 
+            // DEBUG
+
+            MCTS_Node styleNode;
+            MCTS_Node baseNode;
+
+            List<DebugNodeComparable> pairs = new List<DebugNodeComparable>();
+
+            for (int i = 0; i < copyRootNoode.children.Length; i++)
+            {
+                styleNode = copyRootNoode.children[i];
+                if (styleNode.children == null)
+                    continue;
+
+                for (int j = 0; j < styleNode.children.Length; j++)
+                {
+                    baseNode = styleNode.children[j];
+
+                    if (baseNode == null)
+                        continue;
+                    
+                    pairs.Add(new DebugNodeComparable(player.styles[i].name + " " + player.bases[j], baseNode.games, baseNode.winrate));
+
+                }
+
+            }
+
+            pairs.Sort();
+
+            foreach (DebugNodeComparable d in pairs)
+            {
+                writeToConsole(d.ToString());
+
+            }
+            
+
+            // DEBUG
+
+
+
             double best = -1;
 
             for (int i = 0; i < copyRootNoode.children.Length; i++)
@@ -455,7 +538,7 @@ namespace BattleCON
                     styleNumber = i;
                 }
 
-            MCTS_Node styleNode = copyRootNoode.children[styleNumber];
+            styleNode = copyRootNoode.children[styleNumber];
 
             best = -1;
 
@@ -481,11 +564,17 @@ namespace BattleCON
             double best = -1;
 
             for (int i = 0; i < copyRootNoode.children.Length; i++)
+            {
+
+                player.g.writeToConsole("DEBUG Ante " + i + ": " + copyRootNoode.children[i].games + " " + copyRootNoode.children[i].winrate);
+
+
                 if (copyRootNoode.children[i].winrate > best)
                 {
                     best = copyRootNoode.children[i].winrate;
                     styleNumber = i;
                 }
+            }
 
             return styleNumber;
 
@@ -516,40 +605,16 @@ namespace BattleCON
         private int MCTS_beatResolution(int number, Player p)
         {
 
-            GameState copy = new GameState(this);
-
-            copy.rootNode = new MCTS_Node();
-            copy.rootNode.games = 1; // to not waste the first game
-
-            bw.ReportProgress(3);
-
-            for (int i = 1; i <= MAX_PLAYOUTS; i++)
-            {
-                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
-                {
-                    playoutsDone = i;
-                    bestWinrate = copy.rootNode.bestWinrate();
-                    bw.ReportProgress(2);
-                }
-
-                copy.fillFromGameState(checkPoint, PlayoutStartType.BeatResolution, p);
-
-                copy.currentRegisteredChoice = 0;
-
-                Player winner = copy.playout();
-
-                copy.updateStats(winner);
-
-            }
+            MCTS_Node copyRootNoode = MCTS_playouts(p, PlayoutStartType.BeatResolution, checkPoint);
 
             int choice = -1;
 
             double best = -1;
 
-            for (int i = 0; i < copy.rootNode.children.Length; i++)
-                if (copy.rootNode.children[i].winrate > best)
+            for (int i = 0; i < copyRootNoode.children.Length; i++)
+                if (copyRootNoode.children[i].winrate > best)
                 {
-                    best = copy.rootNode.children[i].winrate;
+                    best = copyRootNoode.children[i].winrate;
                     choice = i;
                 }
 

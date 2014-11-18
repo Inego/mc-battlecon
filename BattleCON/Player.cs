@@ -17,7 +17,10 @@ namespace BattleCON
             this.styleNumber = styleCard;
             this.baseNumber = baseCard;
         }
+
     }
+
+    
 
 
     public class Player
@@ -569,9 +572,6 @@ namespace BattleCON
 
             selectedBase = selected;
 
-            //clashPool.Add(attackBase);
-            //attackBase = bases[selected];
-            //bases.RemoveAt(selected);
         }
 
         internal void recycle()
@@ -669,17 +669,23 @@ namespace BattleCON
                             if (g.isMainGame)
                                 g.writeToConsole(this + "'s attack style ignores Soak.");
                         }
+                        
                         damageDealt = power - opponent.soakedDamage;
                         opponent.damageTaken = damageDealt;
 
                         if (damageDealt > 0)
                         {
+
                             if (g.isMainGame)
                                 g.writeToConsole(this + " deals " + damageDealt + " damage to " + opponent + '.');
 
 
                             attackBase.OnDamage(this);
                             attackStyle.OnDamage(this);
+
+
+                            opponent.c.OnDamageTaken(opponent);
+                            c.OnDamage(this);
 
                             if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this)))
                             {
