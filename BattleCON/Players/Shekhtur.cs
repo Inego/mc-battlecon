@@ -8,6 +8,8 @@ namespace BattleCON
         public Shekhtur()
         {
             name = "Shekhtur";
+            finisher1 = new SoulBreaker();
+            finisher2 = new CoffinNails();
 
         }
 
@@ -286,4 +288,39 @@ namespace BattleCON
         
     }
 
+
+    class SoulBreaker : Finisher
+    {
+        public SoulBreaker()
+        {
+            name = "Soul Breaker";
+            lowRange = 1;
+            hiRange = 1;
+            power = 3;
+            priority = 3;
+        }
+
+        internal override string getDescription()
+        {
+            return "On Damage: The opponent is stunned and is not able to declare antes for the rest of the duel (except mandatory antes dictated by his Unique Ability).";
+        }
+
+    }
+
+    class CoffinNails : Finisher
+    {
+        public CoffinNails()
+        {
+            name = "Coffin Nails";
+            lowRange = 1;
+            hiRange = 1;
+            power = 3;
+            priority = 3;
+        }
+
+        internal override string getDescription()
+        {
+            return "The opponent is stunned and loses all Soak and Stun Guard for the rest of the duel.";
+        }
+    }
 }

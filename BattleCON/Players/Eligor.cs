@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using BattleCON.Players;
 
 namespace BattleCON
 {
@@ -10,6 +11,9 @@ namespace BattleCON
         public Eligor()
         {
             name = "Eligor";
+
+            finisher1 = new SheetLightning();
+            finisher2 = new SweetRevenge();
         }
 
         public override void init(Player p)
@@ -295,6 +299,48 @@ namespace BattleCON
         }
         
 
+    }
+
+
+    class SheetLightning : Finisher
+    {
+        public SheetLightning()
+        {
+            name = "Sheet Lightning";
+            lowRange = 3;
+            hiRange = 6;
+            power = 4;
+            priority = 6;
+        }
+
+        internal override string getDescription()
+        {
+            return "On Hit: Advance until you are adjacent to the opponent. The opponent cannot move next beat.";
+        }
+
+        // TODO
+
+    }
+
+    class SweetRevenge : Finisher
+    {
+        public SweetRevenge()
+        {
+            name = "Sweet Revenge";
+            lowRange = 1;
+            hiRange = 2;
+            
+        }
+
+        public override string getPowerText()
+        {
+            return "X";
+        }
+
+        internal override string getDescription()
+        {
+            return "Stun Guard 3\nThe power of this attack is equal to 3 times the printed power of the nearest opponent's attack.\nEligor's life cannot drop below 1 during this beat.";
+        }
     }
 
 }

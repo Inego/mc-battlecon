@@ -40,6 +40,9 @@ namespace BattleCON
     {
         public string name;
 
+        public Finisher finisher1;
+        public Finisher finisher2;
+
         public static Character shekhtur;
         public static Character eligor;
 

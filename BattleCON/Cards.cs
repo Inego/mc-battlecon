@@ -147,6 +147,21 @@
 
     }
 
+
+    public class Finisher : Card
+    {
+        public Finisher()
+        {
+            type = CardType.finisher;
+        }
+
+        internal override string getDescription()
+        {
+            return "A Finisher.";
+        }
+
+    }
+
     
 
 

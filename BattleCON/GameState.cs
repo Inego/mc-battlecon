@@ -144,7 +144,7 @@ namespace BattleCON
 
             this.variant = variant;
 
-            p1 = new Player(c1, 2, this, true, false);
+            p1 = new Player(c1, 2, this, true, true);
             p2 = new Player(c2, 6, this, false, false);
 
             firstToAnte = p1;
