@@ -119,6 +119,8 @@ namespace BattleCON
         
         // Monte Carlo Tree Search
 
+        
+
         public static int MAX_PLAYOUTS = 100000;
         public static int PLAYOUT_SCREEN_UPDATE_RATE = 10000;
 
@@ -277,6 +279,9 @@ namespace BattleCON
 
                     antePhase();
 
+                    if (pst == PlayoutStartType.AnteSelection)
+                        pst = PlayoutStartType.Normal;
+
                     p1.AnteEffects();
                     p2.AnteEffects();
 
@@ -306,6 +311,9 @@ namespace BattleCON
                     playoutStartPlayer.selectNextForClash_MCTS();
 
                     revealClash();
+
+                    pst = PlayoutStartType.Normal;
+
                 }
 
 
@@ -408,7 +416,8 @@ namespace BattleCON
         {
             bool previous = (pst == PlayoutStartType.AnteSelection ? playoutPreviousAnte : true);
 
-            Player anteingPlayer = (pst == PlayoutStartType.AnteSelection ? playoutStartPlayer : firstToAnte);
+            Player localFirstPlayer = (pst == PlayoutStartType.AnteSelection ? playoutStartPlayer : firstToAnte);
+            Player anteingPlayer = localFirstPlayer;
 
 
             while (true)
@@ -418,6 +427,10 @@ namespace BattleCON
 
                 if (!current && !previous)
                     // both passed
+                    break;
+
+                // Short way to reduce meaningless trade in MC playouts
+                if (pst != PlayoutStartType.AnteSelection && anteingPlayer != localFirstPlayer && !isMainGame)
                     break;
 
                 anteingPlayer = anteingPlayer.opponent;
