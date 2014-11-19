@@ -92,7 +92,7 @@ namespace BattleCON
         public BackgroundWorker bw;
         public EventWaitHandle waitHandle;
 
-        GameVariant variant;
+        public GameVariant variant;
 
         public Player p1;
         public Player p2;
@@ -415,18 +415,20 @@ namespace BattleCON
         private void antePhase()
         {
             bool previous = (pst == PlayoutStartType.AnteSelection ? playoutPreviousAnte : true);
+            bool current;
 
             Player localFirstPlayer = (pst == PlayoutStartType.AnteSelection ? playoutStartPlayer : firstToAnte);
             Player anteingPlayer = localFirstPlayer;
 
-
             while (true)
             {
                 playoutPreviousAnte = previous;
-                bool current = anteingPlayer.ante();
+                AnteResult result = anteingPlayer.ante();
 
-                if (!current && !previous)
-                    // both passed
+                current = (result == AnteResult.AntedTokens);
+
+                if (!current && !previous || result == AnteResult.AntedFinisher)
+                    // both passed or someone anted a finisher
                     break;
 
                 // Short way to reduce meaningless trade in MC playouts
@@ -436,7 +438,7 @@ namespace BattleCON
                 anteingPlayer = anteingPlayer.opponent;
 
                 // Short way for a special case
-                if (anteingPlayer.availableTokens == 0)
+                if (anteingPlayer.availableTokens == 0 && !anteingPlayer.canAnteFinisher())
                     break;
 
                 previous = current;

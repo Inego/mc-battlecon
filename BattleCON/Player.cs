@@ -20,6 +20,12 @@ namespace BattleCON
 
     }
 
+    public enum AnteResult
+    {
+        Pass,
+        AntedTokens,
+        AntedFinisher
+    }
     
 
 
@@ -74,6 +80,8 @@ namespace BattleCON
         public Card CooldownBase2;
         public Card CooldownStyle1;
         public Card CooldownStyle2;
+
+        public Finisher finisher;
 
         
 
@@ -130,6 +138,8 @@ namespace BattleCON
             CooldownStyle1 = player.CooldownStyle1;
             CooldownStyle2 = player.CooldownStyle2;
 
+            finisher = player.finisher;
+
         }
 
         
@@ -138,6 +148,8 @@ namespace BattleCON
         {
             this.g = gs;
             this.c = c;
+
+            
         }
 
 
@@ -163,6 +175,8 @@ namespace BattleCON
 
             CooldownBase1 = new Dash();
             CooldownBase2 = new Grasp();
+            
+            this.finisher = c.finisher1;
 
             resetBeat();
         }
@@ -464,13 +478,16 @@ namespace BattleCON
             //    g.writeToConsole(this + " selected " + attackStyle + ' ' + attackBase);
         }
 
-        internal virtual bool ante()
+        internal virtual AnteResult ante()
         {
-            if (availableTokens == 0)
+            bool canAnteFinisherflag = canAnteFinisher();
+
+
+            if (availableTokens == 0 && !canAnteFinisherflag)
             {
                 if (g.isMainGame)
-                    g.writeToConsole(this + " has no tokens.");
-                return false;
+                    g.writeToConsole(this + " has nothing to ante.");
+                return AnteResult.Pass;
             }
 
             int toAnte;
@@ -483,6 +500,8 @@ namespace BattleCON
                     g.selectionHeader = "Make your ante:";
                     for (int j = 0; j < availableTokens + 1; j++)
                         g.selectionItems.Add(j == 0 ? "Ante nothing" : "Ante " + j + " tokens");
+                    if (canAnteFinisherflag)
+                        g.selectionItems.Add(finisher.ToString() + " (Finisher)");
                     g.getUserChoice();
                     toAnte = g.selectionResult;
                 }
@@ -490,14 +509,12 @@ namespace BattleCON
                 {
                     g.writeToConsole(this + " is selecting ante...");
                     toAnte = g.MCTS_ante(this);
-                    // Honesty
-                    
-                    
                 }
             }
             else
             {
-                toAnte = g.UCTSelect(availableTokens + 1, this, false);
+
+                toAnte = g.UCTSelect(availableTokens + (canAnteFinisherflag ? 2 : 1), this, false);
 
                 if (g.pst == PlayoutStartType.AnteSelection)
                 {
@@ -510,20 +527,29 @@ namespace BattleCON
             if (toAnte > 0)
             {
                 if (g.isMainGame)
-                    g.writeToConsole(this + " antes " + toAnte + " tokens.");
+                    g.writeToConsole(this + " antes " + (toAnte == availableTokens + 1 ? finisher.ToString() : (toAnte + " tokens.")));
 
+                if (toAnte == availableTokens + 1)
+                {
+                    // Base and style go back
+                    attackStyle = StyleCard.blank;
+                    attackBase = finisher;
+                    finisher = null;
+                    return AnteResult.AntedFinisher;
+                }
+                
                 antedTokens += toAnte;
                 availableTokens -= toAnte;
                 usedTokens += toAnte;
 
-                return true;
+                return AnteResult.AntedTokens;
 
             }
 
             if (g.isMainGame)
                 g.writeToConsole(this + " antes no tokens.");
 
-            return false;
+            return AnteResult.Pass;
         }
 
         internal void AnteEffects()
@@ -576,6 +602,12 @@ namespace BattleCON
 
         internal void recycle()
         {
+            if (attackBase is Finisher)
+            {
+                return;
+            }
+
+
             // 1. Return from clash pool
 
             if (clashPool.Count > 0)
@@ -798,6 +830,10 @@ namespace BattleCON
 
         internal void revealAttack()
         {
+
+            if (attackBase is Finisher)
+                return;
+
             attackStyle = styles[selectedStyle];
             styles.RemoveAt(selectedStyle);
 
@@ -810,6 +846,11 @@ namespace BattleCON
             clashPool.Add(attackBase);
             attackBase = bases[selectedBase];
             bases.RemoveAt(selectedBase);
+        }
+
+        internal bool canAnteFinisher()
+        {
+            return (g.variant == GameVariant.AnteFinishers && health <= 7 && finisher != null);
         }
     }
 

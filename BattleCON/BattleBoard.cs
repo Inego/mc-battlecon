@@ -282,6 +282,10 @@ namespace BattleCON
             drawCard(p.CooldownStyle1, cooldownOffset + cardSpacing + cardWidth, y + 80, CardBorderStyle.cooldown, false);
             drawCard(p.CooldownBase1, cooldownOffset + cardSpacing + cardWidth, y + 100, CardBorderStyle.cooldown, false);
 
+            // Finisher
+            drawCard(p.finisher, cooldownOffset + 200, y + 80, CardBorderStyle.finisher, false);
+
+
         }
 
         public enum CardBorderStyle
@@ -289,7 +293,8 @@ namespace BattleCON
             available,
             cooldown,
             player1,
-            player2
+            player2,
+            finisher
         }
 
         private void drawCard(Card card, int x, int y, CardBorderStyle cbs, bool highlightToSelect)
@@ -318,6 +323,10 @@ namespace BattleCON
                 case CardBorderStyle.player2:
                     p = Pens.Red;
                     b = Brushes.Red;
+                    break;
+                case CardBorderStyle.finisher:
+                    p = Pens.Blue;
+                    b = Brushes.Orange;
                     break;
 
             }

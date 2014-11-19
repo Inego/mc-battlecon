@@ -135,6 +135,10 @@
 
     public class StyleCard : Card
     {
+
+        public static StyleCard blank = new StyleCard();
+
+
         public StyleCard()
         {
             type = CardType.styleCard;
