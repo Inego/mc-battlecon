@@ -173,7 +173,7 @@ namespace BattleCON
 
         public override void BeforeActivating(Player p)
         {
-            if (p.wasHit)
+            if (p.wasHit && p.canMove)
             {
                 if (p.g.isMainGame)
                     p.g.writeToConsole("Since " + p + " was hit, he may move directly to any space adjacent to an opponent who hit him.");
@@ -244,7 +244,7 @@ namespace BattleCON
                     p.g.selectionHeader = "Spend tokens to pull the opponent:";
                     for (int j = 0; j <= maxNumber; j++)
                     {
-                        p.g.selectionItems.Add(j == 0 ? "None" : "Spend " + 1 + " tokens to pull " + j + " space");
+                        p.g.selectionItems.Add(j == 0 ? "None" : "Spend " + j + " tokens to pull " + j + " space");
                     }
                     p.g.getUserChoice();
                     number = p.g.selectionResult;
@@ -317,7 +317,34 @@ namespace BattleCON
             return "On Hit: Advance until you are adjacent to the opponent. The opponent cannot move next beat.";
         }
 
-        // TODO
+        public override void OnHit(Player p)
+        {
+
+            p.opponent.canMoveNextBeat = false;
+
+            if (p.canMove)
+            {
+                bool moved = false;
+                if (p.position < p.opponent.position - 1)
+                {
+                    p.position = p.opponent.position - 1;
+                    moved = true;
+                }
+                else if (p.position > p.opponent.position + 1)
+                {
+                    p.position = p.opponent.position + 1;
+                    moved = true;
+                }
+                if (p.g.isMainGame && moved)
+                {
+                    p.g.writeToConsole(p + "'s Sheet Lightning on hit: advanced until adjacent.");
+                }
+            }
+
+        }
+
+
+
 
     }
 

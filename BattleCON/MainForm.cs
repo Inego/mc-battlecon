@@ -39,10 +39,11 @@ namespace BattleCON
 
             if (currentGame == null)
             {
-                //currentGame = new GameState(Character.shekhtur, Character.eligor, backgroundWorker1, _waitHandle);
+                //currentGame = new GameState(Character.shekhtur, Character.eligor, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
                 currentGame = new GameState(Character.eligor, Character.shekhtur, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
                 currentGame.pureRandom = true;
-                currentGame.p1.health = 4;
+                //currentGame.p1.health = 7;
+                //currentGame.p2.health = 7;
                 battleBoard.gs = currentGame;
                 backgroundWorker1.RunWorkerAsync();
             }

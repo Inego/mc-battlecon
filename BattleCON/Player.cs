@@ -41,6 +41,7 @@ namespace BattleCON
         public int antedTokens;
         public int availableTokens;
         public int usedTokens;
+        public bool cannotAnte = false;
 
         public int stunGuard;
         public bool stunImmunity;
@@ -52,6 +53,9 @@ namespace BattleCON
         public bool hasHit;
         public bool wasHit;
         public bool hitOpponentLastBeat;
+
+        public bool canMoveNextBeat = true;
+        public bool canMove;
 
         public int soakedDamage;
 
@@ -90,6 +94,7 @@ namespace BattleCON
         public Character c;
 
         public bool isHuman;
+        
 
 
         public void fillFromPlayer(Player player)
@@ -101,6 +106,7 @@ namespace BattleCON
             antedTokens = player.antedTokens;
             availableTokens = player.availableTokens;
             usedTokens = player.usedTokens;
+            cannotAnte = player.cannotAnte;
             stunGuard = player.stunGuard;
             stunImmunity = player.stunImmunity;
             isStunned = player.isStunned;
@@ -116,6 +122,9 @@ namespace BattleCON
             powerModifier = player.powerModifier;
             priorityModifier = player.priorityModifier;
             nextBeatPowerModifier = player.nextBeatPowerModifier;
+
+            canMoveNextBeat = player.canMoveNextBeat;
+            canMove = player.canMove;
             
             bases.Clear();
             foreach (Card z in player.bases)
@@ -208,6 +217,13 @@ namespace BattleCON
 
             nextBeatPowerModifier = 0;
 
+            canMove = canMoveNextBeat;
+
+            if (g.isMainGame && !canMove)
+                g.writeToConsole(this + " cannot move next beat.");
+
+            canMoveNextBeat = true;
+
             priorityModifier = 0;
 
         }
@@ -266,21 +282,17 @@ namespace BattleCON
         }
 
 
-        internal void MoveOpponent(int i)
-        {
-            opponent.MoveSelf(i);
-        }
-
-
         internal MovementResult UniversalMove(bool self, Direction direction, int loRange, int hiRange)
         {
             if (!self && opponent.ignoresAppliedMovement)
                 return MovementResult.noMovement;
 
+            Player p = self ? this : opponent;
+
+            if (!p.canMove)
+                return MovementResult.noMovement;
 
             List<int> moves = new List<int>(13);
-
-            Player p = self ? this : opponent;
 
             int maxMoves;
             int maxPossible;
@@ -472,14 +484,19 @@ namespace BattleCON
                 baseNumber = g.UCTSelect(bases.Count, this, false);
 
             selectedBase = baseNumber;
-            //bases.RemoveAt(baseNumber);
 
-            //if (g.isMainGame)
-            //    g.writeToConsole(this + " selected " + attackStyle + ' ' + attackBase);
         }
 
         internal virtual AnteResult ante()
         {
+            if (cannotAnte)
+            {
+                if (g.isMainGame)
+                    g.writeToConsole(this + " cannot ante.");
+                return AnteResult.Pass;
+            }
+
+
             bool canAnteFinisherflag = canAnteFinisher();
 
 
@@ -604,6 +621,8 @@ namespace BattleCON
         {
             if (attackBase is Finisher)
             {
+                attackBase = null;
+                attackStyle = null;
                 return;
             }
 
@@ -747,6 +766,7 @@ namespace BattleCON
                                 if (g.isMainGame)
                                     g.writeToConsole(opponent + " IS DEAD!");
                                 opponent.isDead = true;
+                                return;
                             }
                         }
 

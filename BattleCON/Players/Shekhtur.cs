@@ -305,6 +305,13 @@ namespace BattleCON
             return "On Damage: The opponent is stunned and is not able to declare antes for the rest of the duel (except mandatory antes dictated by his Unique Ability).";
         }
 
+        public override void OnDamage(Player p)
+        {
+            p.opponent.isStunned = true;
+            p.opponent.cannotAnte = true;
+
+        }
+
     }
 
     class CoffinNails : Finisher

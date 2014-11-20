@@ -372,6 +372,8 @@ namespace BattleCON
                 if (!activePlayer.isStunned)
                 {
                     activePlayer.attack(true);
+                    if (reactivePlayer.isDead)
+                        return;
                 }
                 else
                 {
@@ -382,6 +384,8 @@ namespace BattleCON
                 if (!reactivePlayer.isDead && !reactivePlayer.isStunned)
                 {
                     reactivePlayer.attack(false);
+                    if (activePlayer.isDead)
+                        return;
                 }
                 else
                 {
@@ -431,9 +435,10 @@ namespace BattleCON
                     // both passed or someone anted a finisher
                     break;
 
-                // Short way to reduce meaningless trade in MC playouts
-                if (pst != PlayoutStartType.AnteSelection && anteingPlayer != localFirstPlayer && !isMainGame)
-                    break;
+                // Doesn't work well with anteing finishers
+                //// Short way to reduce meaningless trade in MC playouts
+                //if (pst != PlayoutStartType.AnteSelection && anteingPlayer != localFirstPlayer && !isMainGame)
+                //    break;
 
                 anteingPlayer = anteingPlayer.opponent;
 
