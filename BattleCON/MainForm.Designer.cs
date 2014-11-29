@@ -34,22 +34,22 @@
             this.userChoiceListBox = new System.Windows.Forms.ListBox();
             this.userChoiceListLabel = new System.Windows.Forms.Label();
             this.gameLogListBoxLabel = new System.Windows.Forms.Label();
-            this.battleBoard = new BattleCON.BattleBoard();
             this.playoutNumberLabel = new System.Windows.Forms.Label();
             this.bestWinrateLabel = new System.Windows.Forms.Label();
+            this.battleBoard = new BattleCON.BattleBoard();
             this.SuspendLayout();
             // 
             // gameLogListBox
             // 
             this.gameLogListBox.FormattingEnabled = true;
-            this.gameLogListBox.Location = new System.Drawing.Point(718, 22);
+            this.gameLogListBox.Location = new System.Drawing.Point(780, 22);
             this.gameLogListBox.Name = "gameLogListBox";
             this.gameLogListBox.Size = new System.Drawing.Size(392, 303);
             this.gameLogListBox.TabIndex = 1;
             // 
             // startButton
             // 
-            this.startButton.Location = new System.Drawing.Point(721, 345);
+            this.startButton.Location = new System.Drawing.Point(783, 345);
             this.startButton.Name = "startButton";
             this.startButton.Size = new System.Drawing.Size(75, 23);
             this.startButton.TabIndex = 2;
@@ -66,7 +66,7 @@
             // userChoiceListBox
             // 
             this.userChoiceListBox.FormattingEnabled = true;
-            this.userChoiceListBox.Location = new System.Drawing.Point(721, 388);
+            this.userChoiceListBox.Location = new System.Drawing.Point(783, 388);
             this.userChoiceListBox.Name = "userChoiceListBox";
             this.userChoiceListBox.Size = new System.Drawing.Size(392, 316);
             this.userChoiceListBox.TabIndex = 5;
@@ -76,7 +76,7 @@
             // 
             this.userChoiceListLabel.AutoSize = true;
             this.userChoiceListLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.userChoiceListLabel.Location = new System.Drawing.Point(721, 375);
+            this.userChoiceListLabel.Location = new System.Drawing.Point(783, 375);
             this.userChoiceListLabel.Name = "userChoiceListLabel";
             this.userChoiceListLabel.Size = new System.Drawing.Size(114, 13);
             this.userChoiceListLabel.TabIndex = 6;
@@ -85,25 +85,16 @@
             // gameLogListBoxLabel
             // 
             this.gameLogListBoxLabel.AutoSize = true;
-            this.gameLogListBoxLabel.Location = new System.Drawing.Point(718, 7);
+            this.gameLogListBoxLabel.Location = new System.Drawing.Point(780, 7);
             this.gameLogListBoxLabel.Name = "gameLogListBoxLabel";
             this.gameLogListBoxLabel.Size = new System.Drawing.Size(56, 13);
             this.gameLogListBoxLabel.TabIndex = 7;
             this.gameLogListBoxLabel.Text = "Game Log";
             // 
-            // battleBoard
-            // 
-            this.battleBoard.Location = new System.Drawing.Point(12, 12);
-            this.battleBoard.Name = "battleBoard";
-            this.battleBoard.Size = new System.Drawing.Size(700, 688);
-            this.battleBoard.TabIndex = 4;
-            this.battleBoard.MouseClick += new System.Windows.Forms.MouseEventHandler(this.battleBoard_MouseClick);
-            this.battleBoard.MouseMove += new System.Windows.Forms.MouseEventHandler(this.battleBoard_MouseMove);
-            // 
             // playoutNumberLabel
             // 
             this.playoutNumberLabel.AutoSize = true;
-            this.playoutNumberLabel.Location = new System.Drawing.Point(802, 338);
+            this.playoutNumberLabel.Location = new System.Drawing.Point(864, 338);
             this.playoutNumberLabel.Name = "playoutNumberLabel";
             this.playoutNumberLabel.Size = new System.Drawing.Size(35, 13);
             this.playoutNumberLabel.TabIndex = 8;
@@ -112,17 +103,26 @@
             // bestWinrateLabel
             // 
             this.bestWinrateLabel.AutoSize = true;
-            this.bestWinrateLabel.Location = new System.Drawing.Point(802, 355);
+            this.bestWinrateLabel.Location = new System.Drawing.Point(864, 355);
             this.bestWinrateLabel.Name = "bestWinrateLabel";
             this.bestWinrateLabel.Size = new System.Drawing.Size(35, 13);
             this.bestWinrateLabel.TabIndex = 9;
             this.bestWinrateLabel.Text = "label2";
             // 
+            // battleBoard
+            // 
+            this.battleBoard.Location = new System.Drawing.Point(12, 12);
+            this.battleBoard.Name = "battleBoard";
+            this.battleBoard.Size = new System.Drawing.Size(745, 688);
+            this.battleBoard.TabIndex = 4;
+            this.battleBoard.MouseClick += new System.Windows.Forms.MouseEventHandler(this.battleBoard_MouseClick);
+            this.battleBoard.MouseMove += new System.Windows.Forms.MouseEventHandler(this.battleBoard_MouseMove);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1122, 712);
+            this.ClientSize = new System.Drawing.Size(1184, 712);
             this.Controls.Add(this.bestWinrateLabel);
             this.Controls.Add(this.playoutNumberLabel);
             this.Controls.Add(this.gameLogListBoxLabel);

@@ -227,7 +227,7 @@ namespace BattleCON
         }
 
         public const int playerPanelHeight = 150;
-        public const int playerPanelWidth = 550;
+        public const int playerPanelWidth = 700;
         public const int panelsVertSpacing = 10;
         public const int battleSpaceHeight = 150;
         public const int battlespaceVertOffset = 40;
@@ -282,9 +282,20 @@ namespace BattleCON
             drawCard(p.CooldownStyle1, cooldownOffset + cardSpacing + cardWidth, y + 80, CardBorderStyle.cooldown, false);
             drawCard(p.CooldownBase1, cooldownOffset + cardSpacing + cardWidth, y + 100, CardBorderStyle.cooldown, false);
 
-            // Finisher
-            drawCard(p.finisher, cooldownOffset + 200, y + 80, CardBorderStyle.finisher, false);
 
+            // Finisher
+            if (p.finisher == null)
+            {
+
+                highlightToSelect = (p == p.g.selectionPlayer && p.g.sss == SpecialSelectionStyle.Finishers);
+
+                drawCard(p.c.finisher1, cooldownOffset + 200, y + 80, CardBorderStyle.finisher, highlightToSelect);
+                drawCard(p.c.finisher2, cooldownOffset + 200, y + 100, CardBorderStyle.finisher, highlightToSelect);
+            }
+            else
+            {
+                drawCard(p.finisher, cooldownOffset + 200, y + 80, CardBorderStyle.finisher, false);
+            }
 
         }
 
@@ -331,13 +342,23 @@ namespace BattleCON
 
             }
 
-            if (highlightToSelect)
-                drawingGraphics.FillRectangle(Brushes.PaleGreen, x, y, cardWidth, cardHeight);
+            int _cardWidth = card is Finisher ? cardWidth * 4 / 3 : cardWidth;
 
-            drawingGraphics.DrawRectangle(p, x, y, cardWidth, cardHeight);
+            bool _highlightToSelect = highlightToSelect;
+
+            if (_highlightToSelect)
+            {
+                if (!gs.selectionItems.Contains(card.name))
+                    _highlightToSelect = false;
+            }
+
+            if (_highlightToSelect)
+                drawingGraphics.FillRectangle(Brushes.PaleGreen, x, y, _cardWidth, cardHeight);
+
+            drawingGraphics.DrawRectangle(p, x, y, _cardWidth, cardHeight);
             drawingGraphics.DrawString(card.name, SystemFonts.CaptionFont, b, x + 5, y);
 
-            regionsOnScreen.Add(new CardOnScreen(x, y, cardWidth, cardHeight, card, highlightToSelect));
+            regionsOnScreen.Add(new CardOnScreen(x, y, _cardWidth, cardHeight, card, _highlightToSelect));
 
         }
 

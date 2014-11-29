@@ -8,6 +8,38 @@ using System.ComponentModel;
 namespace BattleCON
 {
 
+    public class MCTS_BestSequenceExtractor
+    {
+        private MCTS_Node node;
+
+        public MCTS_BestSequenceExtractor(MCTS_Node initialNode)
+        {
+            node = initialNode;
+        }
+
+        public int getNextBest()
+        {
+
+            int result = -1;
+
+            double best = -1;
+
+            for (int i = 0; i < node.children.Length; i++)
+            {
+                if (node.children[i].winrate > best)
+                {
+                    best = node.children[i].winrate;
+                    result = i;
+                }
+            }
+
+            node = node.children[result];
+            return result;
+
+        }
+    }
+
+
     public class MCTS_Node
     {
         public Player player;
@@ -63,8 +95,10 @@ namespace BattleCON
     {
         None,
         Styles,
-        Bases
+        Bases,
+        Finishers
     }
+
 
     public enum PlayoutStartType
     {
@@ -86,7 +120,6 @@ namespace BattleCON
     
     public class GameState
     {
-
         public bool isMainGame;
 
         public List<string> consoleBuffer;
@@ -757,23 +790,18 @@ namespace BattleCON
         }
 
 
-
-        internal int MCTS_selectSetupCards(Player player)
+        internal void MCTS_selectSetupCards(Player player)
         {
             MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this);
 
-            int finisher = -1;
+            MCTS_BestSequenceExtractor e = new MCTS_BestSequenceExtractor(copyRootNoode);
 
-            double best = -1;
-
-            for (int i = 0; i < copyRootNoode.children.Length; i++)
-                if (copyRootNoode.children[i].winrate > best)
-                {
-                    best = copyRootNoode.children[i].winrate;
-                    finisher = i;
-                }
-
-            return finisher;
+            player.selectedCooldownStyle2 = e.getNextBest();
+            player.selectedCooldownStyle1 = e.getNextBest();
+            player.selectedCooldownBase2 = e.getNextBest();
+            player.selectedCooldownBase1 = e.getNextBest();
+            player.selectedFinisher = e.getNextBest();
+            
         }
     }
 

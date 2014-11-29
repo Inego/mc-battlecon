@@ -178,7 +178,7 @@ namespace BattleCON
 
             health = 20;
             this.c = c;
-            c.init(this);
+            
             this.position = position;
             this.hasHit = false;
 
@@ -191,6 +191,8 @@ namespace BattleCON
             bases.Add(new Drive());
             bases.Add(new Strike());
             bases.Add(new Shot());
+
+            c.init(this);
 
             //CooldownBase1 = new Dash();
             //CooldownBase2 = new Grasp();
@@ -593,7 +595,6 @@ namespace BattleCON
 
         internal void selectNextForClash()
         {
-            
 
             int selected;
 
@@ -874,8 +875,6 @@ namespace BattleCON
 
             g.pst = PlayoutStartType.Normal;
 
-            
-
             // Honesty
 
             // Try to guess his base
@@ -919,12 +918,14 @@ namespace BattleCON
                     g.selectionPlayer = this;
 
                     g.selectionHeader = "Select the 2nd Discard Style:";
+                    g.sss = SpecialSelectionStyle.Styles;
                     for (int i = 0; i < 5; i++)
                         g.selectionItems.Add(styles[i].ToString());
                     g.getUserChoice();
                     selectedCooldownStyle2 = g.selectionResult;
 
                     g.selectionHeader = "Select the 1st Discard Style:";
+                    g.sss = SpecialSelectionStyle.Styles;
                     for (int i = 0; i < 5; i++)
                         if (i != selectedCooldownStyle2)
                             g.selectionItems.Add(styles[i].ToString());
@@ -933,12 +934,14 @@ namespace BattleCON
 
 
                     g.selectionHeader = "Select the 2nd Discard Base:";
+                    g.sss = SpecialSelectionStyle.Bases;
                     for (int i = 0; i < 7; i++)
                         g.selectionItems.Add(bases[i].ToString());
                     g.getUserChoice();
                     selectedCooldownBase2 = g.selectionResult;
 
                     g.selectionHeader = "Select the 1st Discard Base:";
+                    g.sss = SpecialSelectionStyle.Bases;
                     for (int i = 0; i < 7; i++)
                         if (i != selectedCooldownBase2)
                             g.selectionItems.Add(bases[i].ToString());
@@ -947,6 +950,9 @@ namespace BattleCON
 
 
                     g.selectionHeader = "Select the Finisher:";
+
+                    g.sss = SpecialSelectionStyle.Finishers;
+
                     g.selectionItems.Add(c.finisher1.ToString());
                     g.selectionItems.Add(c.finisher2.ToString());
                     g.getUserChoice();
