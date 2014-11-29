@@ -8,6 +8,15 @@ using System.ComponentModel;
 namespace BattleCON
 {
 
+    public class GameSettings
+    {
+        public Character c1;
+        public Character c2;
+
+        public int kPlayouts;
+    }
+
+
     public class MCTS_BestSequenceExtractor
     {
         private MCTS_Node node;

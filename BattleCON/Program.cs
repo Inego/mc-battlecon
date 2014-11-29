@@ -46,11 +46,15 @@ namespace BattleCON
         public static Character shekhtur;
         public static Character eligor;
 
+        public static Character[] characters;
+
         static Character()
         {
 
             shekhtur = new Shekhtur();
             eligor = new Eligor();
+
+            characters = new Character[] {eligor, shekhtur};
 
         }
 
@@ -71,6 +75,20 @@ namespace BattleCON
 
         virtual public void AnteEffects(Player p)
         {
+        }
+
+        public override string ToString()
+        {
+            return name;
+        }
+
+        internal static Character getByName(string p)
+        {
+            foreach (Character ch in Character.characters)
+                if (ch.name == p)
+                    return ch;
+
+            return null;
         }
     }
 
