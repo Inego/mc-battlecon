@@ -88,9 +88,13 @@ namespace BattleCON
         public Card CooldownStyle1;
         public Card CooldownStyle2;
 
+        public int selectedCooldownBase1;
+        public int selectedCooldownBase2;
+        public int selectedCooldownStyle1;
+        public int selectedCooldownStyle2;
+
         public int selectedFinisher;
         public Finisher finisher;
-
         
 
         public GameState g;
@@ -98,10 +102,6 @@ namespace BattleCON
         public Character c;
 
         public bool isHuman;
-        
-        
-        
-        
 
 
         public void fillFromPlayer(Player player)
@@ -167,8 +167,6 @@ namespace BattleCON
         {
             this.g = gs;
             this.c = c;
-
-            
         }
 
 
@@ -187,13 +185,15 @@ namespace BattleCON
             this.nextBeatPowerModifier = 0;
 
             // Six standard bases
+            bases.Add(new Dash());
+            bases.Add(new Grasp());
             bases.Add(new Burst());
             bases.Add(new Drive());
             bases.Add(new Strike());
             bases.Add(new Shot());
 
-            CooldownBase1 = new Dash();
-            CooldownBase2 = new Grasp();
+            //CooldownBase1 = new Dash();
+            //CooldownBase2 = new Grasp();
             
             //this.finisher = c.finisher2;
 
@@ -909,15 +909,44 @@ namespace BattleCON
             return (g.variant == GameVariant.AnteFinishers && health <= 7 && finisher != null);
         }
 
-        internal void selectFinisher()
+        internal void makeSetupDecisions()
         {
 
             if (g.isMainGame)
             {
                 if (isHuman)
                 {
-                    g.selectionHeader = "Select the Finisher:";
                     g.selectionPlayer = this;
+
+                    g.selectionHeader = "Select the 2nd Discard Style:";
+                    for (int i = 0; i < 5; i++)
+                        g.selectionItems.Add(styles[i].ToString());
+                    g.getUserChoice();
+                    selectedCooldownStyle2 = g.selectionResult;
+
+                    g.selectionHeader = "Select the 1st Discard Style:";
+                    for (int i = 0; i < 5; i++)
+                        if (i != selectedCooldownStyle2)
+                            g.selectionItems.Add(styles[i].ToString());
+                    g.getUserChoice();
+                    selectedCooldownStyle1 = g.selectionResult;
+
+
+                    g.selectionHeader = "Select the 2nd Discard Base:";
+                    for (int i = 0; i < 7; i++)
+                        g.selectionItems.Add(bases[i].ToString());
+                    g.getUserChoice();
+                    selectedCooldownBase2 = g.selectionResult;
+
+                    g.selectionHeader = "Select the 1st Discard Base:";
+                    for (int i = 0; i < 7; i++)
+                        if (i != selectedCooldownBase2)
+                            g.selectionItems.Add(bases[i].ToString());
+                    g.getUserChoice();
+                    selectedCooldownBase1 = g.selectionResult;
+
+
+                    g.selectionHeader = "Select the Finisher:";
                     g.selectionItems.Add(c.finisher1.ToString());
                     g.selectionItems.Add(c.finisher2.ToString());
                     g.getUserChoice();
@@ -925,23 +954,40 @@ namespace BattleCON
                 }
                 else
                 {
-                    g.writeToConsole(this + " is selecting the Finisher...");
-
-                    selectedFinisher = g.MCTS_finisher(this);
-
-                    g.writeToConsole(this + " has selected the Finisher.");
+                    g.writeToConsole(this + " is selecting setup cards...");
+                    g.MCTS_selectSetupCards(this);
+                    g.writeToConsole(this + " has selected setup cards.");
 
                 }
 
             }
             else
+            {
+                selectedCooldownStyle2 = g.UCTSelect(5, this, false);
+                selectedCooldownStyle1 = g.UCTSelect(4, this, false);
+                selectedCooldownBase2 = g.UCTSelect(7, this, false);
+                selectedCooldownBase1 = g.UCTSelect(6, this, false);
                 selectedFinisher = g.UCTSelect(2, this, false);
+            }
 
             
         }
 
-        internal void applySelectedFinisher()
+        internal void applySetupDecisions()
         {
+            CooldownStyle2 = styles[selectedCooldownStyle2];
+            styles.RemoveAt(selectedCooldownStyle2);
+            
+            CooldownStyle1 = styles[selectedCooldownStyle1];
+            styles.RemoveAt(selectedCooldownStyle1);
+
+            CooldownBase2 = bases[selectedCooldownBase2];
+            bases.RemoveAt(selectedCooldownBase2);
+
+            CooldownBase1 = bases[selectedCooldownBase1];
+            bases.RemoveAt(selectedCooldownBase1);
+
+
             finisher = selectedFinisher == 0 ? c.finisher1 : c.finisher2;
         }
     }

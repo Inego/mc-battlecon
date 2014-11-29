@@ -22,12 +22,14 @@ namespace BattleCON
         {
             p.bases.Add(new Brand());
 
+            p.styles.Add(new Combination());
+            p.styles.Add(new Unleashed());
             p.styles.Add(new Reaver());
             p.styles.Add(new Jugular());
             p.styles.Add(new Spiral());
 
-            p.CooldownStyle1 = new Unleashed();
-            p.CooldownStyle2 = new Combination();
+            //p.CooldownStyle1 = new Unleashed();
+            //p.CooldownStyle2 = new Combination();
 
             p.availableTokens = 3;
             p.usedTokens = 2;

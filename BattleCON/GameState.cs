@@ -69,7 +69,7 @@ namespace BattleCON
     public enum PlayoutStartType
     {
         Normal,
-        FinisherSelection,
+        SetupCardsSelection,
         AttackPairSelection,
         AnteSelection,
         ClashResolution,
@@ -205,12 +205,22 @@ namespace BattleCON
         {
             if (isMainGame)
             {
-                // Select Finisher
-                p2.selectFinisher();
-                p1.selectFinisher();
+                // Select Setup Cards
+                p2.makeSetupDecisions();
+                p1.makeSetupDecisions();
 
-                p1.applySelectedFinisher();
-                p2.applySelectedFinisher();
+                p1.applySetupDecisions();
+                p2.applySetupDecisions();
+            }
+            else if (pst == PlayoutStartType.SetupCardsSelection)
+            {
+                playoutStartPlayer.makeSetupDecisions();
+                playoutStartPlayer.opponent.makeSetupDecisions();
+
+                p1.applySetupDecisions();
+                p2.applySetupDecisions();
+
+                pst = PlayoutStartType.Normal;
             }
 
 
@@ -267,7 +277,6 @@ namespace BattleCON
 
             if (pst == PlayoutStartType.Normal)
             {
-                // Select random style
                 p2.selectAttackingPair();
                 p1.selectAttackingPair();
                 
@@ -493,7 +502,6 @@ namespace BattleCON
                     //EXPLORATION_WEIGHT = (i < MAX_PLAYOUTS / 10 ? 2 : 0.6);
 
                     EXPLORATION_WEIGHT = 0.8;
-
 
                     playoutsDone = i;
                     bestWinrate = copy.rootNode.bestWinrate();
@@ -750,9 +758,9 @@ namespace BattleCON
 
 
 
-        internal int MCTS_finisher(Player player)
+        internal int MCTS_selectSetupCards(Player player)
         {
-            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.FinisherSelection, this);
+            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this);
 
             int finisher = -1;
 
