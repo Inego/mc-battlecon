@@ -179,7 +179,7 @@ namespace BattleCON
             }
         }
 
-        public override bool ignoresSoak(Player p)
+        public override bool ignoresOpponentSoak(Player p)
         {
             return (p.priority() >= 7);
         }
@@ -329,5 +329,14 @@ namespace BattleCON
         {
             return "The opponent is stunned and loses all Soak and Stun Guard for the rest of the duel.";
         }
+
+        public override void OnDamage(Player p)
+        {
+            p.opponent.isStunned = true;
+            p.opponent.soakDisabled = true;
+            p.opponent.stunGuardDisabled = true;
+
+        }
+
     }
 }

@@ -69,6 +69,7 @@ namespace BattleCON
     public enum PlayoutStartType
     {
         Normal,
+        FinisherSelection,
         AttackPairSelection,
         AnteSelection,
         ClashResolution,
@@ -202,6 +203,17 @@ namespace BattleCON
 
         internal Player playout()
         {
+            if (isMainGame)
+            {
+                // Select Finisher
+                p2.selectFinisher();
+                p1.selectFinisher();
+
+                p1.applySelectedFinisher();
+                p2.applySelectedFinisher();
+            }
+
+
             while (beat <= 15)
             {
                 if (isMainGame)
@@ -736,7 +748,25 @@ namespace BattleCON
 
         }
 
-        
+
+
+        internal int MCTS_finisher(Player player)
+        {
+            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.FinisherSelection, this);
+
+            int finisher = -1;
+
+            double best = -1;
+
+            for (int i = 0; i < copyRootNoode.children.Length; i++)
+                if (copyRootNoode.children[i].winrate > best)
+                {
+                    best = copyRootNoode.children[i].winrate;
+                    finisher = i;
+                }
+
+            return finisher;
+        }
     }
 
 

@@ -32,6 +32,7 @@ namespace BattleCON
     public class Player
     {
         public int health;
+        public bool cannotDie = false;
         public bool isDead = false;
         public int position;
         public Player opponent;
@@ -41,9 +42,10 @@ namespace BattleCON
         public int antedTokens;
         public int availableTokens;
         public int usedTokens;
-        public bool cannotAnte = false;
+        public bool cannotAnte = false; // long
 
         public int stunGuard;
+        public bool stunGuardDisabled = false; // long
         public bool stunImmunity;
         public bool isStunned;
         public bool canHit;
@@ -57,6 +59,7 @@ namespace BattleCON
         public bool canMoveNextBeat = true;
         public bool canMove;
 
+        public bool soakDisabled = false; // long
         public int soakedDamage;
 
         public int damageDealt;
@@ -85,6 +88,7 @@ namespace BattleCON
         public Card CooldownStyle1;
         public Card CooldownStyle2;
 
+        public int selectedFinisher;
         public Finisher finisher;
 
         
@@ -95,11 +99,15 @@ namespace BattleCON
 
         public bool isHuman;
         
+        
+        
+        
 
 
         public void fillFromPlayer(Player player)
         {
             health = player.health;
+            cannotDie = player.cannotDie;
             isDead = player.isDead;
             position = player.position;
             first = player.first;
@@ -108,6 +116,7 @@ namespace BattleCON
             usedTokens = player.usedTokens;
             cannotAnte = player.cannotAnte;
             stunGuard = player.stunGuard;
+            stunGuardDisabled = player.stunGuardDisabled;
             stunImmunity = player.stunImmunity;
             isStunned = player.isStunned;
             canHit = player.canHit;
@@ -116,6 +125,7 @@ namespace BattleCON
             wasHit = player.wasHit;
             hitOpponentLastBeat = player.hitOpponentLastBeat;
             soakedDamage = player.soakedDamage;
+            soakDisabled = player.soakDisabled;
             damageDealt = player.damageDealt;
             damageTaken = player.damageTaken;
             soak = player.soak;
@@ -185,7 +195,7 @@ namespace BattleCON
             CooldownBase1 = new Dash();
             CooldownBase2 = new Grasp();
             
-            this.finisher = c.finisher1;
+            //this.finisher = c.finisher2;
 
             resetBeat();
         }
@@ -198,6 +208,8 @@ namespace BattleCON
             canHit = true;
             antedTokens = 0;
             soak = 0;
+
+            cannotDie = false;
 
             hitOpponentLastBeat = hasHit;
             hasHit = false;
@@ -704,24 +716,41 @@ namespace BattleCON
                     if (power > 0)
                     {
                         // Soak.
-                        if (!attackStyle.ignoresSoak(this))
+                        if (opponent.soak > 0)
                         {
-                            opponent.soakedDamage = Math.Min(power, opponent.soak);
-                            if (opponent.soakedDamage > 0)
+                            if (!(attackStyle.ignoresOpponentSoak(this) || opponent.soakDisabled))
                             {
-                                if (g.isMainGame)
-                                    g.writeToConsole(opponent + " soaked " + opponent.soakedDamage);
-                                
-                                opponent.attackStyle.OnSoak(opponent);
+                                opponent.soakedDamage = Math.Min(power, opponent.soak);
+                                if (opponent.soakedDamage > 0)
+                                {
+                                    if (g.isMainGame)
+                                        g.writeToConsole(opponent + " soaked " + opponent.soakedDamage);
+
+                                    opponent.attackStyle.OnSoak(opponent);
+                                }
                             }
+                            else
+                            {
+                                opponent.soakedDamage = 0;
+
+                                if (g.isMainGame)
+                                {
+                                    if (attackStyle.ignoresOpponentSoak(this))
+                                        g.writeToConsole(this + "'s attack style ignores Soak.");
+                                    else if (opponent.soakDisabled)
+                                        g.writeToConsole(opponent + "'s Soak is disabled.");
+
+                                }
+                            }
+
+                            damageDealt = power - opponent.soakedDamage;
                         }
                         else
                         {
-                            if (g.isMainGame)
-                                g.writeToConsole(this + "'s attack style ignores Soak.");
+                            damageDealt = power;
                         }
                         
-                        damageDealt = power - opponent.soakedDamage;
+                        
                         opponent.damageTaken = damageDealt;
 
                         if (damageDealt > 0)
@@ -738,11 +767,16 @@ namespace BattleCON
                             opponent.c.OnDamageTaken(opponent);
                             c.OnDamage(this);
 
-                            if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this)))
+                            if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this) || opponent.stunGuardDisabled))
                             {
-                                
-                                if (g.isMainGame && active && opponent.stunGuard > 0 && attackBase.ignoresStunGuard(this))
-                                    g.writeToConsole(this + "'s " + attackBase + " ignores " + opponent + "'s Stun Guard of " + opponent.stunGuard + ".");
+
+                                if (g.isMainGame && active && opponent.stunGuard > 0)
+                                {
+                                    if (attackBase.ignoresStunGuard(this))
+                                        g.writeToConsole(this + "'s " + attackBase + " ignores " + opponent + "'s Stun Guard of " + opponent.stunGuard + ".");
+                                    else if (opponent.stunGuardDisabled)
+                                        g.writeToConsole(opponent + "'s Stun Guard is disabled.");
+                                }
 
                                 opponent.isStunned = true;
                             }
@@ -754,12 +788,14 @@ namespace BattleCON
                                         g.writeToConsole(opponent + " has Stun Immunity.");
                                     if (opponent.stunGuard >= damageDealt)
                                         g.writeToConsole(opponent + "'s Stun Guard of " + opponent.stunGuard + " saves from being stunned.");
-
                                 }
                                 
                             }
 
                             opponent.health -= damageDealt;
+
+                            if (opponent.cannotDie && opponent.health < 1)
+                                opponent.health = 1;
 
                             if (opponent.health <= 0 && !isDead)
                             {
@@ -871,6 +907,42 @@ namespace BattleCON
         internal bool canAnteFinisher()
         {
             return (g.variant == GameVariant.AnteFinishers && health <= 7 && finisher != null);
+        }
+
+        internal void selectFinisher()
+        {
+
+            if (g.isMainGame)
+            {
+                if (isHuman)
+                {
+                    g.selectionHeader = "Select the Finisher:";
+                    g.selectionPlayer = this;
+                    g.selectionItems.Add(c.finisher1.ToString());
+                    g.selectionItems.Add(c.finisher2.ToString());
+                    g.getUserChoice();
+                    selectedFinisher = g.selectionResult;
+                }
+                else
+                {
+                    g.writeToConsole(this + " is selecting the Finisher...");
+
+                    selectedFinisher = g.MCTS_finisher(this);
+
+                    g.writeToConsole(this + " has selected the Finisher.");
+
+                }
+
+            }
+            else
+                selectedFinisher = g.UCTSelect(2, this, false);
+
+            
+        }
+
+        internal void applySelectedFinisher()
+        {
+            finisher = selectedFinisher == 0 ? c.finisher1 : c.finisher2;
         }
     }
 

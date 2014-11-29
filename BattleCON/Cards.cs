@@ -74,7 +74,7 @@
             return false;
         }
 
-        virtual public bool ignoresSoak(Player p)
+        virtual public bool ignoresOpponentSoak(Player p)
         {
             return false;
         }

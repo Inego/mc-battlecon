@@ -367,6 +367,22 @@ namespace BattleCON
         {
             return "Stun Guard 3\nThe power of this attack is equal to 3 times the printed power of the nearest opponent's attack.\nEligor's life cannot drop below 1 during this beat.";
         }
+
+        public override void CommonProperties(Player p)
+        {
+            p.stunGuard += 3;
+            p.cannotDie = true;
+        }
+
+        public override int getAttackPower(Player p)
+        {
+            if (p.opponent.attackBase.power > 0)
+                return 3 * (p.opponent.attackStyle.power + p.opponent.attackBase.power);
+
+            // otherwise 0
+            return 0;
+            
+        }
     }
 
 }
