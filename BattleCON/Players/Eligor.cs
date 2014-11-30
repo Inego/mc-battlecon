@@ -25,9 +25,6 @@ namespace BattleCON
             p.styles.Add(new Chained());
             p.styles.Add(new Martial());
 
-            //p.CooldownStyle1 = new Vengeful();
-            //p.CooldownStyle2 = new Counter();
-
             p.availableTokens = 2;
             p.usedTokens = 3;
         }

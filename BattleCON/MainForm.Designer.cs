@@ -61,9 +61,9 @@
             // backgroundWorker1
             // 
             this.backgroundWorker1.WorkerReportsProgress = true;
-            this.backgroundWorker1.WorkerSupportsCancellation = true;
             this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
             this.backgroundWorker1.ProgressChanged += new System.ComponentModel.ProgressChangedEventHandler(this.backgroundWorker1_ProgressChanged);
+            this.backgroundWorker1.RunWorkerCompleted += new System.ComponentModel.RunWorkerCompletedEventHandler(this.backgroundWorker1_RunWorkerCompleted);
             // 
             // userChoiceListBox
             // 
@@ -98,18 +98,18 @@
             this.playoutNumberLabel.AutoSize = true;
             this.playoutNumberLabel.Location = new System.Drawing.Point(864, 338);
             this.playoutNumberLabel.Name = "playoutNumberLabel";
-            this.playoutNumberLabel.Size = new System.Drawing.Size(35, 13);
+            this.playoutNumberLabel.Size = new System.Drawing.Size(59, 13);
             this.playoutNumberLabel.TabIndex = 8;
-            this.playoutNumberLabel.Text = "label1";
+            this.playoutNumberLabel.Text = "<Playouts>";
             // 
             // bestWinrateLabel
             // 
             this.bestWinrateLabel.AutoSize = true;
             this.bestWinrateLabel.Location = new System.Drawing.Point(864, 355);
             this.bestWinrateLabel.Name = "bestWinrateLabel";
-            this.bestWinrateLabel.Size = new System.Drawing.Size(35, 13);
+            this.bestWinrateLabel.Size = new System.Drawing.Size(56, 13);
             this.bestWinrateLabel.TabIndex = 9;
-            this.bestWinrateLabel.Text = "label2";
+            this.bestWinrateLabel.Text = "<Winrate>";
             // 
             // newGameBtn
             // 

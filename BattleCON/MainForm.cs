@@ -108,9 +108,12 @@ namespace BattleCON
         {
 
             currentGame.playout();
-            currentGame.flushConsole();
 
             currentGame.isFinished = true;
+
+            currentGame.writeToConsole("The game is over. You may now start a new one.");
+
+            
 
         }
 
@@ -130,12 +133,7 @@ namespace BattleCON
             startButton.Enabled = (eventType != 3);
 
 
-            foreach (string s in currentGame.consoleBuffer)
-            {
-                gameLogListBox.Items.Add(s);
-            }
-
-            currentGame.consoleBuffer.Clear();
+            outputCurrentGameConsole();
 
             gameLogListBox.SelectedIndex = gameLogListBox.Items.Count - 1;
 
@@ -166,18 +164,21 @@ namespace BattleCON
 
         }
 
+        private void outputCurrentGameConsole()
+        {
+            foreach (string s in currentGame.consoleBuffer)
+            {
+                gameLogListBox.Items.Add(s);
+            }
+
+            currentGame.consoleBuffer.Clear();
+        }
+
         private void battleBoard_MouseMove(object sender, MouseEventArgs e)
         {
             battleBoard.checkMouseMove(e.X, e.Y);
-
         }
 
-
-
-        private void userChoiceListBox_DoubleClick(object sender, EventArgs e)
-        {
-
-        }
 
         private void userChoiceListBox_Click(object sender, EventArgs e)
         {
@@ -218,19 +219,34 @@ namespace BattleCON
 
         private void newGameBtn_Click(object sender, EventArgs e)
         {
+            
             if (currentGame != null && !currentGame.isFinished)
             {
-                DialogResult dr = MessageBox.Show("The current game is not finished. Do you want to start a new one?", "New Game", MessageBoxButtons.YesNo);
 
-                if (dr == DialogResult.No)
+                if (currentGame.p1.isDead)
+                {
+                    MessageBox.Show("Play to the end of the current beat to start a new game.", "New Game");
                     return;
+                }
+                else
+                {
+                    DialogResult dr = MessageBox.Show("To start a new game, you have to resign and play to the end of the current beat. Proceed?", "New Game", MessageBoxButtons.YesNo);
+                    if (dr == DialogResult.No)
+                        return;
+                    currentGame.p1.isDead = true;
+                    currentGame.writeToConsole(currentGame.p1 + " has resigned. Now play to the end of this beat to finish the game.");
+                    return;
+                }
 
-                
-                backgroundWorker1.CancelAsync();
-                _waitHandle.Set();
                     
             }
             startNewGame();
+
+        }
+
+        private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            outputCurrentGameConsole();
         }
 
         

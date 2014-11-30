@@ -248,7 +248,14 @@ namespace BattleCON
             {
                 // Select Setup Cards
                 p2.makeSetupDecisions();
+
+                if (p1.isDead)
+                    return p2;
+
                 p1.makeSetupDecisions();
+
+                if (p1.isDead)
+                    return p2;
 
                 p1.applySetupDecisions();
                 p2.applySetupDecisions();
@@ -268,7 +275,9 @@ namespace BattleCON
             while (beat <= 15)
             {
                 if (isMainGame)
+                {
                     writeToConsole("BEAT " + beat);
+                }
                 
                 this.nextBeat();
 
@@ -355,13 +364,16 @@ namespace BattleCON
                     p2.RevealEffects();
 
                     if (isMainGame)
+                    {
                         flushConsole();
+
+                        if (p1.isDead)
+                            return;
+                    }
 
                 }
 
                 // Determine a clash
-
-
 
                 if (isMainGame)
                     writeToConsole("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
@@ -382,7 +394,12 @@ namespace BattleCON
                 {
 
                     if (isMainGame)
+                    {
+                        if (p1.isDead)
+                            return;
+
                         writeToConsole("CLASH! (both players " + p1.priority() + ')');
+                    }
 
                     if (p1.bases.Count == 0 || p2.bases.Count == 0)
                     {
@@ -398,6 +415,9 @@ namespace BattleCON
 
                     if (isMainGame)
                     {
+                        if (p1.isDead)
+                            return;
+
                         writeToConsole(p1 + " selected " + p1.attackStyle + ' ' + p1.attackBase);
                         writeToConsole(p2 + " selected " + p2.attackStyle + ' ' + p2.attackBase);
                         writeToConsole("Priorities: " + p1 + ' ' + p1.priority() + ", " + p2 + ' ' + p2.priority());
@@ -412,6 +432,9 @@ namespace BattleCON
 
                 if (isMainGame)
                 {
+                    if (p1.isDead)
+                        return;
+
                     checkPoint.fillFromGameState(this, PlayoutStartType.BeatResolution, p1);
                     registeredChoices.Clear();
                 }
@@ -456,6 +479,9 @@ namespace BattleCON
 
                 // End of beat
                 firstToAnte = activePlayer;
+
+                if (p1.isDead)
+                    return;
 
                 activePlayer.resolveEndOfBeat();
                 reactivePlayer.resolveEndOfBeat();

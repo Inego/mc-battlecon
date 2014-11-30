@@ -28,9 +28,6 @@ namespace BattleCON
             p.styles.Add(new Jugular());
             p.styles.Add(new Spiral());
 
-            //p.CooldownStyle1 = new Unleashed();
-            //p.CooldownStyle2 = new Combination();
-
             p.availableTokens = 3;
             p.usedTokens = 2;
         }

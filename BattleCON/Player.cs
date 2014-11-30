@@ -188,19 +188,14 @@ namespace BattleCON
             this.nextBeatPowerModifier = 0;
 
             // Six standard bases
-            bases.Add(new Dash());
             bases.Add(new Grasp());
+            bases.Add(new Dash());
             bases.Add(new Burst());
             bases.Add(new Drive());
             bases.Add(new Strike());
             bases.Add(new Shot());
 
             c.init(this);
-
-            //CooldownBase1 = new Dash();
-            //CooldownBase2 = new Grasp();
-            
-            //this.finisher = c.finisher2;
 
             resetBeat();
         }
@@ -561,7 +556,9 @@ namespace BattleCON
             if (toAnte > 0)
             {
                 if (g.isMainGame)
+                {
                     g.writeToConsole(this + " antes " + (toAnte == availableTokens + 1 ? finisher.ToString() : (toAnte + " tokens.")));
+                }
 
                 if (toAnte == availableTokens + 1) // FINISHER
                 {
