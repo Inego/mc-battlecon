@@ -12,6 +12,10 @@ namespace BattleCON
 {
     public partial class GameSetupForm : Form
     {
+
+        public GameSettings gameSettings = null;
+
+
         public GameSetupForm()
         {
             InitializeComponent();
@@ -46,7 +50,7 @@ namespace BattleCON
 
             // Check if possible
 
-            GameSettings gameSettings = new GameSettings();
+            gameSettings = new GameSettings();
 
             Character c1 = Character.getByName(character1CB.Text);
 
@@ -64,7 +68,17 @@ namespace BattleCON
                 return;
             }
 
+            gameSettings = new GameSettings();
+            gameSettings.c1 = c1;
+            gameSettings.c2 = c2;
 
+            GameState.MAX_PLAYOUTS = (int) Properties.Settings.Default.kPlayouts * 1000;
+
+
+
+            Close();
+
+            
 
         }
 

@@ -32,9 +32,9 @@
             this.reverseCharactersBtn = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.button1 = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.button1 = new System.Windows.Forms.Button();
             this.character2CB = new System.Windows.Forms.ComboBox();
             this.character1CB = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
@@ -80,17 +80,6 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "MCTS Settings";
             // 
-            // button1
-            // 
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button1.Location = new System.Drawing.Point(243, 64);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(63, 31);
-            this.button1.TabIndex = 6;
-            this.button1.Text = "FIGHT!";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // label3
             // 
             this.label3.AutoSize = true;
@@ -118,6 +107,17 @@
             this.numericUpDown1.Size = new System.Drawing.Size(56, 20);
             this.numericUpDown1.TabIndex = 6;
             this.numericUpDown1.Value = global::BattleCON.Properties.Settings.Default.kPlayouts;
+            // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.button1.Location = new System.Drawing.Point(243, 64);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(63, 31);
+            this.button1.TabIndex = 6;
+            this.button1.Text = "FIGHT!";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // character2CB
             // 
@@ -155,7 +155,11 @@
             this.Controls.Add(this.reverseCharactersBtn);
             this.Controls.Add(this.character1CB);
             this.Controls.Add(this.label1);
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "GameSetupForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Game Setup";
             this.Load += new System.EventHandler(this.GameSetupForm_Load);
             this.groupBox1.ResumeLayout(false);

@@ -39,17 +39,22 @@ namespace BattleCON
 
             if (currentGame == null)
             {
-                //currentGame = new GameState(Character.shekhtur, Character.eligor, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
-                //currentGame = new GameState(Character.eligor, Character.shekhtur, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
-                //currentGame.pureRandom = true;
-                ////currentGame.p1.health = 7;
-                ////currentGame.p2.health = 7;
-                //battleBoard.gs = currentGame;
-                //backgroundWorker1.RunWorkerAsync();
-
                 using (GameSetupForm gsf = new GameSetupForm())
                 {
                     gsf.ShowDialog();
+
+                    GameSettings gameSettings = gsf.gameSettings;
+
+                    if (gameSettings != null)
+                    {
+                        currentGame = new GameState(gameSettings.c1, gameSettings.c2, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
+                        //currentGame = new GameState(Character.eligor, Character.shekhtur, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
+                        currentGame.pureRandom = true;
+                        //currentGame.p1.health = 7;
+                        //currentGame.p2.health = 7;
+                        battleBoard.gs = currentGame;
+                        backgroundWorker1.RunWorkerAsync();
+                    }
                 }
 
 
