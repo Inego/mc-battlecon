@@ -95,6 +95,7 @@ namespace BattleCON
 
         public int selectedFinisher;
         public Finisher finisher;
+        public bool finisherPlayed = false;
         
 
         public GameState g;
@@ -158,6 +159,7 @@ namespace BattleCON
             CooldownStyle2 = player.CooldownStyle2;
 
             finisher = player.finisher;
+            finisherPlayed = player.finisherPlayed;
 
         }
 
@@ -175,6 +177,7 @@ namespace BattleCON
             this.g = gs;
             this.first = first;
             this.isHuman = isHuman;
+            this.selectedFinisher = -1;
 
             health = 20;
             this.c = c;
@@ -511,10 +514,10 @@ namespace BattleCON
             }
 
 
-            bool canAnteFinisherflag = canAnteFinisher();
+            bool canAnteFinisherFlag = canAnteFinisher();
 
 
-            if (availableTokens == 0 && !canAnteFinisherflag)
+            if (availableTokens == 0 && !canAnteFinisherFlag)
             {
                 if (g.isMainGame)
                     g.writeToConsole(this + " has nothing to ante.");
@@ -531,7 +534,7 @@ namespace BattleCON
                     g.selectionHeader = "Make your ante:";
                     for (int j = 0; j < availableTokens + 1; j++)
                         g.selectionItems.Add(j == 0 ? "Ante nothing" : "Ante " + j + " tokens");
-                    if (canAnteFinisherflag)
+                    if (canAnteFinisherFlag)
                         g.selectionItems.Add(finisher.ToString() + " (Finisher)");
                     g.getUserChoice();
                     toAnte = g.selectionResult;
@@ -545,7 +548,7 @@ namespace BattleCON
             else
             {
 
-                toAnte = g.UCTSelect(availableTokens + (canAnteFinisherflag ? 2 : 1), this, false);
+                toAnte = g.UCTSelect(availableTokens + (canAnteFinisherFlag ? 2 : 1), this, false);
 
                 if (g.pst == PlayoutStartType.AnteSelection)
                 {
@@ -560,12 +563,12 @@ namespace BattleCON
                 if (g.isMainGame)
                     g.writeToConsole(this + " antes " + (toAnte == availableTokens + 1 ? finisher.ToString() : (toAnte + " tokens.")));
 
-                if (toAnte == availableTokens + 1)
+                if (toAnte == availableTokens + 1) // FINISHER
                 {
                     // Base and style go back
                     attackStyle = StyleCard.blank;
                     attackBase = finisher;
-                    finisher = null;
+                    finisherPlayed = true;
                     return AnteResult.AntedFinisher;
                 }
                 
@@ -905,7 +908,7 @@ namespace BattleCON
 
         internal bool canAnteFinisher()
         {
-            return (g.variant == GameVariant.AnteFinishers && health <= 7 && finisher != null);
+            return (g.variant == GameVariant.AnteFinishers && health <= 7 && !finisherPlayed);
         }
 
         internal void makeSetupDecisions()

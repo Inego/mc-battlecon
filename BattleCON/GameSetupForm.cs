@@ -74,13 +74,15 @@ namespace BattleCON
 
             GameState.MAX_PLAYOUTS = (int) Properties.Settings.Default.kPlayouts * 1000;
 
-
+            GameState.DEBUG_MESSAGES = Properties.Settings.Default.debugMessages;
 
             Close();
 
             
 
         }
+
+      
 
         
     }

@@ -33,8 +33,9 @@
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.button1 = new System.Windows.Forms.Button();
+            this.debugMessagesCheckBox = new System.Windows.Forms.CheckBox();
+            this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
             this.character2CB = new System.Windows.Forms.ComboBox();
             this.character1CB = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
@@ -71,11 +72,12 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.debugMessagesCheckBox);
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.numericUpDown1);
             this.groupBox1.Location = new System.Drawing.Point(16, 48);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(205, 48);
+            this.groupBox1.Size = new System.Drawing.Size(215, 48);
             this.groupBox1.TabIndex = 5;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "MCTS Settings";
@@ -88,6 +90,29 @@
             this.label3.Size = new System.Drawing.Size(53, 13);
             this.label3.TabIndex = 7;
             this.label3.Text = "kPlayouts";
+            // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.button1.Location = new System.Drawing.Point(243, 60);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(63, 31);
+            this.button1.TabIndex = 6;
+            this.button1.Text = "FIGHT!";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
+            // 
+            // debugMessagesCheckBox
+            // 
+            this.debugMessagesCheckBox.AutoSize = true;
+            this.debugMessagesCheckBox.Checked = global::BattleCON.Properties.Settings.Default.debugMessages;
+            this.debugMessagesCheckBox.DataBindings.Add(new System.Windows.Forms.Binding("Checked", global::BattleCON.Properties.Settings.Default, "debugMessages", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.debugMessagesCheckBox.Location = new System.Drawing.Point(151, 20);
+            this.debugMessagesCheckBox.Name = "debugMessagesCheckBox";
+            this.debugMessagesCheckBox.Size = new System.Drawing.Size(58, 17);
+            this.debugMessagesCheckBox.TabIndex = 8;
+            this.debugMessagesCheckBox.Text = "Debug";
+            this.debugMessagesCheckBox.UseVisualStyleBackColor = true;
             // 
             // numericUpDown1
             // 
@@ -107,17 +132,6 @@
             this.numericUpDown1.Size = new System.Drawing.Size(56, 20);
             this.numericUpDown1.TabIndex = 6;
             this.numericUpDown1.Value = global::BattleCON.Properties.Settings.Default.kPlayouts;
-            // 
-            // button1
-            // 
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button1.Location = new System.Drawing.Point(243, 64);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(63, 31);
-            this.button1.TabIndex = 6;
-            this.button1.Text = "FIGHT!";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // character2CB
             // 
@@ -181,5 +195,6 @@
         private System.Windows.Forms.NumericUpDown numericUpDown1;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.CheckBox debugMessagesCheckBox;
     }
 }

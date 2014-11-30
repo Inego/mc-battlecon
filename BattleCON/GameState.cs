@@ -130,6 +130,7 @@ namespace BattleCON
     public class GameState
     {
         public bool isMainGame;
+        public bool isFinished = false;
 
         public List<string> consoleBuffer;
         public BackgroundWorker bw;
@@ -144,7 +145,6 @@ namespace BattleCON
 
         public int beat;
 
-        //public Random rnd = new Random(2);
         public Random rnd = new Random();
 
 
@@ -161,9 +161,6 @@ namespace BattleCON
         
         
         // Monte Carlo Tree Search
-
-        
-
         public static int MAX_PLAYOUTS = 100000;
         public static int PLAYOUT_SCREEN_UPDATE_RATE = 10000;
 
@@ -181,6 +178,8 @@ namespace BattleCON
 
         public bool pureRandom;
         private static double EXPLORATION_WEIGHT;
+        public static bool DEBUG_MESSAGES;
+        
         
 
         public GameState(Character c1, Character c2, GameVariant variant,  BackgroundWorker bw, EventWaitHandle waitHandle)
@@ -297,7 +296,6 @@ namespace BattleCON
         {
             bw.ReportProgress(0);
             waitHandle.WaitOne();
-
         }
 
         public void writeToConsole(string p)
@@ -498,11 +496,6 @@ namespace BattleCON
                     // both passed or someone anted a finisher
                     break;
 
-                // Doesn't work well with anteing finishers
-                //// Short way to reduce meaningless trade in MC playouts
-                //if (pst != PlayoutStartType.AnteSelection && anteingPlayer != localFirstPlayer && !isMainGame)
-                //    break;
-
                 anteingPlayer = anteingPlayer.opponent;
 
                 // Short way for a special case
@@ -600,12 +593,13 @@ namespace BattleCON
 
             pairs.Sort();
 
-            foreach (DebugNodeComparable d in pairs)
+            if (DEBUG_MESSAGES)
             {
-                writeToConsole(d.ToString());
-
+                foreach (DebugNodeComparable d in pairs)
+                {
+                    writeToConsole(d.ToString());
+                }
             }
-            
 
             // DEBUG
 
@@ -648,8 +642,8 @@ namespace BattleCON
             for (int i = 0; i < copyRootNoode.children.Length; i++)
             {
 
-                player.g.writeToConsole("DEBUG Ante " + i + ": " + copyRootNoode.children[i].games + " " + copyRootNoode.children[i].winrate);
-
+                if (DEBUG_MESSAGES)
+                    player.g.writeToConsole("DEBUG Ante " + i + ": " + copyRootNoode.children[i].games + " " + copyRootNoode.children[i].winrate);
 
                 if (copyRootNoode.children[i].winrate > best)
                 {

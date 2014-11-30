@@ -34,30 +34,35 @@ namespace BattleCON
             InitializeComponent();
         }
 
+
+        public void startNewGame()
+        {
+
+            using (GameSetupForm gsf = new GameSetupForm())
+            {
+                gsf.ShowDialog();
+
+                GameSettings gameSettings = gsf.gameSettings;
+
+                if (gameSettings != null)
+                {
+                    currentGame = new GameState(gameSettings.c1, gameSettings.c2, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
+                    currentGame.pureRandom = true;
+                    //currentGame.p1.health = 7;
+                    //currentGame.p2.health = 7;
+                    battleBoard.gs = currentGame;
+                    backgroundWorker1.RunWorkerAsync();
+                    
+                }
+            }
+        }
+
         private void startButton_Click(object sender, EventArgs e)
         {
 
             if (currentGame == null)
             {
-                using (GameSetupForm gsf = new GameSetupForm())
-                {
-                    gsf.ShowDialog();
-
-                    GameSettings gameSettings = gsf.gameSettings;
-
-                    if (gameSettings != null)
-                    {
-                        currentGame = new GameState(gameSettings.c1, gameSettings.c2, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
-                        //currentGame = new GameState(Character.eligor, Character.shekhtur, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
-                        currentGame.pureRandom = true;
-                        //currentGame.p1.health = 7;
-                        //currentGame.p2.health = 7;
-                        battleBoard.gs = currentGame;
-                        backgroundWorker1.RunWorkerAsync();
-                    }
-                }
-
-
+                startNewGame();
             }
             else
             {
@@ -104,6 +109,8 @@ namespace BattleCON
 
             currentGame.playout();
             currentGame.flushConsole();
+
+            currentGame.isFinished = true;
 
         }
 
@@ -208,6 +215,25 @@ namespace BattleCON
             // save 1 click
             startButton.PerformClick();
         }
+
+        private void newGameBtn_Click(object sender, EventArgs e)
+        {
+            if (currentGame != null && !currentGame.isFinished)
+            {
+                DialogResult dr = MessageBox.Show("The current game is not finished. Do you want to start a new one?", "New Game", MessageBoxButtons.YesNo);
+
+                if (dr == DialogResult.No)
+                    return;
+
+                
+                backgroundWorker1.CancelAsync();
+                _waitHandle.Set();
+                    
+            }
+            startNewGame();
+        }
+
+        
         
     }
 }

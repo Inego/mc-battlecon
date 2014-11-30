@@ -11,142 +11,7 @@ using System.Windows.Forms;
 namespace BattleCON
 {
 
-    public abstract class SomethingOnScreen
-    {
-        public static Font regionCaptionFont = new Font("Tahoma", 16, FontStyle.Bold);
-        public static Font regionTinyCaptionFont = new Font(FontFamily.GenericMonospace, 8);
-        public static Brush alphaWhite = new SolidBrush(Color.FromArgb(220, Color.White));
-
-        public int x1;
-        public int y1;
-        public int width;
-        public int height;
-
-        public SomethingOnScreen(int x1, int y1, int width, int height)
-        {
-            this.x1 = x1;
-            this.y1 = y1;
-            this.width = width;
-            this.height = height;
-        }
-
-        internal bool hasMouse(int mouseX, int mouseY)
-        {
-            return (mouseX >= x1 && mouseX <= x1 + width - 1
-                && mouseY >= y1 && mouseY <= y1 + height - 1);
-        }
-
-        internal abstract void highlight(BattleBoard bb);
-    }
-
-
-    public class CharacterOnScreen : SomethingOnScreen
-    {
-        public Character c;
-
-        public static int characterCardWidth = 300;
-        public static int characterCardHeight = 250;
-
-        public static Brush characterCardBkBrush = new SolidBrush(Color.FromArgb(240, Color.PaleGoldenrod));
-
-        public CharacterOnScreen(int x1, int y1, int width, int height, Character c) : base(x1, y1, width, height)
-        {
-            this.c = c;
-        }
-
-        internal override void highlight(BattleBoard bb)
-        {
-
-            int x = bb.mouseX;
-            int y = bb.mouseY;
-
-            if (x + characterCardWidth > bb.Width)
-                x = bb.Width - characterCardWidth;
-
-            if (y + characterCardHeight > bb.Height)
-                y = bb.Height - characterCardHeight;
-
-            Graphics g = bb.drawingGraphics2;
-
-            g.FillRectangle(characterCardBkBrush, x, y, characterCardWidth, characterCardHeight);
-
-            TextRenderer.DrawText(g, c.getDescription(), SystemFonts.SmallCaptionFont, new Rectangle(x + 5, y + 5, characterCardWidth - 10, characterCardHeight - 10), Color.Black, /*TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |*/ TextFormatFlags.WordBreak);
-            
-        }
-
-    }
-
-
-    public class CardOnScreen : SomethingOnScreen
-    {
-        public Card c;
-
-        public bool highlightable;
-
-        private static int screenCardWidth = 250;
-        private static int screenCardHeight = 280;
-
-        private static Brush rangeBrush    = new SolidBrush(Color.FromArgb(150, Color.LightSeaGreen));
-        private static Brush powerBrush    = new SolidBrush(Color.FromArgb(150, Color.Red));
-        private static Brush priorityBrush = new SolidBrush(Color.FromArgb(150, Color.Orange));
-
-        public CardOnScreen(int x1, int y1, int width, int height, Card c, bool highlightable) : base(x1, y1, width, height)
-        {
-            this.c = c;
-            this.highlightable = highlightable;
-        }
-
-        static int stripeOffset = 30;
-
-        internal void drawStripe(Graphics g, string caption, int x, int y, Brush b, string value)
-        {
-            g.DrawString(caption, regionTinyCaptionFont, Brushes.Black, x + 5, y + stripeOffset);
-            g.FillRectangle(b, x, y + stripeOffset + 15, screenCardWidth / 2, 22);
-            g.DrawString(value, regionCaptionFont, Brushes.Black, x + 5, y + stripeOffset + 13);
-        }
-
-
-
-        internal override void highlight(BattleBoard bb)
-        {
-            int x = bb.mouseX;
-            int y = bb.mouseY;
-
-            if (x + screenCardWidth > bb.Width)
-                x = bb.Width - screenCardWidth;
-
-            if (y + screenCardHeight > bb.Height)
-                y = bb.Height - screenCardHeight;
-
-            Graphics g = bb.drawingGraphics2;
-
-
-            if (highlightable)
-                g.DrawRectangle(Pens.Green, x1 - 2, y1 - 2, width + 4, height + 4);
-
-            g.FillRectangle(alphaWhite, x, y, screenCardWidth, screenCardHeight);
-            
-            g.DrawString(c.name, regionCaptionFont, Brushes.Black, x + 5, y + 5);
-            g.DrawLine(Pens.Black, x, y + 30, x + screenCardWidth, y + 30);
-
-            drawStripe(g, "range",    x, y,       rangeBrush,    c.getRangeText());
-            drawStripe(g, "power",    x, y + 40,  powerBrush,    c.getPowerText());
-            drawStripe(g, "priority", x, y + 80, priorityBrush, c.getPriorityText());
-
-            
-
-            int descYBegin = 160;
-
-            Rectangle descRect = new Rectangle(x + 5, y + descYBegin, screenCardWidth - 10, screenCardHeight - descYBegin - 5);
-
-
-            TextRenderer.DrawText(g, c.getDescription(), SystemFonts.SmallCaptionFont, descRect, Color.Black, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
-            
-            
-
-            
-        }
-    }
+    
 
 
     public partial class BattleBoard : UserControl
@@ -283,18 +148,17 @@ namespace BattleCON
             drawCard(p.CooldownBase1, cooldownOffset + cardSpacing + cardWidth, y + 100, CardBorderStyle.cooldown, false);
 
 
-            // Finisher
-            if (p.finisher == null)
+            if (p.finisher != null)
+            {
+                drawCard(p.finisher, cooldownOffset + 200, y + 80, p.finisherPlayed ? CardBorderStyle.finisherPlayed : CardBorderStyle.finisher, false);
+            }
+            else
             {
 
                 highlightToSelect = (p == p.g.selectionPlayer && p.g.sss == SpecialSelectionStyle.Finishers);
 
                 drawCard(p.c.finisher1, cooldownOffset + 200, y + 80, CardBorderStyle.finisher, highlightToSelect);
                 drawCard(p.c.finisher2, cooldownOffset + 200, y + 100, CardBorderStyle.finisher, highlightToSelect);
-            }
-            else
-            {
-                drawCard(p.finisher, cooldownOffset + 200, y + 80, CardBorderStyle.finisher, false);
             }
 
         }
@@ -305,7 +169,8 @@ namespace BattleCON
             cooldown,
             player1,
             player2,
-            finisher
+            finisher,
+            finisherPlayed
         }
 
         private void drawCard(Card card, int x, int y, CardBorderStyle cbs, bool highlightToSelect)
@@ -338,6 +203,10 @@ namespace BattleCON
                 case CardBorderStyle.finisher:
                     p = Pens.Blue;
                     b = Brushes.Orange;
+                    break;
+                case CardBorderStyle.finisherPlayed:
+                    p = Pens.Blue;
+                    b = Brushes.Gray;
                     break;
 
             }
@@ -422,7 +291,6 @@ namespace BattleCON
                 this.Refresh();
             }
         }
-
         
 
         protected override void OnPaint(PaintEventArgs pe)
@@ -438,26 +306,16 @@ namespace BattleCON
             this.mouseX = mouseX;
             this.mouseY = mouseY;
 
-            //Pen p = null;
-
             if (checkMouseInRegionOnScreen())
             {
                 RefreshUpperLayer();
-                //p = Pens.Red;
             }
             else
             {
-                //p = currentRegion == null ? Pens.Black : Pens.Blue;
                 if (currentRegion != null)
                     RefreshUpperLayer();
-
-                    
             }
 
-            //drawingGraphics2.DrawEllipse(p, mouseX - 10, mouseY - 10, 20, 20);
-
-            
-            
         }
 
         private void RefreshUpperLayer()
@@ -489,6 +347,146 @@ namespace BattleCON
             }
 
             return false;
+        }
+    }
+
+
+    public abstract class SomethingOnScreen
+    {
+        public static Font regionCaptionFont = new Font("Tahoma", 16, FontStyle.Bold);
+        public static Font regionTinyCaptionFont = new Font(FontFamily.GenericMonospace, 8);
+        public static Brush alphaWhite = new SolidBrush(Color.FromArgb(220, Color.White));
+
+        public int x1;
+        public int y1;
+        public int width;
+        public int height;
+
+        public SomethingOnScreen(int x1, int y1, int width, int height)
+        {
+            this.x1 = x1;
+            this.y1 = y1;
+            this.width = width;
+            this.height = height;
+        }
+
+        internal bool hasMouse(int mouseX, int mouseY)
+        {
+            return (mouseX >= x1 && mouseX <= x1 + width - 1
+                && mouseY >= y1 && mouseY <= y1 + height - 1);
+        }
+
+        internal abstract void highlight(BattleBoard bb);
+    }
+
+
+    public class CharacterOnScreen : SomethingOnScreen
+    {
+        public Character c;
+
+        public static int characterCardWidth = 300;
+        public static int characterCardHeight = 250;
+
+        public static Brush characterCardBkBrush = new SolidBrush(Color.FromArgb(240, Color.PaleGoldenrod));
+
+        public CharacterOnScreen(int x1, int y1, int width, int height, Character c)
+            : base(x1, y1, width, height)
+        {
+            this.c = c;
+        }
+
+        internal override void highlight(BattleBoard bb)
+        {
+
+            int x = bb.mouseX;
+            int y = bb.mouseY;
+
+            if (x + characterCardWidth > bb.Width)
+                x = bb.Width - characterCardWidth;
+
+            if (y + characterCardHeight > bb.Height)
+                y = bb.Height - characterCardHeight;
+
+            Graphics g = bb.drawingGraphics2;
+
+            g.FillRectangle(characterCardBkBrush, x, y, characterCardWidth, characterCardHeight);
+
+            TextRenderer.DrawText(g, c.getDescription(), SystemFonts.SmallCaptionFont, new Rectangle(x + 5, y + 5, characterCardWidth - 10, characterCardHeight - 10), Color.Black, /*TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |*/ TextFormatFlags.WordBreak);
+
+        }
+
+    }
+
+
+    public class CardOnScreen : SomethingOnScreen
+    {
+        public Card c;
+
+        public bool highlightable;
+
+        private static int screenCardWidth = 250;
+        private static int screenCardHeight = 280;
+
+        private static Brush rangeBrush = new SolidBrush(Color.FromArgb(150, Color.LightSeaGreen));
+        private static Brush powerBrush = new SolidBrush(Color.FromArgb(150, Color.Red));
+        private static Brush priorityBrush = new SolidBrush(Color.FromArgb(150, Color.Orange));
+
+        public CardOnScreen(int x1, int y1, int width, int height, Card c, bool highlightable)
+            : base(x1, y1, width, height)
+        {
+            this.c = c;
+            this.highlightable = highlightable;
+        }
+
+        static int stripeOffset = 30;
+
+        internal void drawStripe(Graphics g, string caption, int x, int y, Brush b, string value)
+        {
+            g.DrawString(caption, regionTinyCaptionFont, Brushes.Black, x + 5, y + stripeOffset);
+            g.FillRectangle(b, x, y + stripeOffset + 15, screenCardWidth / 2, 22);
+            g.DrawString(value, regionCaptionFont, Brushes.Black, x + 5, y + stripeOffset + 13);
+        }
+
+
+
+        internal override void highlight(BattleBoard bb)
+        {
+            int x = bb.mouseX;
+            int y = bb.mouseY;
+
+            if (x + screenCardWidth > bb.Width)
+                x = bb.Width - screenCardWidth;
+
+            if (y + screenCardHeight > bb.Height)
+                y = bb.Height - screenCardHeight;
+
+            Graphics g = bb.drawingGraphics2;
+
+
+            if (highlightable)
+                g.DrawRectangle(Pens.Green, x1 - 2, y1 - 2, width + 4, height + 4);
+
+            g.FillRectangle(alphaWhite, x, y, screenCardWidth, screenCardHeight);
+
+            g.DrawString(c.name, regionCaptionFont, Brushes.Black, x + 5, y + 5);
+            g.DrawLine(Pens.Black, x, y + 30, x + screenCardWidth, y + 30);
+
+            drawStripe(g, "range", x, y, rangeBrush, c.getRangeText());
+            drawStripe(g, "power", x, y + 40, powerBrush, c.getPowerText());
+            drawStripe(g, "priority", x, y + 80, priorityBrush, c.getPriorityText());
+
+
+
+            int descYBegin = 160;
+
+            Rectangle descRect = new Rectangle(x + 5, y + descYBegin, screenCardWidth - 10, screenCardHeight - descYBegin - 5);
+
+
+            TextRenderer.DrawText(g, c.getDescription(), SystemFonts.SmallCaptionFont, descRect, Color.Black, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
+
+
+
+
         }
     }
 }
