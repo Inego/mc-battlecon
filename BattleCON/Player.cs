@@ -834,8 +834,8 @@ namespace BattleCON
         {
             int basePower = attackBase.getAttackPower(this);
 
-            if (basePower == 0)
-                return 0;
+            //if (basePower == 0)
+            //    return 0;
 
             return basePower + attackStyle.power + powerModifier;
         }

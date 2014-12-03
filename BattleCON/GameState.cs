@@ -163,6 +163,7 @@ namespace BattleCON
         // Monte Carlo Tree Search
         public static int MAX_PLAYOUTS = 100000;
         public static int PLAYOUT_SCREEN_UPDATE_RATE = 10000;
+        private static double ANTE_DELTA = 0.02;
 
         public MCTS_Node rootNode;
         public MCTS_Node currentNode;
@@ -179,6 +180,7 @@ namespace BattleCON
         public bool pureRandom;
         private static double EXPLORATION_WEIGHT;
         public static bool DEBUG_MESSAGES;
+        
         
         
 
@@ -661,7 +663,9 @@ namespace BattleCON
 
             MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.AnteSelection, this);
 
-            int styleNumber = -1;
+            int bestAnte = -1;
+
+            
             
             double best = -1;
 
@@ -674,11 +678,23 @@ namespace BattleCON
                 if (copyRootNoode.children[i].winrate > best)
                 {
                     best = copyRootNoode.children[i].winrate;
-                    styleNumber = i;
+                    
+                    bestAnte = i;
                 }
             }
 
-            return styleNumber;
+            // Now we can select the cheapest ante within delta of the best winrate
+
+            for (int i = 0; i < copyRootNoode.children.Length; i++)
+            {
+                if (copyRootNoode.children[i].winrate >= best - ANTE_DELTA && i < bestAnte)
+                {
+                    bestAnte = i;
+                }
+            }
+
+
+            return bestAnte;
 
         }
 
