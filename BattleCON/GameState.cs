@@ -19,9 +19,9 @@ namespace BattleCON
 
     public class MCTS_BestSequenceExtractor
     {
-        private MCTS_Node node;
+        private SimpleNode node;
 
-        public MCTS_BestSequenceExtractor(MCTS_Node initialNode)
+        public MCTS_BestSequenceExtractor(SimpleNode initialNode)
         {
             node = initialNode;
         }
@@ -33,29 +33,37 @@ namespace BattleCON
 
             double best = -1;
 
+            SimpleNode sn;
+
             for (int i = 0; i < node.children.Length; i++)
             {
-                if (node.children[i].winrate > best)
+                sn = (SimpleNode)node.children[i];
+                if (sn.winrate > best)
                 {
-                    best = node.children[i].winrate;
+                    best = sn.winrate;
                     result = i;
                 }
             }
 
-            node = node.children[result];
+            node = (SimpleNode)node.children[result];
             return result;
 
         }
     }
 
 
-    public class MCTS_Node
+    public class Node
+    {
+    }
+
+
+    public class SimpleNode : Node
     {
         public Player player;
         public int games = 0;
         public int wins = 0;
-        public MCTS_Node[] children;
-        public MCTS_Node parent = null;
+        public Node[] children;
+        public Node parent = null;
         public double winrate;
 
         internal double bestWinrate()
@@ -63,7 +71,7 @@ namespace BattleCON
             if (children != null)
             {
                 double best = 0;
-                foreach (MCTS_Node child in children)
+                foreach (SimpleNode child in children)
                     if (child != null)
                         if (child.winrate > best)
                             best = child.winrate;
@@ -165,8 +173,8 @@ namespace BattleCON
         public static int PLAYOUT_SCREEN_UPDATE_RATE = 10000;
         private static double ANTE_DELTA = 0.02;
 
-        public MCTS_Node rootNode;
-        public MCTS_Node currentNode;
+        public SimpleNode rootNode;
+        public SimpleNode currentNode;
 
         public PlayoutStartType pst = PlayoutStartType.Normal;
         public Player playoutStartPlayer = null;
@@ -544,12 +552,12 @@ namespace BattleCON
         }
 
 
-        internal MCTS_Node MCTS_playouts(Player player, PlayoutStartType rpst, GameState fillOrigin)
+        internal SimpleNode MCTS_playouts(Player player, PlayoutStartType rpst, GameState fillOrigin)
         {
 
             GameState copy = new GameState(this);
 
-            copy.rootNode = new MCTS_Node();
+            copy.rootNode = new SimpleNode();
             copy.rootNode.games = 1; // to not waste the first game
 
             bw.ReportProgress(3);
@@ -588,27 +596,29 @@ namespace BattleCON
         internal AttackingPair MCTS_attackingPair(Player player)
         {
 
-            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.AttackPairSelection, this);
+            SimpleNode copyRootNoode = MCTS_playouts(player, PlayoutStartType.AttackPairSelection, this);
 
             int styleNumber = -1;
             int baseNumber = -1;
 
             // DEBUG
 
-            MCTS_Node styleNode;
-            MCTS_Node baseNode;
+            SimpleNode styleNode;
+            SimpleNode baseNode;
 
             List<DebugNodeComparable> pairs = new List<DebugNodeComparable>();
 
+            
             for (int i = 0; i < copyRootNoode.children.Length; i++)
             {
-                styleNode = copyRootNoode.children[i];
+
+                styleNode = (SimpleNode)copyRootNoode.children[i];
                 if (styleNode.children == null)
                     continue;
 
                 for (int j = 0; j < styleNode.children.Length; j++)
                 {
-                    baseNode = styleNode.children[j];
+                    baseNode = (SimpleNode)styleNode.children[j];
 
                     if (baseNode == null)
                         continue;
@@ -635,23 +645,31 @@ namespace BattleCON
 
             double best = -1;
 
+            SimpleNode sn;
+
             for (int i = 0; i < copyRootNoode.children.Length; i++)
-                if (copyRootNoode.children[i].winrate > best)
+            {
+                sn = (SimpleNode)copyRootNoode.children[i];
+                if (sn.winrate > best)
                 {
-                    best = copyRootNoode.children[i].winrate;
+                    best = sn.winrate;
                     styleNumber = i;
                 }
+            }
 
-            styleNode = copyRootNoode.children[styleNumber];
+            styleNode = (SimpleNode)copyRootNoode.children[styleNumber];
 
             best = -1;
 
             for (int i = 0; i < styleNode.children.Length; i++)
-                if (styleNode.children[i].winrate > best)
+            {
+                sn = (SimpleNode)styleNode.children[i]; 
+                if (sn.winrate > best)
                 {
-                    best = styleNode.children[i].winrate;
+                    best = sn.winrate;
                     baseNumber = i;
                 }
+            }
 
             return new AttackingPair(styleNumber, baseNumber);
             
@@ -661,7 +679,7 @@ namespace BattleCON
         internal int MCTS_ante(Player player)
         {
 
-            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.AnteSelection, this);
+            SimpleNode copyRootNoode = MCTS_playouts(player, PlayoutStartType.AnteSelection, this);
 
             int bestAnte = -1;
 
@@ -669,15 +687,17 @@ namespace BattleCON
             
             double best = -1;
 
+            SimpleNode sn;
+
             for (int i = 0; i < copyRootNoode.children.Length; i++)
             {
-
+                sn = (SimpleNode)copyRootNoode.children[i];
                 if (DEBUG_MESSAGES)
-                    player.g.writeToConsole("DEBUG Ante " + i + ": " + copyRootNoode.children[i].games + " " + copyRootNoode.children[i].winrate);
+                    player.g.writeToConsole("DEBUG Ante " + i + ": " + sn.games + " " + sn.winrate);
 
-                if (copyRootNoode.children[i].winrate > best)
+                if (sn.winrate > best)
                 {
-                    best = copyRootNoode.children[i].winrate;
+                    best = sn.winrate;
                     
                     bestAnte = i;
                 }
@@ -687,7 +707,8 @@ namespace BattleCON
 
             for (int i = 0; i < copyRootNoode.children.Length; i++)
             {
-                if (copyRootNoode.children[i].winrate >= best - ANTE_DELTA && i < bestAnte)
+                sn = (SimpleNode)copyRootNoode.children[i];
+                if (sn.winrate >= best - ANTE_DELTA && i < bestAnte)
                 {
                     bestAnte = i;
                 }
@@ -702,18 +723,23 @@ namespace BattleCON
         internal int MCTS_clash(Player player)
         {
 
-            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.ClashResolution, this);
+            SimpleNode copyRootNoode = MCTS_playouts(player, PlayoutStartType.ClashResolution, this);
 
             int styleNumber = -1;
 
             double best = -1;
 
+            SimpleNode sn;
+
             for (int i = 0; i < copyRootNoode.children.Length; i++)
-                if (copyRootNoode.children[i].winrate > best)
+            {
+                sn = (SimpleNode) copyRootNoode.children[i]; 
+                if (sn.winrate > best)
                 {
-                    best = copyRootNoode.children[i].winrate;
+                    best = sn.winrate;
                     styleNumber = i;
                 }
+            }
 
             return styleNumber;
 
@@ -723,18 +749,24 @@ namespace BattleCON
         private int MCTS_beatResolution(int number, Player p)
         {
 
-            MCTS_Node copyRootNoode = MCTS_playouts(p, PlayoutStartType.BeatResolution, checkPoint);
+            SimpleNode copyRootNoode = MCTS_playouts(p, PlayoutStartType.BeatResolution, checkPoint);
 
             int choice = -1;
 
             double best = -1;
 
+            SimpleNode sn;
+
+
             for (int i = 0; i < copyRootNoode.children.Length; i++)
-                if (copyRootNoode.children[i].winrate > best)
+            {
+                sn = (SimpleNode) copyRootNoode.children[i];
+                if (sn.winrate > best)
                 {
-                    best = copyRootNoode.children[i].winrate;
+                    best = sn.winrate;
                     choice = i;
                 }
+            }
 
             return choice;
 
@@ -744,7 +776,7 @@ namespace BattleCON
 
         private void updateStats(Player winner)
         {
-            MCTS_Node n = currentNode;
+            SimpleNode n = currentNode;
 
             while (n != null)
             {
@@ -754,7 +786,7 @@ namespace BattleCON
 
                 n.winrate = (double)n.wins / n.games; 
 
-                n = n.parent;
+                n = (SimpleNode) n.parent;
             }
         }
 
@@ -796,10 +828,10 @@ namespace BattleCON
                 double bestUCT = 0;
                 int result = -1;
                 double UCTvalue = 0;
-                MCTS_Node child;
+                SimpleNode child;
 
                 if (currentNode.children == null)
-                    currentNode.children = new MCTS_Node[number];
+                    currentNode.children = new SimpleNode[number];
 
                 for (int i = 0; i < number; i++)
                 {
@@ -808,7 +840,7 @@ namespace BattleCON
                         UCTvalue = 10000 + rnd.Next(1000);
                     else
                     {
-                        child = currentNode.children[i];
+                        child = (SimpleNode)currentNode.children[i];
                         UCTvalue = (double) child.wins / child.games + EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(currentNode.games) / child.games);
                     }
 
@@ -821,12 +853,13 @@ namespace BattleCON
 
                 if (currentNode.children[result] == null)
                 {
-                    currentNode.children[result] = new MCTS_Node();
-                    currentNode.children[result].parent = currentNode;
-                    currentNode.children[result].player = p;
+                    SimpleNode newChild = new SimpleNode();
+                    newChild.parent = currentNode;
+                    newChild.player = p;
+                    currentNode.children[result] = newChild;
                 }
 
-                currentNode = currentNode.children[result];
+                currentNode = (SimpleNode)currentNode.children[result];
 
                 return result;
 
@@ -837,7 +870,7 @@ namespace BattleCON
 
         internal void MCTS_selectSetupCards(Player player)
         {
-            MCTS_Node copyRootNoode = MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this);
+            SimpleNode copyRootNoode = MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this);
 
             MCTS_BestSequenceExtractor e = new MCTS_BestSequenceExtractor(copyRootNoode);
 
