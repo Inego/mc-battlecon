@@ -104,6 +104,7 @@ namespace BattleCON
             _waitHandle.Set();
         }
 
+
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
 
@@ -113,9 +114,8 @@ namespace BattleCON
 
             currentGame.writeToConsole("The game is over. You may now start a new one.");
 
-            
-
         }
+
 
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {

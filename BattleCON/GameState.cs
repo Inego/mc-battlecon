@@ -19,9 +19,9 @@ namespace BattleCON
 
     public class MCTS_BestSequenceExtractor
     {
-        private SimpleEnd node;
+        private SimpleStart node;
 
-        public MCTS_BestSequenceExtractor(SimpleEnd initialNode)
+        public MCTS_BestSequenceExtractor(SimpleStart initialNode)
         {
             node = initialNode;
         }
@@ -33,13 +33,13 @@ namespace BattleCON
 
             double best = -1;
 
-            SimpleStart ss = (SimpleStart)node.next;
-
             SimpleEnd sn;
 
-            for (int i = 0; i < ss.children.Length; i++)
+            for (int i = 0; i < node.children.Length; i++)
             {
-                sn = (SimpleEnd)ss.children[i];
+                sn = node.children[i];
+                if (sn == null)
+                    continue;
                 if (sn.winrate > best)
                 {
                     best = sn.winrate;
@@ -47,7 +47,7 @@ namespace BattleCON
                 }
             }
 
-            node = ss.children[result];
+            node = (SimpleStart)node.children[result].next;
             return result;
 
         }
@@ -63,6 +63,13 @@ namespace BattleCON
         public bool pureRandom = false;
         
         public SimpleStart cn;
+
+        public SimpleEnd currentEnd;
+
+
+        public MoveSequence()
+        {
+        }
 
         public MoveSequence(SimpleStart baseNode)
         {
@@ -122,7 +129,9 @@ namespace BattleCON
                     newChild.next = newSS;
                 }
 
-                cn = (SimpleStart)cn.children[result].next;
+                currentEnd = cn.children[result];
+
+                cn = (SimpleStart)currentEnd.next;
 
                 return result;
 
@@ -176,6 +185,19 @@ namespace BattleCON
     public class ParallelSequences
     {
         public MoveSequence[] sequences;
+
+        public ParallelStart start;
+
+        internal NodeEnd updateStats(Player p)
+        {
+            foreach (MoveSequence ms in sequences)
+            {
+                if (ms.currentEnd != null)
+                    ms.currentEnd.updateStats(p);
+            }
+
+            return start.parent;
+        }
     }
 
     
@@ -391,6 +413,7 @@ namespace BattleCON
 
         public NodeStart rootNode;
         public NodeEnd currentNode;
+        public ParallelSequences currentParallelSequences;
 
         public PlayoutStartType pst = PlayoutStartType.Normal;
         public Player playoutStartPlayer = null;
@@ -448,7 +471,8 @@ namespace BattleCON
             // MCTS
             this.pst = pst;
             this.playoutStartPlayer = playoutStartPlayer.first ? p1 : p2;
-            currentNode = rootNode;
+            currentNode = new SimpleEnd();
+            currentNode.next = rootNode;
             pureRandom = false;
             
         }
@@ -1001,15 +1025,16 @@ namespace BattleCON
 
         private void updateStats(Player winner)
         {
-            Node n = currentNode;
+            NodeEnd n;
+
+            if (currentParallelSequences != null)
+                n = currentParallelSequences.updateStats(winner);
+            else
+                n = currentNode;
 
             while (n != null)
-            {
                 n = n.updateStats(winner);
 
-
-                
-            }
         }
 
 
@@ -1039,55 +1064,53 @@ namespace BattleCON
             if (pureRandom)
                 return rnd.Next(number);
 
-            SimpleNode cn = (SimpleNode)currentNode;
-
-            if (cn.games == 0)
+            if (currentNode.next == null)
             {
+                currentNode.next = new SimpleStart(false);
+
                 pureRandom = true;
                 return rnd.Next(number);
             }
 
-            else
+            SimpleStart cn = (SimpleStart)currentNode.next;
+            
+            double bestUCT = 0;
+            int result = -1;
+            double UCTvalue = 0;
+            SimpleEnd child;
+
+            if (cn.children == null)
+                cn.children = new SimpleEnd[number];
+
+            for (int i = 0; i < number; i++)
             {
-                double bestUCT = 0;
-                int result = -1;
-                double UCTvalue = 0;
-                SimpleNode child;
-
-                if (cn.children == null)
-                    cn.children = new SimpleNode[number];
-
-                for (int i = 0; i < number; i++)
+                if (cn.children[i] == null)
+                    // Always play a random unexplored move first
+                    UCTvalue = 10000 + rnd.Next(1000);
+                else
                 {
-                    if (cn.children[i] == null)
-                        // Always play a random unexplored move first
-                        UCTvalue = 10000 + rnd.Next(1000);
-                    else
-                    {
-                        child = (SimpleNode)cn.children[i];
-                        UCTvalue = (double) child.wins / child.games + EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
-                    }
-
-                    if (UCTvalue > bestUCT)
-                    {
-                        result = i;
-                        bestUCT = UCTvalue;
-                    }
+                    child = cn.children[i];
+                    UCTvalue = (double) child.wins / child.games + EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
                 }
 
-                if (cn.children[result] == null)
+                if (UCTvalue > bestUCT)
                 {
-                    SimpleNode newChild = new SimpleNode(false);
-                    newChild.parent = currentNode;
-                    newChild.player = p;
-                    cn.children[result] = newChild;
+                    result = i;
+                    bestUCT = UCTvalue;
                 }
-
-                currentNode = (SimpleNode)cn.children[result];
-
-                return result;
-
             }
+
+            if (cn.children[result] == null)
+            {
+                SimpleEnd newChild = new SimpleEnd();
+                newChild.start = cn;
+                newChild.player = p;
+                cn.children[result] = newChild;
+            }
+
+            currentNode = cn.children[result];
+
+            return result;
 
         }
 
@@ -1095,7 +1118,7 @@ namespace BattleCON
         internal void MCTS_selectSetupCards(Player player)
         {
 
-            ParallelNode rNode = new ParallelNode(2);
+            ParallelStart rNode = new ParallelStart(2);
 
 
             MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this, rNode);
