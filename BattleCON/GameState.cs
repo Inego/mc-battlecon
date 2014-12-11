@@ -179,6 +179,10 @@ namespace BattleCON
             moves.Add(move);
         }
 
+        public DynamicMoveSequence(SimpleStart baseNode) : base(baseNode)
+        {
+        }
+
     }
 
 
@@ -214,6 +218,11 @@ namespace BattleCON
         public abstract NodeEnd updateStats(Player winner);
         
         public NodeStart next;
+
+        internal double bestWinrate()
+        {
+            return next.bestWinrate();
+        }
     }
     
 
@@ -411,9 +420,10 @@ namespace BattleCON
         public static int PLAYOUT_SCREEN_UPDATE_RATE = 10000;
         private static double ANTE_DELTA = 0.02;
 
-        public NodeStart rootNode;
+        public NodeEnd rootNode;
         public NodeEnd currentNode;
         public ParallelSequences currentParallelSequences;
+        public NodeStart currentStart;
 
         public PlayoutStartType pst = PlayoutStartType.Normal;
         public Player playoutStartPlayer = null;
@@ -427,8 +437,6 @@ namespace BattleCON
         public bool pureRandom;
         public static double EXPLORATION_WEIGHT;
         public static bool DEBUG_MESSAGES;
-        
-        
         
 
         public GameState(Character c1, Character c2, GameVariant variant,  BackgroundWorker bw, EventWaitHandle waitHandle)
@@ -471,8 +479,7 @@ namespace BattleCON
             // MCTS
             this.pst = pst;
             this.playoutStartPlayer = playoutStartPlayer.first ? p1 : p2;
-            currentNode = new SimpleEnd();
-            currentNode.next = rootNode;
+            currentNode = rootNode;
             pureRandom = false;
             
         }
@@ -484,6 +491,9 @@ namespace BattleCON
             p2 = new Player(gameState.p2.c, this);
 
             variant = gameState.variant;
+
+            rootNode = new SimpleEnd();
+            currentNode = rootNode;
 
             p1.opponent = p2;
             p2.opponent = p1;
@@ -792,12 +802,12 @@ namespace BattleCON
         }
 
 
-        internal void MCTS_playouts(Player player, PlayoutStartType rpst, GameState fillOrigin, NodeStart rootNode)
+        internal void MCTS_playouts(Player player, PlayoutStartType rpst, GameState fillOrigin, NodeStart startNode)
         {
 
             GameState copy = new GameState(this);
 
-            copy.rootNode = rootNode;
+            copy.addStartNode(startNode);
 
             bw.ReportProgress(3);
 
@@ -823,6 +833,13 @@ namespace BattleCON
             }
 
             
+        }
+
+        private void addStartNode(NodeStart startNode)
+        {
+            currentNode.next = startNode;
+            startNode.parent = currentNode;
+            this.currentStart = startNode;
         }
 
 
@@ -1033,8 +1050,12 @@ namespace BattleCON
                 n = currentNode;
 
             while (n != null)
+            {
                 n = n.updateStats(winner);
 
+
+                
+            }
         }
 
 
