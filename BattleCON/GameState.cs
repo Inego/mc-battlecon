@@ -19,6 +19,9 @@ namespace BattleCON
 
     public abstract class NodeStart
     {
+        public NodeEnd parent;
+
+        public abstract double bestWinrate(Player p);
         
     }
 
@@ -27,7 +30,7 @@ namespace BattleCON
     {
         
         public NodeStart next;
-        public NodeEnd parent;
+        
 
         public abstract NodeEnd updateStats(Player winner);
 
@@ -36,10 +39,13 @@ namespace BattleCON
 
     public class SimpleStart : NodeStart
     {
+
+        public Player player;
+        public int games = 1;
         
         public SimpleEnd[] children;
 
-        public double bestWinrate()
+        public override double bestWinrate(Player p)
         {
             if (children != null)
             {
@@ -60,17 +66,18 @@ namespace BattleCON
     public class SimpleEnd : NodeEnd
     {
         public double winrate;
-        public Player player;
+        public SimpleStart owner;
+        
         public int games = 0;
         public int wins = 0;
         
         public override NodeEnd updateStats(Player winner)
         {
             games++;
-            if (player == winner)
+            if (owner.player == winner)
                 wins++;
             winrate = (double)wins / games;
-            return parent;
+            return owner.parent;
         }
 
     }
@@ -90,6 +97,14 @@ namespace BattleCON
             tree2 = new SimpleStart();
         }
 
+        public override double bestWinrate(Player p)
+        {
+            if (tree1.player == p)
+                return tree1.bestWinrate(p);
+            else
+                return tree2.bestWinrate(p);
+        }
+
     }
 
 
@@ -97,10 +112,11 @@ namespace BattleCON
     {
         public SimpleEnd top1;
         public SimpleEnd top2;
+
+        public ParallelStart owner;
+
     }
     
-
-
 
     public class DebugNodeComparable : IComparable<DebugNodeComparable>
     {
@@ -195,7 +211,7 @@ namespace BattleCON
         public NodeStart rootNode;
 
         public NodeStart currentStart;
-        public NodeEnd currentNode;
+        public NodeEnd currentEnd;
         
         
 
@@ -208,7 +224,15 @@ namespace BattleCON
 
         public GameState checkPoint;
 
+        
+
         public bool pureRandom;
+        public bool pureRandom1;
+        public bool pureRandom2;
+
+        public SimpleStart currentStart1;
+        public SimpleStart currentStart2;
+
         public static double EXPLORATION_WEIGHT;
         public static bool DEBUG_MESSAGES;
         
@@ -253,7 +277,7 @@ namespace BattleCON
             // MCTS
             this.pst = pst;
             this.playoutStartPlayer = playoutStartPlayer.first ? p1 : p2;
-            currentNode = rootNode;
+            currentStart = rootNode;
             pureRandom = false;
             
         }
@@ -265,9 +289,6 @@ namespace BattleCON
             p2 = new Player(gameState.p2.c, this);
 
             variant = gameState.variant;
-
-            rootNode = new SimpleEnd();
-            currentNode = rootNode;
 
             p1.opponent = p2;
             p2.opponent = p1;
@@ -593,7 +614,8 @@ namespace BattleCON
                     EXPLORATION_WEIGHT = 0.8;
 
                     playoutsDone = i;
-                    bestWinrate = copy.rootNode.bestWinrate();
+                    bestWinrate = copy.rootNode.bestWinrate(player);
+
                     bw.ReportProgress(2);
                 }
 
@@ -611,8 +633,6 @@ namespace BattleCON
 
         private void addStartNode(NodeStart startNode)
         {
-            currentNode.next = startNode;
-            startNode.parent = currentNode;
             this.currentStart = startNode;
         }
 
@@ -620,11 +640,11 @@ namespace BattleCON
 
         internal AttackingPair MCTS_attackingPair(Player player)
         {
-            ParallelStart rNode = new ParallelStart(2);
+            ParallelStart rNode = new ParallelStart();
             
             MCTS_playouts(player, PlayoutStartType.AttackPairSelection, this, rNode);
 
-            SimpleStart copyRootNode = rNode[0];
+            SimpleStart copyRootNode = rNode.tree1;
 
             int styleNumber = -1;
             int baseNumber = -1;
@@ -711,11 +731,11 @@ namespace BattleCON
 
         internal int MCTS_ante(Player player)
         {
-            ParallelStart rNode = new ParallelStart(2);
+            ParallelStart rNode = new ParallelStart();
 
             MCTS_playouts(player, PlayoutStartType.AnteSelection, this, rNode);
 
-            SimpleStart copyRootNode = rNode[0];
+            SimpleStart copyRootNode = rNode.tree1;
 
             int bestAnte = -1;
 
@@ -758,11 +778,11 @@ namespace BattleCON
         internal int MCTS_clash(Player player)
         {
             
-            ParallelStart rNode = new ParallelStart(2);
+            ParallelStart rNode = new ParallelStart();
             
             MCTS_playouts(player, PlayoutStartType.ClashResolution, this, rNode);
 
-            SimpleStart copyRootNode = rNode[0];
+            SimpleStart copyRootNode = rNode.tree1;
 
             int styleNumber = -1;
 
@@ -788,7 +808,7 @@ namespace BattleCON
         private int MCTS_beatResolution(int number, Player p)
         {
 
-            SimpleStart rNode = new SimpleStart(true);
+            SimpleStart rNode = new SimpleStart();
 
             MCTS_playouts(p, PlayoutStartType.BeatResolution, checkPoint, rNode);
 
