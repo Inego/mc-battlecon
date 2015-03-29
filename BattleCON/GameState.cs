@@ -230,8 +230,8 @@ namespace BattleCON
         public bool pureRandom1;
         public bool pureRandom2;
 
-        public SimpleStart currentStart1;
-        public SimpleStart currentStart2;
+        public SimpleEnd currentEnd1;
+        public SimpleEnd currentEnd2;
 
         public static double EXPLORATION_WEIGHT;
         public static bool DEBUG_MESSAGES;
@@ -838,18 +838,20 @@ namespace BattleCON
         {
             NodeEnd n;
 
-            if (currentParallelSequences != null)
-                n = currentParallelSequences.updateStats(winner);
+            if (currentStart is SimpleStart)
+                n = currentEnd; // SimpleEnd
             else
-                n = currentNode;
+            {
+                currentEnd1.updateStats(winner);
+                currentEnd2.updateStats(winner);
+                n = currentStart.parent;
+            }
 
             while (n != null)
             {
                 n = n.updateStats(winner);
-
-
-                
             }
+
         }
 
 
@@ -879,15 +881,15 @@ namespace BattleCON
             if (pureRandom)
                 return rnd.Next(number);
 
-            if (currentNode.next == null)
+            if (currentEnd.next == null)
             {
-                currentNode.next = new SimpleStart(false);
+                currentEnd.next = new SimpleStart();
 
                 pureRandom = true;
                 return rnd.Next(number);
             }
 
-            SimpleStart cn = (SimpleStart)currentNode.next;
+            SimpleStart cn = (SimpleStart)currentEnd.next;
             
             double bestUCT = 0;
             int result = -1;
@@ -918,12 +920,11 @@ namespace BattleCON
             if (cn.children[result] == null)
             {
                 SimpleEnd newChild = new SimpleEnd();
-                newChild.start = cn;
-                newChild.player = p;
+                newChild.owner = cn;
                 cn.children[result] = newChild;
             }
 
-            currentNode = cn.children[result];
+            currentEnd = cn.children[result];
 
             return result;
 
@@ -933,12 +934,12 @@ namespace BattleCON
         internal void MCTS_selectSetupCards(Player player)
         {
 
-            ParallelStart rNode = new ParallelStart(2);
+            ParallelStart rNode = new ParallelStart();
 
 
             MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this, rNode);
 
-            MCTS_BestSequenceExtractor e = new MCTS_BestSequenceExtractor(rNode[0]);
+            MCTS_BestSequenceExtractor e = new MCTS_BestSequenceExtractor(rNode.tree1);
 
             player.selectedCooldownStyle2 = e.getNextBest();
             player.selectedCooldownStyle1 = e.getNextBest();
