@@ -17,229 +17,29 @@ namespace BattleCON
     }
 
 
-    public class MCTS_BestSequenceExtractor
-    {
-        private SimpleStart node;
-
-        public MCTS_BestSequenceExtractor(SimpleStart initialNode)
-        {
-            node = initialNode;
-        }
-
-        public int getNextBest()
-        {
-
-            int result = -1;
-
-            double best = -1;
-
-            SimpleEnd sn;
-
-            for (int i = 0; i < node.children.Length; i++)
-            {
-                sn = node.children[i];
-                if (sn == null)
-                    continue;
-                if (sn.winrate > best)
-                {
-                    best = sn.winrate;
-                    result = i;
-                }
-            }
-
-            node = (SimpleStart)node.children[result].next;
-            return result;
-
-        }
-    }
-
-
-    public abstract class MoveSequence
-    {
-        static Random rnd = new Random();
-
-
-        public int hash = 17;
-        public bool pureRandom = false;
-        
-        public SimpleStart cn;
-
-        public SimpleEnd currentEnd;
-
-
-        public MoveSequence()
-        {
-        }
-
-        public MoveSequence(SimpleStart baseNode)
-        {
-            this.cn = baseNode;
-        }
-
-
-        public int makeMoveInternal(int number, Player p)
-        {
-            if (pureRandom)
-                return rnd.Next(number);
-            
-            if (cn.games == 0)
-            {
-                pureRandom = true;
-                return rnd.Next(number);
-            }
-
-            else
-            {
-                double bestUCT = 0;
-                int result = -1;
-                double UCTvalue = 0;
-                SimpleEnd child;
-
-                if (cn.children == null)
-                    cn.children = new SimpleEnd[number];
-
-                for (int i = 0; i < number; i++)
-                {
-                    if (cn.children[i] == null)
-                        // Always play a random unexplored move first
-                        UCTvalue = 10000 + rnd.Next(1000);
-                    else
-                    {
-                        child = cn.children[i];
-                        UCTvalue = (double) child.wins / child.games + GameState.EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
-                    }
-
-                    if (UCTvalue > bestUCT)
-                    {
-                        result = i;
-                        bestUCT = UCTvalue;
-                    }
-                }
-
-                if (cn.children[result] == null)
-                {
-                    SimpleEnd newChild = new SimpleEnd();
-                    newChild.start = cn;
-                    newChild.player = p;
-                    cn.children[result] = newChild;
-
-                    SimpleStart newSS = new SimpleStart(false);
-                    newSS.parent = newChild;
-
-                    newChild.next = newSS;
-                }
-
-                currentEnd = cn.children[result];
-
-                cn = (SimpleStart)currentEnd.next;
-
-                return result;
-
-            }
-        }
-
-
-        public void addWithHashing(int move)
-        {
-            this.add(move);
-            hash = hash * 19 + move;
-        }
-
-        public abstract void add(int move);
-    }
-
-
-    public class FixedStructMoveSequence : MoveSequence
-    {
-        int[] moves;
-
-        int currentMove = 0;
-
-        public FixedStructMoveSequence(SimpleStart baseNode, int depth) : base(baseNode)
-        {
-            moves = new int[depth];
-        }
-
-        public override void add(int move)
-        {
-            moves[currentMove] = move;
-            currentMove++;
-        }
-
-    }
-
-
-    // Move sequence of arbitrary length
-    public class DynamicMoveSequence : MoveSequence
-    {
-        List<int> moves = new List<int>();
-
-        public override void add(int move)
-        {
-            moves.Add(move);
-        }
-
-        public DynamicMoveSequence(SimpleStart baseNode) : base(baseNode)
-        {
-        }
-
-    }
-
-
-    public class ParallelSequences
-    {
-        public MoveSequence[] sequences;
-
-        public ParallelStart start;
-
-        internal NodeEnd updateStats(Player p)
-        {
-            foreach (MoveSequence ms in sequences)
-            {
-                if (ms.currentEnd != null)
-                    ms.currentEnd.updateStats(p);
-            }
-
-            return start.parent;
-        }
-    }
-
-    
     public abstract class NodeStart
     {
-        public NodeEnd parent;
-
-        public abstract double bestWinrate();
+        
     }
 
 
     public abstract class NodeEnd
     {
-        public abstract NodeEnd updateStats(Player winner);
         
         public NodeStart next;
+        public NodeEnd parent;
 
-        internal double bestWinrate()
-        {
-            return next.bestWinrate();
-        }
+        public abstract NodeEnd updateStats(Player winner);
+
     }
     
 
     public class SimpleStart : NodeStart
     {
         
-        public int games = 0;
-        
         public SimpleEnd[] children;
 
-        public SimpleStart(bool p)
-        {
-            if (p)
-                games = 1;
-        }
-
-        public override double bestWinrate()
+        public double bestWinrate()
         {
             if (children != null)
             {
@@ -254,9 +54,6 @@ namespace BattleCON
                 return 0;
         }
 
-        
-
-
     }
 
 
@@ -266,65 +63,40 @@ namespace BattleCON
         public Player player;
         public int games = 0;
         public int wins = 0;
-        public SimpleStart start;
-
+        
         public override NodeEnd updateStats(Player winner)
         {
             games++;
-
             if (player == winner)
                 wins++;
-
             winrate = (double)wins / games;
-
-            start.games++;
-
-            return start.parent;
+            return parent;
         }
-
-
-        
 
     }
 
 
     public class ParallelStart : NodeStart
     {
-        public SimpleStart[] parallelTrees;
-
         
-        public ParallelStart(int numberOfTrees)
-        {
-            parallelTrees = new SimpleStart[numberOfTrees];
+        public SimpleStart tree1;
+        public SimpleStart tree2;
 
-            for (int i = 0; i < numberOfTrees; i++)
-                parallelTrees[i] = new SimpleStart(true);
-        }
-
-        public SimpleStart this[int i]
-        {
-            get
-            {
-                return parallelTrees[i];
-            }
-
-            set
-            {
-                parallelTrees[i] = value;
-            }
-        }
-
-        public override double bestWinrate() {
-            return parallelTrees[0].bestWinrate();
-        }
-
+        public SortedDictionary<BitSequence, ParallelEnd> combinations;
         
+        public ParallelStart()
+        {
+            tree1 = new SimpleStart();
+            tree2 = new SimpleStart();
+        }
+
     }
 
 
     public class ParallelEnd
     {
-        public SimpleEnd[] tops;
+        public SimpleEnd top1;
+        public SimpleEnd top2;
     }
     
 
@@ -420,10 +192,12 @@ namespace BattleCON
         public static int PLAYOUT_SCREEN_UPDATE_RATE = 10000;
         private static double ANTE_DELTA = 0.02;
 
-        public NodeEnd rootNode;
-        public NodeEnd currentNode;
-        public ParallelSequences currentParallelSequences;
+        public NodeStart rootNode;
+
         public NodeStart currentStart;
+        public NodeEnd currentNode;
+        
+        
 
         public PlayoutStartType pst = PlayoutStartType.Normal;
         public Player playoutStartPlayer = null;

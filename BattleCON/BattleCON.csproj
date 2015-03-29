@@ -50,6 +50,7 @@
     <Compile Include="BattleBoard.Designer.cs">
       <DependentUpon>BattleBoard.cs</DependentUpon>
     </Compile>
+    <Compile Include="BitSequence.cs" />
     <Compile Include="Cards.cs" />
     <Compile Include="CommonBases.cs" />
     <Compile Include="GameSetupForm.cs">
