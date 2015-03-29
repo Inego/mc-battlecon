@@ -16,12 +16,43 @@ namespace BattleCON
         public int kPlayouts;
     }
 
+    public class MCTS_BestSequenceExtractor
+    {
+        private SimpleStart node;
+
+        public MCTS_BestSequenceExtractor(SimpleStart initialNode)
+        {
+            node = initialNode;
+        }
+
+        public int getNextBest()
+        {
+
+            int result = -1;
+
+            double best = -1;
+
+            for (int i = 0; i < node.children.Length; i++)
+            {
+                if (node.children[i].winrate > best)
+                {
+                    best = node.children[i].winrate;
+                    result = i;
+                }
+            }
+
+            node = node.children[result].next as SimpleStart;
+            return result;
+
+        }
+    }
+
 
     public abstract class NodeStart
     {
         public NodeEnd parent;
 
-        public abstract double bestWinrate(Player p);
+        public abstract double bestWinrate();
         
     }
 
@@ -45,7 +76,7 @@ namespace BattleCON
         
         public SimpleEnd[] children;
 
-        public override double bestWinrate(Player p)
+        public override double bestWinrate()
         {
             if (children != null)
             {
@@ -97,12 +128,9 @@ namespace BattleCON
             tree2 = new SimpleStart();
         }
 
-        public override double bestWinrate(Player p)
+        public override double bestWinrate()
         {
-            if (tree1.player == p)
-                return tree1.bestWinrate(p);
-            else
-                return tree2.bestWinrate(p);
+            return tree1.bestWinrate();
         }
 
     }
@@ -317,6 +345,9 @@ namespace BattleCON
             }
             else if (pst == PlayoutStartType.SetupCardsSelection)
             {
+                
+
+
                 playoutStartPlayer.makeSetupDecisions();
                 playoutStartPlayer.opponent.makeSetupDecisions();
 
@@ -614,7 +645,7 @@ namespace BattleCON
                     EXPLORATION_WEIGHT = 0.8;
 
                     playoutsDone = i;
-                    bestWinrate = copy.rootNode.bestWinrate(player);
+                    bestWinrate = copy.rootNode.bestWinrate();
 
                     bw.ReportProgress(2);
                 }
@@ -634,6 +665,8 @@ namespace BattleCON
         private void addStartNode(NodeStart startNode)
         {
             this.currentStart = startNode;
+            this.rootNode = startNode;
+
         }
 
 
