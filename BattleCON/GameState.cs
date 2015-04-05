@@ -8,6 +8,11 @@ using System.ComponentModel;
 namespace BattleCON
 {
 
+    public static class Constants
+    {
+        public static double EXPLORATION_WEIGHT = 0.8;
+    }
+
     public class GameSettings
     {
         public Character c1;
@@ -15,6 +20,7 @@ namespace BattleCON
 
         public int kPlayouts;
     }
+
 
     public class MCTS_BestSequenceExtractor
     {
@@ -153,6 +159,7 @@ namespace BattleCON
 
     }
 
+
     public class MoveSequence : BitSequence
     {
         public bool pureRandom;
@@ -181,22 +188,27 @@ namespace BattleCON
             if (pureRandom)
                 return rnd.Next(number);
 
+            int result = -1;
+
             if (current.next == null)
             {
                 current.next = new SimpleStart();
 
                 pureRandom = true;
 
+                result = rnd.Next(number);
+
                 if (opponent.pureRandom)
                     pmm.pureRandom = true;
+                else
+                    AddBits((uint)result, number);
 
-                return rnd.Next(number);
+                return result;
             }
 
             SimpleStart cn = (SimpleStart)current.next;
 
             double bestUCT = 0;
-            int result = -1;
             double UCTvalue = 0;
             SimpleEnd child;
 
@@ -211,7 +223,7 @@ namespace BattleCON
                 else
                 {
                     child = cn.children[i];
-                    UCTvalue = (double)child.wins / child.games + EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
+                    UCTvalue = (double)child.wins / child.games + Constants.EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
                 }
 
                 if (UCTvalue > bestUCT)
@@ -229,6 +241,8 @@ namespace BattleCON
             }
 
             current = cn.children[result];
+
+            AddBits((uint)result, number);
 
             return result;
 
@@ -278,9 +292,7 @@ namespace BattleCON
             if (pureRandom)
                 return rnd.Next(number);
 
-            int result = active.UCT_select(number);
-
-            return result;
+            return active.UCT_select(number);
 
             
         }
@@ -399,7 +411,6 @@ namespace BattleCON
 
         public bool pureRandom;
 
-        public static double EXPLORATION_WEIGHT;
         public static bool DEBUG_MESSAGES;
         
 
@@ -781,8 +792,6 @@ namespace BattleCON
                 if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
                 {
 
-                    EXPLORATION_WEIGHT = 0.8;
-
                     playoutsDone = i;
                     bestWinrate = copy.rootNode.bestWinrate();
 
@@ -1005,7 +1014,6 @@ namespace BattleCON
         }
 
 
-
         private void updateStats(Player winner)
         {
             NodeEnd n;
@@ -1078,7 +1086,7 @@ namespace BattleCON
                 else
                 {
                     child = cn.children[i];
-                    UCTvalue = (double) child.wins / child.games + EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
+                    UCTvalue = (double) child.wins / child.games + Constants.EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
                 }
 
                 if (UCTvalue > bestUCT)
