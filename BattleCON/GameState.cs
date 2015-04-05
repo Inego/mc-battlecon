@@ -156,13 +156,138 @@ namespace BattleCON
     public class MoveSequence : BitSequence
     {
         public bool pureRandom;
-        public SimpleStart current;
+        public SimpleEnd current;
+        public MoveSequence opponent;
+        public Random rnd = new Random();
+        public ParallelMoveManager pmm;
+
+
+        public MoveSequence(ParallelMoveManager pmm)
+        {
+            this.pmm = pmm;
+        }
         
+
         public new void reset()
         {
             pureRandom = false;
             base.reset();
-            current = new SimpleStart();
+            current = new SimpleEnd();
+        }
+
+
+        public int UCT_select(int number)
+        {
+            if (pureRandom)
+                return rnd.Next(number);
+
+            if (current.next == null)
+            {
+                current.next = new SimpleStart();
+
+                pureRandom = true;
+
+                if (opponent.pureRandom)
+                    pmm.pureRandom = true;
+
+                return rnd.Next(number);
+            }
+
+            SimpleStart cn = (SimpleStart)current.next;
+
+            double bestUCT = 0;
+            int result = -1;
+            double UCTvalue = 0;
+            SimpleEnd child;
+
+            if (cn.children == null)
+                cn.children = new SimpleEnd[number];
+
+            for (int i = 0; i < number; i++)
+            {
+                if (cn.children[i] == null)
+                    // Always play a random unexplored move first
+                    UCTvalue = 10000 + rnd.Next(1000);
+                else
+                {
+                    child = cn.children[i];
+                    UCTvalue = (double)child.wins / child.games + EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
+                }
+
+                if (UCTvalue > bestUCT)
+                {
+                    result = i;
+                    bestUCT = UCTvalue;
+                }
+            }
+
+            if (cn.children[result] == null)
+            {
+                SimpleEnd newChild = new SimpleEnd();
+                newChild.owner = cn;
+                cn.children[result] = newChild;
+            }
+
+            current = cn.children[result];
+
+            return result;
+
+        }
+    }
+
+
+    public class ParallelMoveManager
+    {
+        public bool pureRandom = false;
+        public MoveSequence s1;
+        public MoveSequence s2;
+        public MoveSequence active;
+        public Player firstPlayer;
+        public Random rnd = new Random();
+
+
+        public ParallelMoveManager()
+        {
+            s1 = new MoveSequence(this);
+            s2 = new MoveSequence(this);
+
+            s1.opponent = s2;
+            s2.opponent = s1;
+        }
+
+        public void initialize(Player firstPlayer)
+        {
+            if (pureRandom)
+                return;
+            this.firstPlayer = firstPlayer;
+            s1.reset();
+            s2.reset();
+            active = s1;
+        }
+
+        public void setPlayer(Player p)
+        {
+            if (pureRandom)
+                return;
+            active = (p == firstPlayer ? s1 : s2);
+        }
+
+
+        public int UCT_select(int number)
+        {
+            if (pureRandom)
+                return rnd.Next(number);
+
+            int result = active.UCT_select(number);
+
+            return result;
+
+            
+        }
+
+        public ParallelEnd finalize()
+        { 
+            return null;
         }
     }
     
@@ -304,6 +429,7 @@ namespace BattleCON
             this.waitHandle = waitHandle;
         }
 
+
         public void fillFromGameState(GameState g, PlayoutStartType pst, Player playoutStartPlayer)
         {
             p1.fillFromPlayer(g.p1);
@@ -338,6 +464,7 @@ namespace BattleCON
 
         }
 
+
         internal Player playout()
         {
             if (isMainGame)
@@ -358,9 +485,7 @@ namespace BattleCON
             }
             else if (pst == PlayoutStartType.SetupCardsSelection)
             {
-                initializeParallelSequence();
-
-
+                
                 playoutStartPlayer.makeSetupDecisions();
                 playoutStartPlayer.opponent.makeSetupDecisions();
 
@@ -400,15 +525,6 @@ namespace BattleCON
 
         }
 
-        private void initializeParallelSequence()
-        {
-            if (pureRandom)
-                return;
-
-
-
-            
-        }
 
         public void flushConsole()
         {
@@ -909,7 +1025,6 @@ namespace BattleCON
             }
 
         }
-
 
 
         internal int UCTSelect(int number, Player p, bool beatResolution)

@@ -63,13 +63,25 @@ namespace BattleCON
             return 0;
         }
 
-
-        public void AddBits(uint bitContainer, byte bitsToAdd)
+        public void AddBits(uint bitContainer, int choices)
         {
             if (currentBit == 0)
                 bits.Add(bitContainer);
             else
                 bits[bits.Count - 1] |= bitContainer << currentBit;
+
+            byte bitsToAdd;
+
+            if (choices < 3)
+                bitsToAdd = 1;
+            else if (choices < 5)
+                bitsToAdd = 2;
+            else if (choices < 9)
+                bitsToAdd = 3;
+            else if (choices < 17)
+                bitsToAdd = 4;
+            else
+                bitsToAdd = 5;
 
             currentBit += bitsToAdd;
 
