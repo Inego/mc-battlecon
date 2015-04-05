@@ -136,13 +136,34 @@ namespace BattleCON
     }
 
 
-    public class ParallelEnd
+    public class ParallelEnd : NodeEnd
     {
         public SimpleEnd top1;
         public SimpleEnd top2;
 
         public ParallelStart owner;
 
+        public override NodeEnd updateStats(Player winner)
+        {
+            top1.updateStats(winner);
+            top2.updateStats(winner);
+
+            return owner.parent;
+        }
+
+    }
+
+    public class MoveSequence : BitSequence
+    {
+        public bool pureRandom;
+        public SimpleStart current;
+        
+        public new void reset()
+        {
+            pureRandom = false;
+            base.reset();
+            current = new SimpleStart();
+        }
     }
     
 
@@ -240,8 +261,7 @@ namespace BattleCON
 
         public NodeStart currentStart;
         public NodeEnd currentEnd;
-        
-        
+
 
         public PlayoutStartType pst = PlayoutStartType.Normal;
         public Player playoutStartPlayer = null;
@@ -252,14 +272,7 @@ namespace BattleCON
 
         public GameState checkPoint;
 
-        
-
         public bool pureRandom;
-        public bool pureRandom1;
-        public bool pureRandom2;
-
-        public SimpleEnd currentEnd1;
-        public SimpleEnd currentEnd2;
 
         public static double EXPLORATION_WEIGHT;
         public static bool DEBUG_MESSAGES;
@@ -345,7 +358,7 @@ namespace BattleCON
             }
             else if (pst == PlayoutStartType.SetupCardsSelection)
             {
-                
+                initializeParallelSequence();
 
 
                 playoutStartPlayer.makeSetupDecisions();
@@ -385,6 +398,16 @@ namespace BattleCON
             // DRAW!
             return null;
 
+        }
+
+        private void initializeParallelSequence()
+        {
+            if (pureRandom)
+                return;
+
+
+
+            
         }
 
         public void flushConsole()

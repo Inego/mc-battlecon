@@ -82,6 +82,12 @@ namespace BattleCON
 
         }
 
+        public void reset()
+        {
+            bits.Clear();
+            currentBit = 0;
+        }
+
         public override string ToString()
         {
             string[] ints = new string[bits.Count];
