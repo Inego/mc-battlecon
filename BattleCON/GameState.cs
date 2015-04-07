@@ -160,25 +160,24 @@ namespace BattleCON
     }
 
 
-    public class MoveSequence : BitSequence
+    public class MoveSequence
     {
         public bool pureRandom;
         public SimpleEnd current;
         public MoveSequence opponent;
         public Random rnd = new Random();
-        public ParallelMoveManager pmm;
+        public MoveManager pmm;
 
 
-        public MoveSequence(ParallelMoveManager pmm)
+        public MoveSequence(MoveManager pmm)
         {
             this.pmm = pmm;
         }
         
 
-        public new void reset()
+        public new void Reset()
         {
             pureRandom = false;
-            base.reset();
             current = new SimpleEnd();
         }
 
@@ -200,8 +199,6 @@ namespace BattleCON
 
                 if (opponent.pureRandom)
                     pmm.pureRandom = true;
-                else
-                    AddBits((uint)result, number);
 
                 return result;
             }
@@ -242,44 +239,61 @@ namespace BattleCON
 
             current = cn.children[result];
 
-            AddBits((uint)result, number);
-
             return result;
 
         }
     }
 
 
-    public class ParallelMoveManager
+    public class MoveManager
     {
         public bool pureRandom = false;
-        public MoveSequence s1;
-        public MoveSequence s2;
-        public MoveSequence active;
-        public Player firstPlayer;
+
         public Random rnd = new Random();
 
+        public bool parallel;
 
-        public ParallelMoveManager()
+        // SINGLE MODE
+
+        public SimpleStart sStart;
+        public SimpleEnd   sEnd;
+
+        // PARALLEL MODE
+        
+        private BitSequence bitSequence;
+        
+        public MoveSequence s1;
+        public MoveSequence s2;
+        
+        public MoveSequence active;
+        
+        public Player firstPlayer;
+
+        public ParallelStart pStart;
+        public ParallelEnd   pEnd;
+        
+
+        public MoveManager()
         {
             s1 = new MoveSequence(this);
             s2 = new MoveSequence(this);
-
             s1.opponent = s2;
             s2.opponent = s1;
         }
 
-        public void initialize(Player firstPlayer)
+        public void ParallelInitialize(Player firstPlayer)
         {
             if (pureRandom)
                 return;
+            parallel = true;
             this.firstPlayer = firstPlayer;
-            s1.reset();
-            s2.reset();
+            bitSequence = new BitSequence();
+            s1.Reset();
+            s2.Reset();
             active = s1;
         }
 
-        public void setPlayer(Player p)
+        public void ParallelSetPlayer(Player p)
         {
             if (pureRandom)
                 return;
@@ -287,19 +301,41 @@ namespace BattleCON
         }
 
 
-        public int UCT_select(int number)
+        public int ParallelSelect(int number)
         {
             if (pureRandom)
                 return rnd.Next(number);
 
-            return active.UCT_select(number);
+            int result = active.UCT_select(number);
 
+            bitSequence.AddBits((uint)result, number);
+
+            return result;
             
         }
 
-        public ParallelEnd finalize()
-        { 
-            return null;
+        public void finalize()
+        {
+            if (pureRandom)
+                return;
+            parallel = false;
+
+            ParallelEnd found;
+
+            pStart.combinations.TryGetValue(bitSequence, out found);
+
+            if (found == null)
+            {
+                found = new ParallelEnd();
+                found.owner = pStart;
+                
+                pStart.combinations[bitSequence] = found;
+            }
+
+            // Must update tops even if they are here
+            found.top1 = s1.current;
+            found.top2 = s2.current;
+            
         }
     }
     

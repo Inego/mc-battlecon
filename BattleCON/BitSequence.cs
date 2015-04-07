@@ -21,19 +21,6 @@ namespace BattleCON
             currentBit = bits;
         }
 
-        public static byte GetBitNumber(int choices)
-        {
-            if (choices < 3)
-                return 1;
-            if (choices < 5)
-                return 2;
-            if (choices < 9)
-                return 3;
-            if (choices < 17)
-                return 4;
-            return 5; // :)
-        }
-
         private string IntToBit(byte pos)
         {
             return Convert.ToString(bits[pos], 2).PadLeft(32, '0');
@@ -92,12 +79,6 @@ namespace BattleCON
                     bits.Add(bitContainer >> (bitsToAdd - currentBit));
             }
 
-        }
-
-        public void reset()
-        {
-            bits.Clear();
-            currentBit = 0;
         }
 
         public override string ToString()
