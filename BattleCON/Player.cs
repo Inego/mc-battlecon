@@ -351,7 +351,7 @@ namespace BattleCON
                         moveNumber = g.selectionResult;
                     }
                     else
-                        moveNumber = g.UCTSelect(moves.Count, this, true);
+                        moveNumber = g.SimpleUCTSelect(moves.Count, this);
 
                     if (p.g.isMainGame)
                         p.g.registeredChoices.Add(moveNumber);
@@ -470,7 +470,7 @@ namespace BattleCON
 
             }
             else
-                styleNumber = g.UCTSelect(styles.Count, this, false);
+                styleNumber = g.ParallelUCTSelect(styles.Count, this, false);
 
             selectedStyle = styleNumber;
             //styles.RemoveAt(styleNumber);

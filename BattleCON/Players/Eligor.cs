@@ -203,7 +203,7 @@ namespace BattleCON
                         selected = p.g.selectionResult;
                     }
                     else
-                        selected = p.g.UCTSelect(newPos.Count, p, true);
+                        selected = p.g.SimpleUCTSelect(newPos.Count, p);
 
                     if (p.g.isMainGame)
                         p.g.registeredChoices.Add(selected);
@@ -249,7 +249,7 @@ namespace BattleCON
                     number = p.g.selectionResult;
                 }
                 else
-                    number = p.g.UCTSelect(maxNumber + 1, p, true);
+                    number = p.g.SimpleUCTSelect(maxNumber + 1, p, true);
 
                 if (p.g.isMainGame)
                     p.g.registeredChoices.Add(number);

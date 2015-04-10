@@ -175,7 +175,7 @@ namespace BattleCON
         }
         
 
-        public new void Reset()
+        public void Reset()
         {
             pureRandom = false;
             current = new SimpleEnd();
@@ -253,6 +253,8 @@ namespace BattleCON
 
         public bool parallel;
 
+        public NodeStart rootNode;
+
         // SINGLE MODE
 
         public SimpleStart sStart;
@@ -273,12 +275,15 @@ namespace BattleCON
         public ParallelEnd   pEnd;
         
 
-        public MoveManager()
+        public MoveManager(NodeStart rootNode)
         {
             s1 = new MoveSequence(this);
             s2 = new MoveSequence(this);
             s1.opponent = s2;
             s2.opponent = s1;
+
+            this.rootNode = rootNode;
+
         }
 
         public void ParallelInitialize(Player firstPlayer)
@@ -314,11 +319,10 @@ namespace BattleCON
             
         }
 
-        public void finalize()
+        public void ParallelFinalize()
         {
             if (pureRandom)
                 return;
-            parallel = false;
 
             ParallelEnd found;
 
@@ -336,6 +340,92 @@ namespace BattleCON
             found.top1 = s1.current;
             found.top2 = s2.current;
             
+        }
+
+        public void SingleInitialize()
+        {
+            if (pureRandom)
+                return;
+            parallel = false;
+
+        }
+
+
+        public void updateStats(Player winner)
+        {
+            NodeEnd n;
+
+            if (parallel)
+            {
+                s1.current.updateStats(winner);
+                s2.current.updateStats(winner);
+                n = pStart.parent;
+            }
+            else
+            {
+                n = sEnd; // SimpleEnd
+            }
+
+            while (n != null)
+            {
+                n = n.updateStats(winner);
+            }
+
+        }
+
+
+
+        internal int SingleSelect(int number)
+        {
+            if (pureRandom)
+                return rnd.Next(number);
+
+            if (sEnd.next == null)
+            {
+                sEnd.next = new SimpleStart();
+
+                pureRandom = true;
+                return rnd.Next(number);
+            }
+
+            SimpleStart cn = (SimpleStart)sEnd.next;
+
+            double bestUCT = 0;
+            int result = -1;
+            double UCTvalue = 0;
+            SimpleEnd child;
+
+            if (cn.children == null)
+                cn.children = new SimpleEnd[number];
+
+            for (int i = 0; i < number; i++)
+            {
+                if (cn.children[i] == null)
+                    // Always play a random unexplored move first
+                    UCTvalue = 10000 + rnd.Next(1000);
+                else
+                {
+                    child = cn.children[i];
+                    UCTvalue = (double)child.wins / child.games + Constants.EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
+                }
+
+                if (UCTvalue > bestUCT)
+                {
+                    result = i;
+                    bestUCT = UCTvalue;
+                }
+            }
+
+            if (cn.children[result] == null)
+            {
+                SimpleEnd newChild = new SimpleEnd();
+                newChild.owner = cn;
+                cn.children[result] = newChild;
+            }
+
+            sEnd = cn.children[result];
+
+            return result;
         }
     }
     
@@ -430,12 +520,6 @@ namespace BattleCON
         public static int PLAYOUT_SCREEN_UPDATE_RATE = 10000;
         private static double ANTE_DELTA = 0.02;
 
-        public NodeStart rootNode;
-
-        public NodeStart currentStart;
-        public NodeEnd currentEnd;
-
-
         public PlayoutStartType pst = PlayoutStartType.Normal;
         public Player playoutStartPlayer = null;
         public bool playoutPreviousAnte;
@@ -448,6 +532,8 @@ namespace BattleCON
         public bool pureRandom;
 
         public static bool DEBUG_MESSAGES;
+        
+        private MoveManager moveManager;
         
 
         public GameState(Character c1, Character c2, GameVariant variant,  BackgroundWorker bw, EventWaitHandle waitHandle)
@@ -491,7 +577,7 @@ namespace BattleCON
             // MCTS
             this.pst = pst;
             this.playoutStartPlayer = playoutStartPlayer.first ? p1 : p2;
-            currentStart = rootNode;
+            
             pureRandom = false;
             
         }
@@ -819,8 +905,6 @@ namespace BattleCON
 
             GameState copy = new GameState(this);
 
-            copy.addStartNode(startNode);
-
             bw.ReportProgress(3);
 
             for (int i = 1; i <= MAX_PLAYOUTS; i++)
@@ -829,7 +913,7 @@ namespace BattleCON
                 {
 
                     playoutsDone = i;
-                    bestWinrate = copy.rootNode.bestWinrate();
+                    bestWinrate = startNode.bestWinrate();
 
                     bw.ReportProgress(2);
                 }
@@ -846,15 +930,17 @@ namespace BattleCON
             
         }
 
-        private void addStartNode(NodeStart startNode)
+        private void updateStats(Player winner)
         {
-            this.currentStart = startNode;
-            this.rootNode = startNode;
-
+            moveManager.updateStats(winner);
         }
 
+        private void initializeMoveManager(NodeStart startNode)
+        {
+            throw new NotImplementedException();
+        }
 
-
+        
         internal AttackingPair MCTS_attackingPair(Player player)
         {
             ParallelStart rNode = new ParallelStart();
@@ -1049,99 +1135,24 @@ namespace BattleCON
 
         }
 
-
-        private void updateStats(Player winner)
+        internal int SimpleUCTSelect(int number, Player p)
         {
-            NodeEnd n;
+            if (isMainGame)
+                return MCTS_beatResolution(number, p);
 
-            if (currentStart is SimpleStart)
-                n = currentEnd; // SimpleEnd
-            else
+            if (pst == PlayoutStartType.BeatResolution)
             {
-                currentEnd1.updateStats(winner);
-                currentEnd2.updateStats(winner);
-                n = currentStart.parent;
-            }
-
-            while (n != null)
-            {
-                n = n.updateStats(winner);
-            }
-
-        }
-
-
-        internal int UCTSelect(int number, Player p, bool beatResolution)
-        {
-            if (beatResolution)
-            {
-                if (isMainGame)
-                    return MCTS_beatResolution(number, p);
-
-                if (pst == PlayoutStartType.BeatResolution)
+                if (currentRegisteredChoice < registeredChoices.Count)
                 {
-                    if (currentRegisteredChoice < registeredChoices.Count)
-                    {
-                        currentRegisteredChoice++;
-                        return registeredChoices[currentRegisteredChoice - 1];
-                    }
-
-                    pst = PlayoutStartType.Normal;
-
+                    currentRegisteredChoice++;
+                    return registeredChoices[currentRegisteredChoice - 1];
                 }
 
+                pst = PlayoutStartType.Normal;
+
             }
 
-
-            if (pureRandom)
-                return rnd.Next(number);
-
-            if (currentEnd.next == null)
-            {
-                currentEnd.next = new SimpleStart();
-
-                pureRandom = true;
-                return rnd.Next(number);
-            }
-
-            SimpleStart cn = (SimpleStart)currentEnd.next;
-            
-            double bestUCT = 0;
-            int result = -1;
-            double UCTvalue = 0;
-            SimpleEnd child;
-
-            if (cn.children == null)
-                cn.children = new SimpleEnd[number];
-
-            for (int i = 0; i < number; i++)
-            {
-                if (cn.children[i] == null)
-                    // Always play a random unexplored move first
-                    UCTvalue = 10000 + rnd.Next(1000);
-                else
-                {
-                    child = cn.children[i];
-                    UCTvalue = (double) child.wins / child.games + Constants.EXPLORATION_WEIGHT * Math.Sqrt(Math.Log(cn.games) / child.games);
-                }
-
-                if (UCTvalue > bestUCT)
-                {
-                    result = i;
-                    bestUCT = UCTvalue;
-                }
-            }
-
-            if (cn.children[result] == null)
-            {
-                SimpleEnd newChild = new SimpleEnd();
-                newChild.owner = cn;
-                cn.children[result] = newChild;
-            }
-
-            currentEnd = cn.children[result];
-
-            return result;
+            return moveManager.SingleSelect(number);
 
         }
 
