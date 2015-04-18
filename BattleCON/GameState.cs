@@ -253,7 +253,7 @@ namespace BattleCON
 
         public bool parallel;
 
-        public NodeStart rootNode;
+        public NodeEnd commonEnd;
 
         // SINGLE MODE
 
@@ -269,47 +269,64 @@ namespace BattleCON
         
         public MoveSequence active;
         
-        public Player firstPlayer;
+        public Player p1;
+        public Player p2;
 
         public ParallelStart pStart;
         public ParallelEnd   pEnd;
+
+        private NodeStart rootNode;
         
 
-        public MoveManager(NodeStart rootNode)
+        public MoveManager(NodeStart rootNode, Player p1, Player p2)
         {
             s1 = new MoveSequence(this);
             s2 = new MoveSequence(this);
             s1.opponent = s2;
             s2.opponent = s1;
 
-            this.rootNode = rootNode;
+            this.p1 = p1;
+            this.p2 = p2;
 
+            this.rootNode = rootNode;
+            
         }
 
-        public void ParallelInitialize(Player firstPlayer)
+
+        public void ParallelInitialize()
         {
             if (pureRandom)
                 return;
+
+            Finalize();
+
             parallel = true;
-            this.firstPlayer = firstPlayer;
+            
             bitSequence = new BitSequence();
+            
             s1.Reset();
             s2.Reset();
-            active = s1;
+
+            if (commonEnd == null)
+            {
+                pStart = (ParallelStart)rootNode;
+            }
+            else
+            {
+                pStart = (ParallelStart)commonEnd.next;
+            }
+
+            pEnd = null;
+            
         }
 
-        public void ParallelSetPlayer(Player p)
-        {
-            if (pureRandom)
-                return;
-            active = (p == firstPlayer ? s1 : s2);
-        }
 
-
-        public int ParallelSelect(int number)
+        public int ParallelSelect(int number, Player p)
         {
             if (pureRandom)
                 return rnd.Next(number);
+
+            MoveSequence active = (p == p1 ? s1 : s2);
 
             int result = active.UCT_select(number);
 
@@ -319,9 +336,10 @@ namespace BattleCON
             
         }
 
+
         public void ParallelFinalize()
         {
-            if (pureRandom)
+            if (commonEnd == null)
                 return;
 
             ParallelEnd found;
@@ -339,44 +357,38 @@ namespace BattleCON
             // Must update tops even if they are here
             found.top1 = s1.current;
             found.top2 = s2.current;
+
+            commonEnd = found;
             
         }
+
 
         public void SingleInitialize()
         {
             if (pureRandom)
                 return;
+
+            Finalize();
+
+            if (commonEnd == null)
+            {
+                sStart = (SimpleStart)rootNode;
+            }
+            else
+            {
+                sStart = (SimpleStart)commonEnd.next;
+            }
+
+            sEnd = null;
+
             parallel = false;
 
         }
 
 
-        public void updateStats(Player winner)
-        {
-            NodeEnd n;
-
-            if (parallel)
-            {
-                s1.current.updateStats(winner);
-                s2.current.updateStats(winner);
-                n = pStart.parent;
-            }
-            else
-            {
-                n = sEnd; // SimpleEnd
-            }
-
-            while (n != null)
-            {
-                n = n.updateStats(winner);
-            }
-
-        }
-
-
-
         internal int SingleSelect(int number)
         {
+
             if (pureRandom)
                 return rnd.Next(number);
 
@@ -426,6 +438,53 @@ namespace BattleCON
             sEnd = cn.children[result];
 
             return result;
+        }
+
+
+        private void SingleFinalize()
+        {
+            if (commonEnd == null)
+                return;
+
+            throw new NotImplementedException();
+        }
+
+
+        private void Finalize()
+        {
+            if (parallel)
+                ParallelFinalize();
+            else
+                SingleFinalize();
+        }
+
+
+        public void updateStats(Player winner)
+        {
+            NodeEnd n;
+
+            if (parallel)
+            {
+                s1.current.updateStats(winner);
+                s2.current.updateStats(winner);
+                n = pStart.parent;
+            }
+            else
+            {
+                n = sEnd; // SimpleEnd
+            }
+
+            while (n != null)
+            {
+                n = n.updateStats(winner);
+            }
+
+        }
+                
+
+        internal void ResetToRoot()
+        {
+            commonEnd = null;
         }
     }
     
@@ -502,7 +561,6 @@ namespace BattleCON
 
         public Random rnd = new Random();
 
-
         // Game - Interface interaction
         public string selectionHeader;
         public List<string> selectionItems = new List<string>();
@@ -513,7 +571,6 @@ namespace BattleCON
         // MC updates
         public double bestWinrate;
         public int playoutsDone;
-        
         
         // Monte Carlo Tree Search
         public static int MAX_PLAYOUTS = 100000;
@@ -533,8 +590,9 @@ namespace BattleCON
 
         public static bool DEBUG_MESSAGES;
         
-        private MoveManager moveManager;
-        
+        public MoveManager moveManager;
+       
+ 
 
         public GameState(Character c1, Character c2, GameVariant variant,  BackgroundWorker bw, EventWaitHandle waitHandle)
         {
@@ -562,12 +620,37 @@ namespace BattleCON
             this.waitHandle = waitHandle;
         }
 
+        
+        // Cloning
+        public GameState(GameState gameState)
+        {
+
+            p1 = new Player(gameState.p1.c, this);
+            p2 = new Player(gameState.p2.c, this);
+
+            variant = gameState.variant;
+
+            p1.opponent = p2;
+            p2.opponent = p1;
+
+            rnd = gameState.rnd;
+
+        }
+
+        public GameState(GameState gameState, NodeStart rootNode)
+            : this(gameState)
+        {
+            moveManager = new MoveManager(rootNode, p1, p2);
+        }
+
 
         public void fillFromGameState(GameState g, PlayoutStartType pst, Player playoutStartPlayer)
         {
             p1.fillFromPlayer(g.p1);
             p2.fillFromPlayer(g.p2);
+            
             firstToAnte = g.firstToAnte.first ? p1 : p2;
+            
             beat = g.beat;
 
             playoutPreviousAnte = g.playoutPreviousAnte;
@@ -579,22 +662,9 @@ namespace BattleCON
             this.playoutStartPlayer = playoutStartPlayer.first ? p1 : p2;
             
             pureRandom = false;
+
+            moveManager.ResetToRoot();
             
-        }
-
-        // Cloning
-        public GameState(GameState gameState)
-        {
-            p1 = new Player(gameState.p1.c, this);
-            p2 = new Player(gameState.p2.c, this);
-
-            variant = gameState.variant;
-
-            p1.opponent = p2;
-            p2.opponent = p1;
-
-            rnd = gameState.rnd;
-
         }
 
 
@@ -665,6 +735,7 @@ namespace BattleCON
             waitHandle.WaitOne();
         }
 
+
         public void writeToConsole(string p)
         {
             consoleBuffer.Add(p);
@@ -684,12 +755,15 @@ namespace BattleCON
 
             if (pst == PlayoutStartType.Normal)
             {
-                p2.selectAttackingPair();
+                moveManager.ParallelInitialize();
                 p1.selectAttackingPair();
+                p2.selectAttackingPair();
                 
             }
             else if (pst == PlayoutStartType.AttackPairSelection)
             {
+                moveManager.ParallelInitialize();
+
                 playoutStartPlayer.selectAttackingPair();
                 playoutStartPlayer.opponent.selectAttackingPair();
 
@@ -740,11 +814,8 @@ namespace BattleCON
                 if (pst == PlayoutStartType.ClashResolution)
                 {
                     playoutStartPlayer.selectNextForClash_MCTS();
-
                     revealClash();
-
                     pst = PlayoutStartType.Normal;
-
                 }
 
 
@@ -764,6 +835,8 @@ namespace BattleCON
                         normalPlay = false;
                         break;
                     }
+
+                    moveManager.ParallelInitialize();
 
                     p2.selectNextForClash();
                     p1.selectNextForClash();
@@ -797,6 +870,7 @@ namespace BattleCON
                     registeredChoices.Clear();
                 }
 
+                moveManager.SingleInitialize();
 
                 Player activePlayer = p1.priority() > p2.priority() ? p1 : p2;
                 Player reactivePlayer = activePlayer.opponent;
@@ -835,11 +909,11 @@ namespace BattleCON
                         writeToConsole(reactivePlayer + " is stunned and can't respond.");
                 }
 
-                // End of beat
-                firstToAnte = activePlayer;
-
                 if (p1.isDead)
                     return;
+
+                // End of beat
+                firstToAnte = activePlayer;
 
                 activePlayer.resolveEndOfBeat();
                 reactivePlayer.resolveEndOfBeat();
@@ -855,11 +929,13 @@ namespace BattleCON
             beat++;
         }
 
+
         private void revealClash()
         {
             p1.revealClash();
             p2.revealClash();
         }
+
 
         private void antePhase()
         {
@@ -868,6 +944,8 @@ namespace BattleCON
 
             Player localFirstPlayer = (pst == PlayoutStartType.AnteSelection ? playoutStartPlayer : firstToAnte);
             Player anteingPlayer = localFirstPlayer;
+
+            moveManager.ParallelInitialize();
 
             while (true)
             {
@@ -893,6 +971,7 @@ namespace BattleCON
 
         }
 
+
         internal void getUserChoice()
         {
             bw.ReportProgress(1);
@@ -903,7 +982,7 @@ namespace BattleCON
         internal void MCTS_playouts(Player player, PlayoutStartType rpst, GameState fillOrigin, NodeStart startNode)
         {
 
-            GameState copy = new GameState(this);
+            GameState copy = new GameState(this, startNode);
 
             bw.ReportProgress(3);
 
@@ -930,10 +1009,12 @@ namespace BattleCON
             
         }
 
+
         private void updateStats(Player winner)
         {
             moveManager.updateStats(winner);
         }
+
 
         private void initializeMoveManager(NodeStart startNode)
         {
@@ -1135,6 +1216,7 @@ namespace BattleCON
 
         }
 
+
         internal int SimpleUCTSelect(int number, Player p)
         {
             if (isMainGame)
@@ -1174,6 +1256,19 @@ namespace BattleCON
             player.selectedFinisher = e.getNextBest();
             
         }
+
+
+        internal int ParallelUCTSelect(int p, Player player)
+        {
+            throw new NotImplementedException();
+        }
+
+
+        internal int ParallelUCTSelectWithCloning(int p, Player player)
+        {
+            throw new NotImplementedException();
+        }
+
     }
 
 

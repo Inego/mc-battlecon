@@ -249,7 +249,8 @@ namespace BattleCON
                     number = p.g.selectionResult;
                 }
                 else
-                    number = p.g.SimpleUCTSelect(maxNumber + 1, p, true);
+                    number = p.g.SimpleUCTSelect(maxNumber + 1, p);
+                
 
                 if (p.g.isMainGame)
                     p.g.registeredChoices.Add(number);

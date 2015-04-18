@@ -376,7 +376,6 @@ namespace BattleCON
 
             return MovementResult.noMovement;
 
-
         }
 
         private string movementText(int p, bool self)
@@ -439,7 +438,6 @@ namespace BattleCON
             int styleNumber = -1;
             int baseNumber = -1;
             
-
             // Select style
 
             // Supposedly here are always > 1 cards to choose from
@@ -470,10 +468,9 @@ namespace BattleCON
 
             }
             else
-                styleNumber = g.ParallelUCTSelect(styles.Count, this, false);
+                styleNumber = g.ParallelUCTSelect(styles.Count, this);
 
             selectedStyle = styleNumber;
-            //styles.RemoveAt(styleNumber);
 
             // Select base
 
@@ -493,7 +490,7 @@ namespace BattleCON
 
             }
             else
-                baseNumber = g.UCTSelect(bases.Count, this, false);
+                baseNumber = g.ParallelUCTSelect(bases.Count, this);
 
             selectedBase = baseNumber;
 
@@ -543,7 +540,7 @@ namespace BattleCON
             else
             {
 
-                toAnte = g.UCTSelect(availableTokens + (canAnteFinisherFlag ? 2 : 1), this, false);
+                toAnte = g.ParallelUCTSelectWithCloning(availableTokens + (canAnteFinisherFlag ? 2 : 1), this);
 
                 if (g.pst == PlayoutStartType.AnteSelection)
                 {
@@ -621,7 +618,7 @@ namespace BattleCON
                 }
                 else
                 {
-                    selected = g.UCTSelect(bases.Count, this, false);
+                    selected = g.moveManager.ParallelSelect(bases.Count, this);
                 }
                 
             }
@@ -834,9 +831,6 @@ namespace BattleCON
         {
             int basePower = attackBase.getAttackPower(this);
 
-            //if (basePower == 0)
-            //    return 0;
-
             return basePower + attackStyle.power + powerModifier;
         }
 
@@ -871,15 +865,23 @@ namespace BattleCON
 
         internal void selectNextForClash_MCTS()
         {
+            int myBase = selectedBase;
+
+            g.moveManager.ParallelInitialize();
+
+            // Before selecting clash, emulate parallel base selection
+            selectedBase = g.moveManager.ParallelSelect(bases.Count, this);
+            opponent.selectedBase = g.moveManager.ParallelSelect(opponent.bases.Count, opponent);
+
             selectNextForClash();
 
             g.pst = PlayoutStartType.Normal;
 
-            // Honesty
+            throw new NotImplementedException();
+            
+            
 
-            // Try to guess his base
-
-            opponent.selectedBase = g.UCTSelect(opponent.bases.Count, opponent, false);
+            
             
         }
 
@@ -969,11 +971,11 @@ namespace BattleCON
             }
             else
             {
-                selectedCooldownStyle2 = g.UCTSelect(5, this, false);
-                selectedCooldownStyle1 = g.UCTSelect(4, this, false);
-                selectedCooldownBase2 = g.UCTSelect(7, this, false);
-                selectedCooldownBase1 = g.UCTSelect(6, this, false);
-                selectedFinisher = g.UCTSelect(2, this, false);
+                selectedCooldownStyle2 = g.moveManager.ParallelSelect(5, this);
+                selectedCooldownStyle1 = g.moveManager.ParallelSelect(4, this);
+                selectedCooldownBase2 = g.moveManager.ParallelSelect(7, this);
+                selectedCooldownBase1 = g.moveManager.ParallelSelect(6, this);
+                selectedFinisher = g.moveManager.ParallelSelect(2, this);
             }
 
             
