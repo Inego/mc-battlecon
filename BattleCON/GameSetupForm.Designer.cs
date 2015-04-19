@@ -32,10 +32,10 @@
             this.reverseCharactersBtn = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
             this.debugMessagesCheckBox = new System.Windows.Forms.CheckBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.numericUpDown1 = new System.Windows.Forms.NumericUpDown();
+            this.button1 = new System.Windows.Forms.Button();
             this.character2CB = new System.Windows.Forms.ComboBox();
             this.character1CB = new System.Windows.Forms.ComboBox();
             this.groupBox1.SuspendLayout();
@@ -56,7 +56,7 @@
             this.reverseCharactersBtn.Location = new System.Drawing.Point(143, 19);
             this.reverseCharactersBtn.Name = "reverseCharactersBtn";
             this.reverseCharactersBtn.Size = new System.Drawing.Size(33, 23);
-            this.reverseCharactersBtn.TabIndex = 2;
+            this.reverseCharactersBtn.TabIndex = 1;
             this.reverseCharactersBtn.Text = "<->";
             this.reverseCharactersBtn.UseVisualStyleBackColor = true;
             this.reverseCharactersBtn.Click += new System.EventHandler(this.reverseCharactersBtn_Click);
@@ -82,26 +82,6 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "MCTS Settings";
             // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(6, 21);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(53, 13);
-            this.label3.TabIndex = 7;
-            this.label3.Text = "kPlayouts";
-            // 
-            // button1
-            // 
-            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
-            this.button1.Location = new System.Drawing.Point(243, 60);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(63, 31);
-            this.button1.TabIndex = 6;
-            this.button1.Text = "FIGHT!";
-            this.button1.UseVisualStyleBackColor = true;
-            this.button1.Click += new System.EventHandler(this.button1_Click);
-            // 
             // debugMessagesCheckBox
             // 
             this.debugMessagesCheckBox.AutoSize = true;
@@ -110,9 +90,18 @@
             this.debugMessagesCheckBox.Location = new System.Drawing.Point(151, 20);
             this.debugMessagesCheckBox.Name = "debugMessagesCheckBox";
             this.debugMessagesCheckBox.Size = new System.Drawing.Size(58, 17);
-            this.debugMessagesCheckBox.TabIndex = 8;
+            this.debugMessagesCheckBox.TabIndex = 1;
             this.debugMessagesCheckBox.Text = "Debug";
             this.debugMessagesCheckBox.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(6, 21);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(53, 13);
+            this.label3.TabIndex = 7;
+            this.label3.Text = "kPlayouts";
             // 
             // numericUpDown1
             // 
@@ -130,8 +119,19 @@
             0});
             this.numericUpDown1.Name = "numericUpDown1";
             this.numericUpDown1.Size = new System.Drawing.Size(56, 20);
-            this.numericUpDown1.TabIndex = 6;
+            this.numericUpDown1.TabIndex = 0;
             this.numericUpDown1.Value = global::BattleCON.Properties.Settings.Default.kPlayouts;
+            // 
+            // button1
+            // 
+            this.button1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(204)));
+            this.button1.Location = new System.Drawing.Point(243, 60);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(63, 31);
+            this.button1.TabIndex = 0;
+            this.button1.Text = "FIGHT!";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
             // character2CB
             // 
@@ -154,7 +154,7 @@
             this.character1CB.Location = new System.Drawing.Point(16, 19);
             this.character1CB.Name = "character1CB";
             this.character1CB.Size = new System.Drawing.Size(121, 21);
-            this.character1CB.TabIndex = 1;
+            this.character1CB.TabIndex = 2;
             this.character1CB.Text = global::BattleCON.Properties.Settings.Default.Character1;
             // 
             // GameSetupForm

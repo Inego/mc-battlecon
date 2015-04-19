@@ -468,7 +468,7 @@ namespace BattleCON
 
             }
             else
-                styleNumber = g.ParallelUCTSelect(styles.Count, this);
+                styleNumber = g.moveManager.ParallelSelect(styles.Count, this);
 
             selectedStyle = styleNumber;
 
@@ -490,7 +490,7 @@ namespace BattleCON
 
             }
             else
-                baseNumber = g.ParallelUCTSelect(bases.Count, this);
+                baseNumber = g.moveManager.ParallelSelect(bases.Count, this);
 
             selectedBase = baseNumber;
 
@@ -540,7 +540,7 @@ namespace BattleCON
             else
             {
 
-                toAnte = g.ParallelUCTSelectWithCloning(availableTokens + (canAnteFinisherFlag ? 2 : 1), this);
+                toAnte = g.moveManager.ParallelSelectWithCloning(availableTokens + (canAnteFinisherFlag ? 2 : 1), this);
 
                 if (g.pst == PlayoutStartType.AnteSelection)
                 {

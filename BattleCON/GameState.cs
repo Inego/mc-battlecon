@@ -81,7 +81,7 @@ namespace BattleCON
         public int games = 1;
         
         public SimpleEnd[] children;
-
+        
         public override double bestWinrate()
         {
             if (children != null)
@@ -97,6 +97,34 @@ namespace BattleCON
                 return 0;
         }
 
+        public SimpleStart()
+        {
+            
+        }
+
+        public SimpleStart(NodeEnd parent)
+        {
+            this.parent = parent;
+            parent.next = this;
+        }
+
+        public SimpleStart(Player p)
+        {
+            this.player = p;
+        }
+
+
+        internal SimpleEnd GetChild(int result)
+        {
+            if (children[result] == null)
+            {
+                SimpleEnd newChild = new SimpleEnd();
+                newChild.owner = this;
+                children[result] = newChild;
+            }
+
+            return children[result];
+        }
     }
 
 
@@ -134,6 +162,13 @@ namespace BattleCON
             tree2 = new SimpleStart();
         }
 
+        public ParallelStart(NodeEnd parent)
+            : this()
+        {
+            this.parent = parent;
+            parent.next = this;
+        }
+
         public override double bestWinrate()
         {
             return tree1.bestWinrate();
@@ -163,6 +198,7 @@ namespace BattleCON
     public class MoveSequence
     {
         public bool pureRandom;
+        public SimpleStart start;
         public SimpleEnd current;
         public MoveSequence opponent;
         public Random rnd = new Random();
@@ -175,10 +211,12 @@ namespace BattleCON
         }
         
 
-        public void Reset()
+        public void Reset(SimpleStart start)
         {
+            throw new NotImplementedException("player");
             pureRandom = false;
-            current = new SimpleEnd();
+            this.start = start;
+            this.current = null;
         }
 
 
@@ -189,9 +227,15 @@ namespace BattleCON
 
             int result = -1;
 
-            if (current.next == null)
+            SimpleStart cn;
+
+            if (current == null)
             {
-                current.next = new SimpleStart();
+                cn = start;
+            }
+            else if (current.next == null)
+            {
+                new SimpleStart(current);
 
                 pureRandom = true;
 
@@ -202,8 +246,8 @@ namespace BattleCON
 
                 return result;
             }
-
-            SimpleStart cn = (SimpleStart)current.next;
+            else 
+                cn = (SimpleStart)current.next;
 
             double bestUCT = 0;
             double UCTvalue = 0;
@@ -230,17 +274,37 @@ namespace BattleCON
                 }
             }
 
-            if (cn.children[result] == null)
-            {
-                SimpleEnd newChild = new SimpleEnd();
-                newChild.owner = cn;
-                cn.children[result] = newChild;
-            }
-
-            current = cn.children[result];
+            current = cn.GetChild(result);
 
             return result;
 
+        }
+
+        internal void RegisterOpponentMove(int number, int result, Player player)
+        {
+            SimpleStart cn;
+
+            if (current == null)
+            {
+                cn = start;
+            }
+            else
+            {
+                if (current.next == null)
+                    new SimpleStart(current);
+                cn = (SimpleStart)current.next;
+            }
+                
+            if (cn.children == null)
+                cn.children = new SimpleEnd[number];
+
+            current = cn.GetChild(result);
+
+        }
+
+        internal void updateStats(Player winner)
+        {
+            current.updateStats(winner);
         }
     }
 
@@ -267,8 +331,6 @@ namespace BattleCON
         public MoveSequence s1;
         public MoveSequence s2;
         
-        public MoveSequence active;
-        
         public Player p1;
         public Player p2;
 
@@ -280,6 +342,8 @@ namespace BattleCON
 
         public MoveManager(NodeStart rootNode, Player p1, Player p2)
         {
+            bitSequence = new BitSequence();
+
             s1 = new MoveSequence(this);
             s2 = new MoveSequence(this);
             s1.opponent = s2;
@@ -298,14 +362,13 @@ namespace BattleCON
             if (pureRandom)
                 return;
 
-            Finalize();
+            FinalizePrevious();
 
             parallel = true;
             
-            bitSequence = new BitSequence();
+            bitSequence.Reset();
             
-            s1.Reset();
-            s2.Reset();
+            
 
             if (commonEnd == null)
             {
@@ -314,7 +377,12 @@ namespace BattleCON
             else
             {
                 pStart = (ParallelStart)commonEnd.next;
+                if (pStart == null)
+                    pStart = new ParallelStart(commonEnd);
             }
+
+            s1.Reset(pStart.tree1);
+            s2.Reset(pStart.tree2);
 
             pEnd = null;
             
@@ -330,7 +398,8 @@ namespace BattleCON
 
             int result = active.UCT_select(number);
 
-            bitSequence.AddBits((uint)result, number);
+            if (!pureRandom)
+                bitSequence.AddBits((uint)result, number);
 
             return result;
             
@@ -339,9 +408,6 @@ namespace BattleCON
 
         public void ParallelFinalize()
         {
-            if (commonEnd == null)
-                return;
-
             ParallelEnd found;
 
             pStart.combinations.TryGetValue(bitSequence, out found);
@@ -368,7 +434,7 @@ namespace BattleCON
             if (pureRandom)
                 return;
 
-            Finalize();
+            FinalizePrevious();
 
             if (commonEnd == null)
             {
@@ -443,15 +509,17 @@ namespace BattleCON
 
         private void SingleFinalize()
         {
-            if (commonEnd == null)
-                return;
+            
 
             throw new NotImplementedException();
         }
 
 
-        private void Finalize()
+        private void FinalizePrevious()
         {
+            if (commonEnd == null)
+                return;
+
             if (parallel)
                 ParallelFinalize();
             else
@@ -465,8 +533,8 @@ namespace BattleCON
 
             if (parallel)
             {
-                s1.current.updateStats(winner);
-                s2.current.updateStats(winner);
+                s1.updateStats(winner);
+                s2.updateStats(winner);
                 n = pStart.parent;
             }
             else
@@ -485,6 +553,22 @@ namespace BattleCON
         internal void ResetToRoot()
         {
             commonEnd = null;
+        }
+
+
+        internal int ParallelSelectWithCloning(int number, Player player)
+        {
+            if (pureRandom)
+                return rnd.Next(number);
+
+            int result = ParallelSelect(number, player);
+
+            MoveSequence opponentSequence = (player == p1 ? s2 : s1);
+
+            if (!opponentSequence.pureRandom)
+                opponentSequence.RegisterOpponentMove(number, result, player);
+
+            return result;
         }
     }
     
@@ -688,6 +772,8 @@ namespace BattleCON
             }
             else if (pst == PlayoutStartType.SetupCardsSelection)
             {
+
+                moveManager.ParallelInitialize();
                 
                 playoutStartPlayer.makeSetupDecisions();
                 playoutStartPlayer.opponent.makeSetupDecisions();
@@ -710,7 +796,6 @@ namespace BattleCON
 
                 if (p1.isDead)
                     return p2;
-                
 
                 if (p2.isDead)
                     return p1;
@@ -840,7 +925,6 @@ namespace BattleCON
 
                     p2.selectNextForClash();
                     p1.selectNextForClash();
-                    
 
                     revealClash();
 
@@ -967,7 +1051,6 @@ namespace BattleCON
                 previous = current;
 
             }
-
 
         }
 
@@ -1255,18 +1338,6 @@ namespace BattleCON
             player.selectedCooldownBase1 = e.getNextBest();
             player.selectedFinisher = e.getNextBest();
             
-        }
-
-
-        internal int ParallelUCTSelect(int p, Player player)
-        {
-            throw new NotImplementedException();
-        }
-
-
-        internal int ParallelUCTSelectWithCloning(int p, Player player)
-        {
-            throw new NotImplementedException();
         }
 
     }

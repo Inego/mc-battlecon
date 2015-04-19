@@ -94,5 +94,11 @@ namespace BattleCON
 
             return '[' + String.Join(" ", ints) + "] " + GetHashCode().ToString("X8");
         }
+
+        internal void Reset()
+        {
+            bits.Clear();
+            currentBit = 0;
+        }
     }
 }
