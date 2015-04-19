@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading;
 using System.ComponentModel;
 
+using System.Diagnostics;
+
 namespace BattleCON
 {
 
@@ -151,6 +153,16 @@ namespace BattleCON
             return owner.parent;
         }
 
+        internal SimpleStart GetOrigin()
+        {
+            SimpleEnd z = this;
+
+            while (z.owner.parent != null)
+                z = (SimpleEnd)z.owner.parent;
+
+            return z.owner;
+        }
+
     }
 
 
@@ -215,7 +227,7 @@ namespace BattleCON
         public SimpleStart start;
         public SimpleEnd current;
         public MoveSequence opponent;
-        public Random rnd = new Random();
+        public Random rnd = new Random(1);
         public MoveManager pmm;
 
 
@@ -304,7 +316,15 @@ namespace BattleCON
             else
             {
                 if (current.next == null)
+                {
                     new SimpleStart(current, player);
+                    pureRandom = true;
+                    if (opponent.pureRandom)
+                    {
+                        pmm.pureRandom = true;
+                    }
+                    return;
+                }
                 cn = (SimpleStart)current.next;
             }
                 
@@ -328,7 +348,7 @@ namespace BattleCON
     {
         public bool pureRandom = false;
 
-        public Random rnd = new Random();
+        public Random rnd = new Random(1);
 
         public bool parallel;
 
@@ -357,7 +377,7 @@ namespace BattleCON
 
         public MoveManager(NodeStart rootNode, Player p1, Player p2)
         {
-            bitSequence = new BitSequence();
+            
 
             s1 = new MoveSequence(this);
             s2 = new MoveSequence(this);
@@ -381,8 +401,8 @@ namespace BattleCON
             FinalizePrevious();
 
             parallel = true;
-            
-            bitSequence.Reset();
+
+            bitSequence = new BitSequence();
 
             if (commonEnd == null)
             {
@@ -431,9 +451,19 @@ namespace BattleCON
             {
                 found = new ParallelEnd();
                 found.owner = pStart;
-                
+
                 pStart.combinations[bitSequence] = found;
             }
+            else
+            {
+                //int z = 1;
+            }
+
+            //if (found.top1 != null)
+            //    Debug.Assert(found.top1.GetOrigin() == s1.current.GetOrigin());
+
+            //if (found.top2 != null)
+            //    Debug.Assert(found.top2.GetOrigin() == s2.current.GetOrigin());
 
             // Must update tops even if they are here
             found.top1 = s1.current;
@@ -458,6 +488,7 @@ namespace BattleCON
             else
             {
                 sStart = (SimpleStart)commonEnd.next;
+                
             }
 
             sEnd = null;
@@ -477,6 +508,11 @@ namespace BattleCON
 
             if (sEnd == null)
             {
+                if (sStart == null)
+                {
+                    sStart = new SimpleStart(commonEnd, p);
+                }
+
                 cn = sStart;
             }
             else
@@ -531,6 +567,13 @@ namespace BattleCON
 
         private void SingleFinalize()
         {
+            if (sEnd == null)
+                // Situations like this can happen when single initialization
+                // turned into 0 single moves.
+                // In this case sEnd is still null and we don't need to overwrite commonEnd with it.
+                return;
+
+
             commonEnd = sEnd;            
         }
 
@@ -578,6 +621,7 @@ namespace BattleCON
             this.started = true;
             commonEnd = null;
             pureRandom = false;
+            
         }
 
 
@@ -668,7 +712,7 @@ namespace BattleCON
 
         public int beat;
 
-        public Random rnd = new Random();
+        public Random rnd = new Random(1);
 
         // Game - Interface interaction
         public string selectionHeader;
@@ -1053,8 +1097,6 @@ namespace BattleCON
 
             Player localFirstPlayer = (pst == PlayoutStartType.AnteSelection ? playoutStartPlayer : firstToAnte);
             Player anteingPlayer = localFirstPlayer;
-
-            moveManager.ParallelInitialize();
 
             while (true)
             {

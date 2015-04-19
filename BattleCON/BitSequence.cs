@@ -92,7 +92,7 @@ namespace BattleCON
 
             Array.Reverse(ints);
 
-            return '[' + String.Join(" ", ints) + "] " + GetHashCode().ToString("X8");
+            return '[' + String.Join(" ", ints) + "] ";
         }
 
         internal void Reset()
