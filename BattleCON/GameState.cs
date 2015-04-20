@@ -10,6 +10,16 @@ using System.Diagnostics;
 namespace BattleCON
 {
 
+    public static class R
+    {
+        static Random rnd = new Random(1);
+
+        public static int n(int number)
+        {
+            return rnd.Next(number);
+        }
+    }
+
     public static class Constants
     {
         public static double EXPLORATION_WEIGHT = 0.8;
@@ -227,7 +237,6 @@ namespace BattleCON
         public SimpleStart start;
         public SimpleEnd current;
         public MoveSequence opponent;
-        public Random rnd = new Random(1);
         public MoveManager pmm;
 
 
@@ -248,7 +257,7 @@ namespace BattleCON
         public int UCT_select(int number, Player p)
         {
             if (pureRandom)
-                return rnd.Next(number);
+                return R.n(number);
 
             int result = -1;
 
@@ -264,7 +273,7 @@ namespace BattleCON
 
                 pureRandom = true;
 
-                result = rnd.Next(number);
+                result = R.n(number);
 
                 if (opponent.pureRandom)
                     pmm.pureRandom = true;
@@ -285,7 +294,7 @@ namespace BattleCON
             {
                 if (cn.children[i] == null)
                     // Always play a random unexplored move first
-                    UCTvalue = 10000 + rnd.Next(1000);
+                    UCTvalue = 10000 + R.n(1000);
                 else
                 {
                     child = cn.children[i];
@@ -347,8 +356,6 @@ namespace BattleCON
     public class MoveManager
     {
         public bool pureRandom = false;
-
-        public Random rnd = new Random(1);
 
         public bool parallel;
 
@@ -424,7 +431,7 @@ namespace BattleCON
         public int ParallelSelect(int number, Player p)
         {
             if (pureRandom)
-                return rnd.Next(number);
+                return R.n(number);
 
             MoveSequence active = (p == p1 ? s1 : s2);
 
@@ -502,7 +509,7 @@ namespace BattleCON
         {
 
             if (pureRandom)
-                return rnd.Next(number);
+                return R.n(number);
 
             SimpleStart cn;
 
@@ -521,7 +528,7 @@ namespace BattleCON
                 {
                     sEnd.next = new SimpleStart(p);
                     pureRandom = true;
-                    return rnd.Next(number);
+                    return R.n(number);
                 }
                 cn = (SimpleStart)sEnd.next;
             }
@@ -538,7 +545,7 @@ namespace BattleCON
             {
                 if (cn.children[i] == null)
                     // Always play a random unexplored move first
-                    UCTvalue = 10000 + rnd.Next(1000);
+                    UCTvalue = 10000 + R.n(1000);
                 else
                 {
                     child = cn.children[i];
@@ -628,7 +635,7 @@ namespace BattleCON
         internal int ParallelSelectWithCloning(int number, Player player)
         {
             if (pureRandom)
-                return rnd.Next(number);
+                return R.n(number);
 
             int result = ParallelSelect(number, player);
 
@@ -712,8 +719,6 @@ namespace BattleCON
 
         public int beat;
 
-        public Random rnd = new Random(1);
-
         // Game - Interface interaction
         public string selectionHeader;
         public List<string> selectionItems = new List<string>();
@@ -785,8 +790,6 @@ namespace BattleCON
 
             p1.opponent = p2;
             p2.opponent = p1;
-
-            rnd = gameState.rnd;
 
         }
 
