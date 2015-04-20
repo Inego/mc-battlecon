@@ -629,6 +629,42 @@ namespace BattleCON
             return lastStart;
 
         }
+
+        public NodeStart TraceOrigin()
+        {
+            NodeEnd n;
+            NodeStart lastStart;
+
+            if (parallel)
+            {
+                n = pStart.parent;
+                lastStart = pStart;
+            }
+            else
+            {
+                n = sEnd; // SimpleEnd
+                lastStart = sEnd.owner;
+            }
+
+            while (n != null)
+            {
+                if (n is ParallelEnd) {
+                    lastStart = ((ParallelEnd)n).owner;
+                }
+                else
+                {
+                    lastStart = ((SimpleEnd)n).owner;
+                }
+                n = lastStart.parent;
+                
+            }
+
+            return lastStart;
+
+        }
+
+
+
                 
 
         internal void ResetToRoot()
@@ -873,6 +909,10 @@ namespace BattleCON
                 }
                 
                 this.nextBeat();
+
+                // Debugging
+                NodeStart z = moveManager.TraceOrigin();
+                // Debugging
 
                 if (p1.isDead)
                     return p2;
