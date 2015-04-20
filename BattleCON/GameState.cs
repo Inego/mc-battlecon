@@ -494,8 +494,7 @@ namespace BattleCON
             }
             else
             {
-                sStart = (SimpleStart)commonEnd.next;
-                
+                sStart = commonEnd.next as SimpleStart; // May be null if commonEnd points to another ParallelStart
             }
 
             sEnd = null;
@@ -600,25 +599,34 @@ namespace BattleCON
         }
 
 
-        public void updateStats(Player winner)
+        public NodeStart updateStats(Player winner)
         {
             NodeEnd n;
+            NodeStart lastStart;
 
             if (parallel)
             {
                 s1.updateStats(winner);
                 s2.updateStats(winner);
                 n = pStart.parent;
+                lastStart = pStart;
             }
             else
             {
                 n = sEnd; // SimpleEnd
+                lastStart = sEnd.owner;
             }
 
             while (n != null)
             {
+                if (n is ParallelEnd)
+                    lastStart = ((ParallelEnd)n).owner;
+                else
+                    lastStart = ((SimpleEnd)n).owner;
                 n = n.updateStats(winner);
             }
+
+            return lastStart;
 
         }
                 
@@ -1167,7 +1175,10 @@ namespace BattleCON
                 
                 Player winner = copy.playout();
 
-                copy.updateStats(winner);
+                NodeStart updateResult = copy.updateStats(winner);
+
+                if(updateResult != startNode)
+                    throw new NotImplementedException("oops");
 
             }
 
@@ -1175,9 +1186,9 @@ namespace BattleCON
         }
 
 
-        private void updateStats(Player winner)
+        private NodeStart updateStats(Player winner)
         {
-            moveManager.updateStats(winner);
+            return moveManager.updateStats(winner);
         }
 
 
