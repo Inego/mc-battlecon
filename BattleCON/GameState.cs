@@ -222,8 +222,10 @@ namespace BattleCON
 
         public override NodeEnd updateStats(Player winner)
         {
-            top1.updateStats(winner);
-            top2.updateStats(winner);
+            if (top1 != null)
+                top1.updateStats(winner);
+            if (top2 != null)
+                top2.updateStats(winner);
 
             return owner.parent;
         }
@@ -476,6 +478,9 @@ namespace BattleCON
             found.top1 = s1.current;
             found.top2 = s2.current;
 
+            //if (s1.current == null || s2.current == null)
+            //    throw new NotImplementedException("crap");
+
             commonEnd = found;
             
         }
@@ -525,7 +530,7 @@ namespace BattleCON
             { 
                 if (sEnd.next == null)
                 {
-                    sEnd.next = new SimpleStart(p);
+                    new SimpleStart(sEnd, p);
                     pureRandom = true;
                     return R.n(number);
                 }
@@ -1239,12 +1244,6 @@ namespace BattleCON
         }
 
 
-        private void initializeMoveManager(NodeStart startNode)
-        {
-            throw new NotImplementedException();
-        }
-
-        
         internal AttackingPair MCTS_attackingPair(Player player)
         {
             ParallelStart rNode = new ParallelStart();
