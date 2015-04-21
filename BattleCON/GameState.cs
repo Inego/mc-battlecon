@@ -157,6 +157,7 @@ namespace BattleCON
         public override NodeEnd updateStats(Player winner)
         {
             games++;
+            owner.games++;
             if (owner.player == winner)
                 wins++;
             winrate = (double)wins / games;
@@ -222,10 +223,16 @@ namespace BattleCON
 
         public override NodeEnd updateStats(Player winner)
         {
-            if (top1 != null)
-                top1.updateStats(winner);
-            if (top2 != null)
-                top2.updateStats(winner);
+            NodeEnd z = top1;
+
+
+            while (z != null)
+                z = z.updateStats(winner);
+
+            z = top2;
+
+            while (z != null)
+                z = z.updateStats(winner);
 
             return owner.parent;
         }
@@ -828,6 +835,7 @@ namespace BattleCON
 
             this.bw = bw;
             this.waitHandle = waitHandle;
+
         }
 
         
@@ -970,7 +978,9 @@ namespace BattleCON
 
             if (pst == PlayoutStartType.Normal)
             {
-                moveManager.ParallelInitialize();
+                if (!isMainGame)
+                    moveManager.ParallelInitialize();
+
                 p1.selectAttackingPair();
                 p2.selectAttackingPair();
                 
@@ -1231,6 +1241,12 @@ namespace BattleCON
 
                 if(updateResult != startNode)
                     throw new NotImplementedException("oops");
+
+                if (((ParallelStart)startNode).tree1.games != i+1)
+                    throw new NotImplementedException("nope 1");
+
+                if (((ParallelStart)startNode).tree2.games != i+1)
+                    throw new NotImplementedException("nope 2");
 
             }
 
