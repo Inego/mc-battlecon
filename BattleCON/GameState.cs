@@ -378,7 +378,7 @@ namespace BattleCON
 
         public ParallelStart pStart;
 
-        private NodeStart rootNode;
+        internal NodeStart rootNode;
         private bool started;
         
 
@@ -567,6 +567,9 @@ namespace BattleCON
 
             sEnd = cn.children[result];
 
+            if (TraceOrigin() != rootNode)
+                throw new NotImplementedException("dam");
+
             return result;
         }
 
@@ -604,7 +607,7 @@ namespace BattleCON
             NodeEnd n;
             NodeStart lastStart;
 
-            if (parallel)
+            if (parallel || sEnd == null)
             {
                 s1.updateStats(winner);
                 s2.updateStats(winner);
@@ -635,7 +638,7 @@ namespace BattleCON
             NodeEnd n;
             NodeStart lastStart;
 
-            if (parallel)
+            if (parallel || sEnd == null)
             {
                 n = pStart.parent;
                 lastStart = pStart;
@@ -912,6 +915,8 @@ namespace BattleCON
 
                 // Debugging
                 NodeStart z = moveManager.TraceOrigin();
+                if (z != moveManager.rootNode)
+                    throw new NotImplementedException("gobshite");
                 // Debugging
 
                 if (p1.isDead)
@@ -1075,6 +1080,8 @@ namespace BattleCON
                 }
 
                 moveManager.SingleInitialize();
+
+                moveManager.TraceOrigin();
 
                 Player activePlayer = p1.priority() > p2.priority() ? p1 : p2;
                 Player reactivePlayer = activePlayer.opponent;
