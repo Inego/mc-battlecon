@@ -1249,9 +1249,9 @@ namespace BattleCON
 
                 anteingPlayer = anteingPlayer.opponent;
 
-                // Short way for a special case
-                if (anteingPlayer.availableTokens == 0 && !anteingPlayer.canAnteFinisher())
-                    break;
+                //// Short way for a special case
+                //if (anteingPlayer.availableTokens == 0 && !anteingPlayer.canAnteFinisher())
+                //    break;
 
                 previous = current;
 

@@ -397,6 +397,8 @@ namespace BattleCON
 
         public int loseLife(int pts)
         {
+            if (health < 2)
+                return 0;
             int toLose = Math.Min(health - 1, pts);
             health -= toLose;
             return toLose;
