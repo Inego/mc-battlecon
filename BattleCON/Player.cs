@@ -534,7 +534,7 @@ namespace BattleCON
                 else
                 {
                     g.writeToConsole(this + " is selecting ante...");
-                    toAnte = g.MCTS_ante(this);
+                    toAnte = g.MCTS_ante(this, availableTokens + (canAnteFinisherFlag ? 2 : 1));
                 }
             }
             else
@@ -544,7 +544,6 @@ namespace BattleCON
 
                 if (g.pst == PlayoutStartType.AnteSelection)
                 {
-                    opponent.selectAttackingPair();
                     g.pst = PlayoutStartType.Normal;
                 }
                                 
@@ -613,7 +612,7 @@ namespace BattleCON
                     }
                     else
                     {
-                        selected = g.MCTS_clash(this);
+                        selected = g.MCTS_clash(this, bases.Count);
                     }
                 }
                 else
@@ -870,18 +869,11 @@ namespace BattleCON
             g.moveManager.ParallelInitialize();
 
             // Before selecting clash, emulate parallel base selection
-            selectedBase = g.moveManager.ParallelSelect(bases.Count, this);
             opponent.selectedBase = g.moveManager.ParallelSelect(opponent.bases.Count, opponent);
 
             selectNextForClash();
 
             g.pst = PlayoutStartType.Normal;
-
-            throw new NotImplementedException();
-            
-            
-
-            
             
         }
 
