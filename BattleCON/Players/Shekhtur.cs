@@ -70,6 +70,8 @@ namespace BattleCON
             if (p.hasHit)
             {
                 List<int> toSpend = new List<int>();
+                
+                // Option 0 - always present, means "don't spend tokens"
                 toSpend.Add(0);
 
                 if (p.availableTokens >= 2)
@@ -112,8 +114,21 @@ namespace BattleCON
                     {
                         p.spendTokens(tokens);
                         p.drainLife(tokens / 2);
+                        if (p.g.isMainGame)
+                            p.g.writeToConsole(p + " spends " + tokens + " token(s) to drain " + (tokens / 2) + " life.");
+                    }
+                    else
+                    {
+                        if (p.g.isMainGame)
+                            p.g.writeToConsole(p + " decides not to spend tokens to drain life.");
                     }
 
+                }
+
+                else
+                {
+                    if (p.g.isMainGame)
+                        p.g.writeToConsole(p + " doesn''t have enough tokens to drain life.");
                 }
             }
 
