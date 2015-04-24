@@ -145,7 +145,7 @@
             this.Controls.Add(this.gameLogListBox);
             this.Controls.Add(this.battleBoard);
             this.Name = "MainForm";
-            this.Text = "BattleCON Monte Carlo Engine";
+            this.Text = "BattleCON Monte Carlo Engine 0.1.1";
             this.Shown += new System.EventHandler(this.MainForm_Shown);
             this.ResumeLayout(false);
             this.PerformLayout();
