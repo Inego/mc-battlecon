@@ -978,6 +978,7 @@ namespace BattleCON
             {
                 if (isMainGame)
                 {
+                    writeToConsole("");
                     writeToConsole("BEAT " + beat);
                 }
                 
@@ -1239,6 +1240,7 @@ namespace BattleCON
             while (true)
             {
                 playoutPreviousAnte = previous;
+
                 AnteResult result = anteingPlayer.ante();
 
                 current = (result == AnteResult.AntedTokens);
@@ -1247,11 +1249,14 @@ namespace BattleCON
                     // both passed or someone anted a finisher
                     break;
 
-                anteingPlayer = anteingPlayer.opponent;
+                if (!anteingPlayer.canAnteFinisher() && !anteingPlayer.opponent.canAnte())
+                {
+                    if (isMainGame)
+                        writeToConsole("Anteing finished since " + anteingPlayer.opponent + " cannot ante.");
+                    break;
+                }
 
-                //// Short way for a special case
-                //if (anteingPlayer.availableTokens == 0 && !anteingPlayer.canAnteFinisher())
-                //    break;
+                anteingPlayer = anteingPlayer.opponent;
 
                 previous = current;
 

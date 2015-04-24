@@ -507,9 +507,7 @@ namespace BattleCON
                 return AnteResult.Pass;
             }
 
-
             bool canAnteFinisherFlag = canAnteFinisher();
-
 
             if (availableTokens == 0 && !canAnteFinisherFlag)
             {
@@ -525,6 +523,10 @@ namespace BattleCON
 
                 if (isHuman)
                 {
+
+                    if (!canAnteFinisher() && !opponent.canAnte())
+                        g.writeToConsole("Attention! " + opponent + " can't ante, so this is your last chance to ante!");
+                    
                     g.selectionHeader = "Make your ante:";
                     for (int j = 0; j < availableTokens + 1; j++)
                         g.selectionItems.Add(j == 0 ? "Ante nothing" : "Ante " + j + " tokens");
@@ -576,7 +578,7 @@ namespace BattleCON
             }
 
             if (g.isMainGame)
-                g.writeToConsole(this + " antes no tokens.");
+                g.writeToConsole(this + " passes.");
 
             return AnteResult.Pass;
         }
@@ -991,6 +993,14 @@ namespace BattleCON
 
 
             finisher = selectedFinisher == 0 ? c.finisher1 : c.finisher2;
+        }
+
+        internal bool canAnte()
+        {
+            if (cannotAnte || availableTokens == 0 && !canAnteFinisher())
+                return false;
+
+            return true;
         }
     }
 
