@@ -33,7 +33,6 @@
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.userChoiceListBox = new System.Windows.Forms.ListBox();
             this.userChoiceListLabel = new System.Windows.Forms.Label();
-            this.gameLogListBoxLabel = new System.Windows.Forms.Label();
             this.playoutNumberLabel = new System.Windows.Forms.Label();
             this.bestWinrateLabel = new System.Windows.Forms.Label();
             this.newGameBtn = new System.Windows.Forms.Button();
@@ -43,9 +42,9 @@
             // gameLogListBox
             // 
             this.gameLogListBox.FormattingEnabled = true;
-            this.gameLogListBox.Location = new System.Drawing.Point(780, 22);
+            this.gameLogListBox.Location = new System.Drawing.Point(780, 9);
             this.gameLogListBox.Name = "gameLogListBox";
-            this.gameLogListBox.Size = new System.Drawing.Size(392, 303);
+            this.gameLogListBox.Size = new System.Drawing.Size(392, 316);
             this.gameLogListBox.TabIndex = 1;
             // 
             // startButton
@@ -83,15 +82,6 @@
             this.userChoiceListLabel.Size = new System.Drawing.Size(114, 13);
             this.userChoiceListLabel.TabIndex = 6;
             this.userChoiceListLabel.Text = "<User Choice List>";
-            // 
-            // gameLogListBoxLabel
-            // 
-            this.gameLogListBoxLabel.AutoSize = true;
-            this.gameLogListBoxLabel.Location = new System.Drawing.Point(780, 7);
-            this.gameLogListBoxLabel.Name = "gameLogListBoxLabel";
-            this.gameLogListBoxLabel.Size = new System.Drawing.Size(56, 13);
-            this.gameLogListBoxLabel.TabIndex = 7;
-            this.gameLogListBoxLabel.Text = "Game Log";
             // 
             // playoutNumberLabel
             // 
@@ -138,7 +128,6 @@
             this.Controls.Add(this.newGameBtn);
             this.Controls.Add(this.bestWinrateLabel);
             this.Controls.Add(this.playoutNumberLabel);
-            this.Controls.Add(this.gameLogListBoxLabel);
             this.Controls.Add(this.userChoiceListLabel);
             this.Controls.Add(this.userChoiceListBox);
             this.Controls.Add(this.startButton);
@@ -160,7 +149,6 @@
         private BattleBoard battleBoard;
         private System.Windows.Forms.ListBox userChoiceListBox;
         private System.Windows.Forms.Label userChoiceListLabel;
-        private System.Windows.Forms.Label gameLogListBoxLabel;
         private System.Windows.Forms.Label playoutNumberLabel;
         private System.Windows.Forms.Label bestWinrateLabel;
         private System.Windows.Forms.Button newGameBtn;

@@ -578,7 +578,7 @@ namespace BattleCON
             }
 
             if (g.isMainGame)
-                g.writeToConsole(this + " passes.");
+                g.writeToConsole(this + " passes on anteing.");
 
             return AnteResult.Pass;
         }
@@ -894,6 +894,7 @@ namespace BattleCON
             bases.RemoveAt(selectedBase);
         }
 
+
         internal void revealClash()
         {
             clashPool.Add(attackBase);
@@ -901,14 +902,15 @@ namespace BattleCON
             bases.RemoveAt(selectedBase);
         }
 
+
         internal bool canAnteFinisher()
         {
             return (g.variant == GameVariant.AnteFinishers && health <= 7 && !finisherPlayed);
         }
 
+
         internal void makeSetupDecisions()
         {
-
             if (g.isMainGame)
             {
                 if (isHuman)
@@ -930,7 +932,6 @@ namespace BattleCON
                     g.getUserChoice();
                     selectedCooldownStyle1 = g.selectionResult;
 
-
                     g.selectionHeader = "Select the 2nd Discard Base:";
                     g.sss = SpecialSelectionStyle.Bases;
                     for (int i = 0; i < 7; i++)
@@ -946,7 +947,6 @@ namespace BattleCON
                     g.getUserChoice();
                     selectedCooldownBase1 = g.selectionResult;
 
-
                     g.selectionHeader = "Select the Finisher:";
 
                     g.sss = SpecialSelectionStyle.Finishers;
@@ -961,7 +961,6 @@ namespace BattleCON
                     g.writeToConsole(this + " is selecting setup cards...");
                     g.MCTS_selectSetupCards(this);
                     g.writeToConsole(this + " has selected setup cards.");
-
                 }
 
             }
