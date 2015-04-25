@@ -855,7 +855,10 @@ namespace BattleCON
             if (c == null)
                 return "<no character>";
             else
-                return c.name;
+                if (opponent.c == c)
+                    return c.name + (first ? "1" : "2");
+                else
+                    return c.name;
         }
 
         internal void returnAttackingPair()
