@@ -65,11 +65,13 @@ namespace BattleCON
             
         }
 
-        public override void AfterActivating(Player p)
+        public override void AfterActivating(Player p, List<NamedHandler> handlers)
         {
             if (p.hasHit)
             {
                 List<int> toSpend = new List<int>();
+                
+                // Option 0 - always present, means "don't spend tokens"
                 toSpend.Add(0);
 
                 if (p.availableTokens >= 2)
@@ -112,8 +114,21 @@ namespace BattleCON
                     {
                         p.spendTokens(tokens);
                         p.drainLife(tokens / 2);
+                        if (p.g.isMainGame)
+                            p.g.writeToConsole(p + " spends " + tokens + " token(s) to drain " + (tokens / 2) + " life.");
+                    }
+                    else
+                    {
+                        if (p.g.isMainGame)
+                            p.g.writeToConsole(p + " decides not to spend tokens to drain life.");
                     }
 
+                }
+
+                else
+                {
+                    if (p.g.isMainGame)
+                        p.g.writeToConsole(p + " doesn''t have enough tokens to drain life.");
                 }
             }
 
@@ -137,13 +152,16 @@ namespace BattleCON
             priority = 2;
         }
 
-        public override void OnHit(Player p)
+        public override void OnHit(Player p, List<NamedHandler> handlers)
         {
-            if (p.g.isMainGame)
-                p.g.writeToConsole(p + "'s Jugular On Hit: Move " + p.opponent + " 1 space.");
+            addHandler(handlers, delegate()
+            {
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Jugular On Hit: Move " + p.opponent + " 1 space.");
 
-            // Move the opponent 1 space
-            p.UniversalMove(false, Direction.Both, 1, 1);
+                // Move the opponent 1 space
+                p.UniversalMove(false, Direction.Both, 1, 1);
+            });
         }
 
         public override void EndOfBeat(Player p)
@@ -183,7 +201,7 @@ namespace BattleCON
             return (p.priority() >= 7);
         }
 
-        public override void OnHit(Player p)
+        public override void OnHit(Player p, List<NamedHandler> handlers)
         {
             if (p.hitOpponentLastBeat)
             {
@@ -210,14 +228,17 @@ namespace BattleCON
             priority = -1;
         }
 
-        public override void BeforeActivating(Player p)
+        public override void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
-            if (p.g.isMainGame)
-                p.g.writeToConsole(p + "'s Spiral Before Activating: Advance up to 3 spaces.");
-            MovementResult mr = p.UniversalMove(true, Direction.Forward, 0, 3);
-            p.powerModifier -= mr.distance;
-            if (p.g.isMainGame && mr.distance > 0)
-                p.g.writeToConsole(this + " lost " + mr.distance + " power because of advance");
+            addHandler(handlers, delegate()
+            {
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Spiral Before Activating: Advance up to 3 spaces.");
+                MovementResult mr = p.UniversalMove(true, Direction.Forward, 0, 3);
+                p.powerModifier -= mr.distance;
+                if (p.g.isMainGame && mr.distance > 0)
+                    p.g.writeToConsole(this + " lost " + mr.distance + " power because of advance");
+            });
         }
 
         internal override string getDescription()
@@ -267,11 +288,14 @@ namespace BattleCON
             power = -1;
         }
 
-        public override void AfterActivating(Player p)
+        public override void AfterActivating(Player p, List<NamedHandler> handlers)
         {
-            if (p.g.isMainGame)
-                p.g.writeToConsole(p + "'s Unleashed After Activating: Retreat 1 or 2 spaces");
-            p.UniversalMove(true, Direction.Backward, 1, 2);
+            addHandler(handlers, delegate()
+            {
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Unleashed After Activating: Retreat 1 or 2 spaces");
+                p.UniversalMove(true, Direction.Backward, 1, 2);
+            });
         }
 
         public override void EndOfBeat(Player p)

@@ -37,7 +37,6 @@ namespace BattleCON
 
         public void startNewGame()
         {
-
             using (GameSetupForm gsf = new GameSetupForm())
             {
                 gsf.ShowDialog();
@@ -48,11 +47,8 @@ namespace BattleCON
                 {
                     currentGame = new GameState(gameSettings.c1, gameSettings.c2, GameVariant.AnteFinishers, backgroundWorker1, _waitHandle);
                     currentGame.pureRandom = true;
-                    //currentGame.p1.health = 7;
-                    //currentGame.p2.health = 7;
                     battleBoard.gs = currentGame;
                     backgroundWorker1.RunWorkerAsync();
-                    
                 }
             }
         }
@@ -78,8 +74,6 @@ namespace BattleCON
                         break;
 
                 }
-
-
                 
             }
 
@@ -91,7 +85,6 @@ namespace BattleCON
                 return;
 
             currentGame.selectionResult = userChoiceListBox.SelectedIndex;
-
 
             currentGame.selectionItems.Clear();
             userChoiceListBox.Items.Clear();
@@ -107,12 +100,10 @@ namespace BattleCON
 
         private void backgroundWorker1_DoWork(object sender, DoWorkEventArgs e)
         {
-
             currentGame.playout();
-
             currentGame.isFinished = true;
 
-            currentGame.writeToConsole("The game is over. You may now start a new one.");
+            currentGame.writeToConsole(currentGame.terminated ? "GAME TERMINATED, starting a new one..." : "The game is over. You may now start a new one.");
 
         }
 
@@ -132,12 +123,7 @@ namespace BattleCON
 
             startButton.Enabled = (eventType != 3);
 
-
             outputCurrentGameConsole();
-
-            gameLogListBox.SelectedIndex = gameLogListBox.Items.Count - 1;
-
-            battleBoard.Redraw(true);
 
             
 
@@ -151,18 +137,14 @@ namespace BattleCON
                 }
             }
             else if (eventType == 0)
-
             {
                 userInteractionType = UserInteractionTypes.Wait;
-
-
                 if (!(currentGame.p1.isHuman || currentGame.p2.isHuman))
                     startButton.PerformClick();
             }
 
-            
-
         }
+
 
         private void outputCurrentGameConsole()
         {
@@ -171,8 +153,13 @@ namespace BattleCON
                 gameLogListBox.Items.Add(s);
             }
 
+            gameLogListBox.SelectedIndex = gameLogListBox.Items.Count - 1;
+
             currentGame.consoleBuffer.Clear();
+
+            battleBoard.Redraw(true);
         }
+
 
         private void battleBoard_MouseMove(object sender, MouseEventArgs e)
         {
@@ -207,12 +194,13 @@ namespace BattleCON
                     }
                 }
             }
-                
 
         }
 
         private void MainForm_Shown(object sender, EventArgs e)
         {
+            gameLogListBox.Items.Add("Hi, I'm your game log. Have fun!");
+
             // save 1 click
             startButton.PerformClick();
         }
@@ -222,24 +210,17 @@ namespace BattleCON
             
             if (currentGame != null && !currentGame.isFinished)
             {
-
-                if (currentGame.p1.isDead)
-                {
-                    MessageBox.Show("Play to the end of the current beat to start a new game.", "New Game");
+                DialogResult dr = MessageBox.Show("Terminate current game?", "New Game", MessageBoxButtons.YesNo);
+                if (dr == DialogResult.No)
                     return;
-                }
-                else
-                {
-                    DialogResult dr = MessageBox.Show("To start a new game, you have to resign and play to the end of the current beat. Proceed?", "New Game", MessageBoxButtons.YesNo);
-                    if (dr == DialogResult.No)
-                        return;
-                    currentGame.p1.isDead = true;
-                    currentGame.writeToConsole(currentGame.p1 + " has resigned. Now play to the end of this beat to finish the game.");
-                    return;
-                }
-
-                    
+                currentGame.terminated = true;
+                currentGame.writeToConsole("Terminating current game...");
+                if (userInteractionType == UserInteractionTypes.Choice)
+                    userChoiceListBox.SelectedIndex = 0;
+                startButton_Click(sender, e);
+                return;
             }
+
             startNewGame();
 
         }
@@ -247,6 +228,9 @@ namespace BattleCON
         private void backgroundWorker1_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             outputCurrentGameConsole();
+
+            if (currentGame.terminated)
+                startNewGame();
         }
 
         

@@ -1,4 +1,5 @@
-﻿namespace BattleCON
+﻿using System.Collections.Generic;
+namespace BattleCON
 {
 
     public enum CardType
@@ -7,6 +8,23 @@
         styleCard,
         finisher
     }
+
+
+    public delegate void TriggerHandler();
+
+
+    public class NamedHandler
+    {
+        public string name;
+        public TriggerHandler handler;
+
+        public NamedHandler(string name, TriggerHandler handler)
+        {
+            this.name = name;
+            this.handler = handler;
+        }
+    }
+
 
     public abstract class Card
     {
@@ -18,6 +36,10 @@
         public int priority = 0;
 
         public CardType type;
+
+        internal void addHandler(List<NamedHandler> list, TriggerHandler handler) {
+            list.Add(new NamedHandler(name, handler));
+        }
 
         virtual public void CommonProperties(Player p)
         {
@@ -34,13 +56,13 @@
 
         }
 
-        virtual public void BeforeActivating(Player p)
+        virtual public void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
 
         }
 
 
-        virtual public void OnHit(Player p)
+        virtual public void OnHit(Player p, List<NamedHandler> handlers)
         {
 
         }
@@ -54,7 +76,7 @@
 
         }
 
-        virtual public void AfterActivating(Player p)
+        virtual public void AfterActivating(Player p, List<NamedHandler> handlers)
         {
 
         }

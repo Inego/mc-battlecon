@@ -55,7 +55,7 @@ namespace BattleCON
             if (pureRandom)
                 return R.n(number);
 
-            if (node == null)
+            if (node == null || node.children == null)
             {
                 pureRandom = true;
                 return R.n(number);
@@ -864,6 +864,7 @@ namespace BattleCON
         public static bool DEBUG_MESSAGES;
         
         public MoveManager moveManager;
+        public bool terminated;
        
  
 
@@ -945,23 +946,20 @@ namespace BattleCON
         {
             if (isMainGame)
             {
+                writeToConsole("");
+                writeToConsole("--- NEW GAME STARTED ---");
+
                 // Select Setup Cards
                 p2.makeSetupDecisions();
 
-                if (p1.isDead)
-                    return p2;
-
                 p1.makeSetupDecisions();
-
-                if (p1.isDead)
-                    return p2;
 
                 p1.applySetupDecisions();
                 p2.applySetupDecisions();
             }
+
             else if (pst == PlayoutStartType.SetupCardsSelection)
             {
-
                 moveManager.ParallelInitialize();
                 
                 playoutStartPlayer.makeSetupDecisions();
@@ -978,6 +976,10 @@ namespace BattleCON
             {
                 if (isMainGame)
                 {
+                    if (terminated)
+                        return null;
+
+                    writeToConsole("");
                     writeToConsole("BEAT " + beat);
                 }
                 
@@ -1016,6 +1018,8 @@ namespace BattleCON
 
         public void flushConsole()
         {
+            if (terminated)
+                return;
             bw.ReportProgress(0);
             waitHandle.WaitOne();
         }
@@ -1239,6 +1243,7 @@ namespace BattleCON
             while (true)
             {
                 playoutPreviousAnte = previous;
+
                 AnteResult result = anteingPlayer.ante();
 
                 current = (result == AnteResult.AntedTokens);
@@ -1247,11 +1252,14 @@ namespace BattleCON
                     // both passed or someone anted a finisher
                     break;
 
-                anteingPlayer = anteingPlayer.opponent;
+                if (!anteingPlayer.canAnteFinisher() && !anteingPlayer.opponent.canAnte())
+                {
+                    if (isMainGame)
+                        writeToConsole("Anteing finished since " + anteingPlayer.opponent + " cannot ante.");
+                    break;
+                }
 
-                //// Short way for a special case
-                //if (anteingPlayer.availableTokens == 0 && !anteingPlayer.canAnteFinisher())
-                //    break;
+                anteingPlayer = anteingPlayer.opponent;
 
                 previous = current;
 
@@ -1262,6 +1270,12 @@ namespace BattleCON
 
         internal void getUserChoice()
         {
+            if (terminated)
+            {
+                selectionResult = 0;
+                return;
+            }
+
             bw.ReportProgress(1);
             waitHandle.WaitOne();
         }
@@ -1269,6 +1283,8 @@ namespace BattleCON
 
         internal void MCTS_playouts(Player player, PlayoutStartType rpst, GameState fillOrigin, NodeStart startNode)
         {
+            if (terminated)
+                return;
 
             GameState copy = new GameState(this, startNode);
 
@@ -1290,6 +1306,8 @@ namespace BattleCON
             {
                 if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
                 {
+                    if (terminated)
+                        return;
 
                     playoutsDone = i;
                     bestWinrate = startNode.bestWinrate(player);
@@ -1321,7 +1339,6 @@ namespace BattleCON
                 //}
 
             }
-
             
         }
 
@@ -1460,23 +1477,9 @@ namespace BattleCON
 
             MCTS_playouts(p, PlayoutStartType.BeatResolution, checkPoint, rNode);
 
-            int choice = -1;
+            BestSequenceExtractor b = new BestSequenceExtractor(rNode);
 
-            double best = -1;
-
-            SimpleEnd sn;
-
-            for (int i = 0; i < rNode.children.Length; i++)
-            {
-                sn = rNode.children[i];
-                if (sn.winrate > best)
-                {
-                    best = sn.winrate;
-                    choice = i;
-                }
-            }
-
-            return choice;
+            return b.getNextBest(number);
 
         }
 
@@ -1507,7 +1510,6 @@ namespace BattleCON
         {
 
             ParallelStart rNode = new ParallelStart();
-
 
             MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this, rNode);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 namespace BattleCON
 {
     class Drive : BaseCard
@@ -13,14 +14,16 @@ namespace BattleCON
             priority = 4;
         }
 
-        public override void BeforeActivating(Player p)
+        public override void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
+            addHandler(handlers, delegate()
+            {
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Drive Before Activating: Advance 1 or 2 spaces.");
 
-            if (p.g.isMainGame)
-                p.g.writeToConsole(p + "'s Drive Before Activating: Advance 1 or 2 spaces.");
-
-            // Advance 1 or 2 spaces
-            p.UniversalMove(true, Direction.Forward, 1, 2);
+                // Advance 1 or 2 spaces
+                p.UniversalMove(true, Direction.Forward, 1, 2);
+            });
         }
 
         internal override string getDescription()
@@ -71,19 +74,24 @@ namespace BattleCON
             p.canHit = false;
         }
 
-        public override void AfterActivating(Player p)
+        public override void AfterActivating(Player p, List<NamedHandler> handlers)
         {
-            if (p.g.isMainGame)
-                p.g.writeToConsole(p + "'s Dash After Activating: Move 1, 2 or 3 spaces.");
-
-            MovementResult mr = p.UniversalMove(true, Direction.Both, 1, 3);
-
-            if (mr.pastOpponent)
+            addHandler(handlers, delegate()
             {
                 if (p.g.isMainGame)
-                    p.g.writeToConsole(p + " dashed past " + p.opponent);
-                p.opponent.canHit = false;
-            }
+                    p.g.writeToConsole(p + "'s Dash After Activating: Move 1, 2 or 3 spaces.");
+
+                MovementResult mr = p.UniversalMove(true, Direction.Both, 1, 3);
+
+                if (mr.pastOpponent)
+                {
+                    if (p.g.isMainGame)
+                        p.g.writeToConsole(p + " dashed past " + p.opponent);
+                    p.opponent.canHit = false;
+                }
+
+            });
+
 
         }
 
@@ -101,7 +109,6 @@ namespace BattleCON
         {
             return "This attack does not hit opponents.\nAfter Activating: Move 1, 2 or 3 spaces. If you moved past an opponent during this movement, this opponent cannot hit you during this beat.";
         }
-
 
     }
 
@@ -175,13 +182,16 @@ namespace BattleCON
             priority = 5;
         }
 
-        public override void OnHit(Player p)
+        public override void OnHit(Player p, List<NamedHandler> handlers)
         {
-            if (p.g.isMainGame)
-                p.g.writeToConsole(p + "'s Grasp On Hit: Move the opponent 1 space.");
+            addHandler(handlers, delegate()
+            {
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Grasp On Hit: Move the opponent 1 space.");
 
-            // Move opponent 1 space
-            p.UniversalMove(false, Direction.Both, 1, 1);
+                // Move opponent 1 space
+                p.UniversalMove(false, Direction.Both, 1, 1);
+            });
         }
 
         internal override string getDescription()

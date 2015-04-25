@@ -104,6 +104,8 @@ namespace BattleCON
 
         public bool isHuman;
 
+        List<NamedHandler> handlers = new List<NamedHandler>();
+
 
         public void fillFromPlayer(Player player)
         {
@@ -507,9 +509,7 @@ namespace BattleCON
                 return AnteResult.Pass;
             }
 
-
             bool canAnteFinisherFlag = canAnteFinisher();
-
 
             if (availableTokens == 0 && !canAnteFinisherFlag)
             {
@@ -525,6 +525,10 @@ namespace BattleCON
 
                 if (isHuman)
                 {
+
+                    if (!canAnteFinisher() && !opponent.canAnte())
+                        g.writeToConsole("Attention! " + opponent + " can't ante, so this is your last chance to ante!");
+                    
                     g.selectionHeader = "Make your ante:";
                     for (int j = 0; j < availableTokens + 1; j++)
                         g.selectionItems.Add(j == 0 ? "Ante nothing" : "Ante " + j + " tokens");
@@ -576,7 +580,7 @@ namespace BattleCON
             }
 
             if (g.isMainGame)
-                g.writeToConsole(this + " antes no tokens.");
+                g.writeToConsole(this + " passes on anteing.");
 
             return AnteResult.Pass;
         }
@@ -667,7 +671,6 @@ namespace BattleCON
             attackBase = null;
             attackStyle = null;
 
-
         }
 
         internal void resolveStartOfBeat()
@@ -681,9 +684,7 @@ namespace BattleCON
             if (isStunned)
                 return;
 
-            attackBase.BeforeActivating(this);
-            attackStyle.BeforeActivating(this);
-
+            BeforeActivating();
 
             // Check can hit
             attackStyle.checkCanHit(this);
@@ -704,8 +705,7 @@ namespace BattleCON
                     hasHit = true;
                     opponent.wasHit = true;
 
-                    attackBase.OnHit(this);
-                    attackStyle.OnHit(this);
+                    OnHit();
 
                     int power = getTotalPower();
 
@@ -823,9 +823,78 @@ namespace BattleCON
                     g.writeToConsole(this + "'s attack cannot hit.");
             }
 
-            attackBase.AfterActivating(this);
-            attackStyle.AfterActivating(this);
+            AfterActivating();
             
+        }
+
+        private void BeforeActivating()
+        {
+            handlers.Clear();
+            attackStyle.BeforeActivating(this, handlers);
+            attackBase.BeforeActivating(this, handlers);
+            ExecuteTriggers("Before Activating");
+        }
+
+
+        private void OnHit()
+        {
+            handlers.Clear();
+
+            attackStyle.OnHit(this, handlers);
+            attackBase.OnHit(this, handlers);
+
+            ExecuteTriggers("On Hit");
+        }
+
+
+        private void AfterActivating()
+        {
+            handlers.Clear();
+
+            attackStyle.AfterActivating(this, handlers);
+            attackBase.AfterActivating(this, handlers);
+
+            ExecuteTriggers("After Activating");
+        }
+
+
+        private void ExecuteTriggers(string triggerTitle)
+        {
+            while (handlers.Count > 0)
+            {
+
+                int selected;
+
+                if (handlers.Count == 1)
+                    selected = 0;
+                else
+                {
+                    // If there are two or more handlers, the player must choose the next to execute.
+                    if (g.isMainGame && isHuman)
+                    {
+                        g.selectionHeader = "Select " + triggerTitle + " trigger to execute first:";
+                        foreach (NamedHandler handler in handlers)
+                            g.selectionItems.Add(handler.name);
+                        g.getUserChoice();
+                        selected = g.selectionResult;
+                    }
+                    else
+                    {
+                        selected = g.SimpleUCTSelect(handlers.Count, this);
+                        if (g.isMainGame)
+                            g.writeToConsole(this + " decides to execute " + handlers[selected].name + ' ' + triggerTitle + " trigger first.");
+                    }
+
+                    if (g.isMainGame)
+                        g.registeredChoices.Add(selected);
+                }
+
+                // Execute it
+                handlers[selected].handler();
+
+                handlers.RemoveAt(selected);
+
+            }
         }
 
         private int getTotalPower()
@@ -853,7 +922,10 @@ namespace BattleCON
             if (c == null)
                 return "<no character>";
             else
-                return c.name;
+                if (opponent.c == c)
+                    return c.name + (first ? "1" : "2");
+                else
+                    return c.name;
         }
 
         internal void returnAttackingPair()
@@ -892,6 +964,7 @@ namespace BattleCON
             bases.RemoveAt(selectedBase);
         }
 
+
         internal void revealClash()
         {
             clashPool.Add(attackBase);
@@ -899,14 +972,15 @@ namespace BattleCON
             bases.RemoveAt(selectedBase);
         }
 
+
         internal bool canAnteFinisher()
         {
             return (g.variant == GameVariant.AnteFinishers && health <= 7 && !finisherPlayed);
         }
 
+
         internal void makeSetupDecisions()
         {
-
             if (g.isMainGame)
             {
                 if (isHuman)
@@ -928,7 +1002,6 @@ namespace BattleCON
                     g.getUserChoice();
                     selectedCooldownStyle1 = g.selectionResult;
 
-
                     g.selectionHeader = "Select the 2nd Discard Base:";
                     g.sss = SpecialSelectionStyle.Bases;
                     for (int i = 0; i < 7; i++)
@@ -944,7 +1017,6 @@ namespace BattleCON
                     g.getUserChoice();
                     selectedCooldownBase1 = g.selectionResult;
 
-
                     g.selectionHeader = "Select the Finisher:";
 
                     g.sss = SpecialSelectionStyle.Finishers;
@@ -959,7 +1031,6 @@ namespace BattleCON
                     g.writeToConsole(this + " is selecting setup cards...");
                     g.MCTS_selectSetupCards(this);
                     g.writeToConsole(this + " has selected setup cards.");
-
                 }
 
             }
@@ -991,6 +1062,14 @@ namespace BattleCON
 
 
             finisher = selectedFinisher == 0 ? c.finisher1 : c.finisher2;
+        }
+
+        internal bool canAnte()
+        {
+            if (cannotAnte || availableTokens == 0 && !canAnteFinisher())
+                return false;
+
+            return true;
         }
     }
 

@@ -100,14 +100,17 @@ namespace BattleCON
             p.ignoresAppliedMovement = true;
         }
 
-        public override void BeforeActivating(Player p)
+        public override void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
-            if (p.g.isMainGame)
-                p.g.writeToConsole(p + "'s Vengeful Before Activating: Advance 1 space.");
-            p.UniversalMove(true, Direction.Forward, 1, 1);
+            addHandler(handlers, delegate()
+            {
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Vengeful Before Activating: Advance 1 space.");
+                p.UniversalMove(true, Direction.Forward, 1, 1);
+            });
         }
 
-        public override void OnHit(Player p)
+        public override void OnHit(Player p, List<NamedHandler> handlers)
         {
             p.gainTokens(2);
         }
@@ -134,13 +137,16 @@ namespace BattleCON
                 p.opponent.isStunned = true;
         }
 
-        public override void BeforeActivating(Player p)
+        public override void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
             if (p.damageTaken > 0)
             {
-                if (p.g.isMainGame)
-                    p.g.writeToConsole(p + "'s Counter Before Activating: Since " + p.damageTaken + "damage taken, advance up to " + p.damageTaken + ".");
-                p.UniversalMove(true, Direction.Forward, 0, p.damageTaken);
+                addHandler(handlers, delegate()
+                {
+                    if (p.g.isMainGame)
+                        p.g.writeToConsole(p + "'s Counter Before Activating: Since " + p.damageTaken + " damage taken, advance up to " + p.damageTaken + ".");
+                    p.UniversalMove(true, Direction.Forward, 0, p.damageTaken);
+                });
             }
         }
 
@@ -170,7 +176,7 @@ namespace BattleCON
             p.gainTokens(Math.Min(2, p.soakedDamage));
         }
 
-        public override void BeforeActivating(Player p)
+        public override void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
             if (p.wasHit && p.canMove)
             {
@@ -189,27 +195,30 @@ namespace BattleCON
 
                 if (newPos.Count > 1)
                 {
-                    int selected;
-                    if (p.g.isMainGame && p.isHuman)
+                    addHandler(handlers, delegate()
                     {
-                        p.g.selectionHeader = "Select Retribution movement:";
-                        int newposj;
-                        for (int j = 0; j < newPos.Count; j++)
+                        int selected;
+                        if (p.g.isMainGame && p.isHuman)
                         {
-                            newposj = newPos[j];
-                            p.g.selectionItems.Add(newposj == -1 ? "Don't move" : (newposj == p.opponent.position - 1 ? "Move to the left side of opponent" : "Move to the right side of opponent"));
+                            p.g.selectionHeader = "Select Retribution movement:";
+                            int newposj;
+                            for (int j = 0; j < newPos.Count; j++)
+                            {
+                                newposj = newPos[j];
+                                p.g.selectionItems.Add(newposj == -1 ? "Don't move" : (newposj == p.opponent.position - 1 ? "Move to the left side of opponent" : "Move to the right side of opponent"));
+                            }
+                            p.g.getUserChoice();
+                            selected = p.g.selectionResult;
                         }
-                        p.g.getUserChoice();
-                        selected = p.g.selectionResult;
-                    }
-                    else
-                        selected = p.g.SimpleUCTSelect(newPos.Count, p);
+                        else
+                            selected = p.g.SimpleUCTSelect(newPos.Count, p);
 
-                    if (p.g.isMainGame)
-                        p.g.registeredChoices.Add(selected);
+                        if (p.g.isMainGame)
+                            p.g.registeredChoices.Add(selected);
 
-                    if (selected > 0)
-                        p.position = newPos[selected];
+                        if (selected > 0)
+                            p.position = newPos[selected];
+                    });
                 }
             }
         }
@@ -229,40 +238,42 @@ namespace BattleCON
             priority = -1;
         }
 
-        public override void BeforeActivating(Player p)
+        public override void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
             // Discard any number of Vengeance tokens to pull the opponent 1 space per token discarded
             int maxNumber = Math.Min(p.availableTokens, p.opponent.GetPossibleAdvance());
             if (maxNumber > 0)
             {
-
-                int number;
-
-                if (p.g.isMainGame && p.isHuman)
+                addHandler(handlers, delegate()
                 {
-                    p.g.selectionHeader = "Spend tokens to pull the opponent:";
-                    for (int j = 0; j <= maxNumber; j++)
+                    int number;
+
+                    if (p.g.isMainGame && p.isHuman)
                     {
-                        p.g.selectionItems.Add(j == 0 ? "None" : "Spend " + j + " tokens to pull " + j + " space");
+                        p.g.selectionHeader = "Spend tokens to pull the opponent:";
+                        for (int j = 0; j <= maxNumber; j++)
+                        {
+                            p.g.selectionItems.Add(j == 0 ? "None" : "Spend " + j + " tokens to pull " + j + " space");
+                        }
+                        p.g.getUserChoice();
+                        number = p.g.selectionResult;
                     }
-                    p.g.getUserChoice();
-                    number = p.g.selectionResult;
-                }
-                else
-                    number = p.g.SimpleUCTSelect(maxNumber + 1, p);
-                
+                    else
+                        number = p.g.SimpleUCTSelect(maxNumber + 1, p);
 
-                if (p.g.isMainGame)
-                    p.g.registeredChoices.Add(number);
-                    
-                if (number > 0)
-                {
-                    p.opponent.Advance(number);
-                    p.spendTokens(number);
 
                     if (p.g.isMainGame)
-                        p.g.writeToConsole(p + " pulled " + p.opponent + " " + number + " spaces for " + number + " tokens.");
-                }
+                        p.g.registeredChoices.Add(number);
+
+                    if (number > 0)
+                    {
+                        p.opponent.Advance(number);
+                        p.spendTokens(number);
+
+                        if (p.g.isMainGame)
+                            p.g.writeToConsole(p + " pulled " + p.opponent + " " + number + " spaces for " + number + " tokens.");
+                    }
+                });
             }
         }
 
@@ -284,7 +295,7 @@ namespace BattleCON
             priority = -1;
         }
 
-        public override void BeforeActivating(Player p)
+        public override void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
             if (p.damageTaken > 0)
                 p.powerModifier += 2;
@@ -317,7 +328,7 @@ namespace BattleCON
             return "On Hit: Advance until you are adjacent to the opponent. The opponent cannot move next beat.";
         }
 
-        public override void OnHit(Player p)
+        public override void OnHit(Player p, List<NamedHandler> handlers)
         {
 
             p.opponent.canMoveNextBeat = false;
