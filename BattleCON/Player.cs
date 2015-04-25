@@ -104,6 +104,8 @@ namespace BattleCON
 
         public bool isHuman;
 
+        List<NamedHandler> handlers = new List<NamedHandler>();
+
 
         public void fillFromPlayer(Player player)
         {
@@ -669,7 +671,6 @@ namespace BattleCON
             attackBase = null;
             attackStyle = null;
 
-
         }
 
         internal void resolveStartOfBeat()
@@ -683,9 +684,7 @@ namespace BattleCON
             if (isStunned)
                 return;
 
-            attackBase.BeforeActivating(this);
-            attackStyle.BeforeActivating(this);
-
+            BeforeActivating();
 
             // Check can hit
             attackStyle.checkCanHit(this);
@@ -706,8 +705,7 @@ namespace BattleCON
                     hasHit = true;
                     opponent.wasHit = true;
 
-                    attackBase.OnHit(this);
-                    attackStyle.OnHit(this);
+                    OnHit();
 
                     int power = getTotalPower();
 
@@ -825,9 +823,78 @@ namespace BattleCON
                     g.writeToConsole(this + "'s attack cannot hit.");
             }
 
-            attackBase.AfterActivating(this);
-            attackStyle.AfterActivating(this);
+            AfterActivating();
             
+        }
+
+        private void BeforeActivating()
+        {
+            handlers.Clear();
+            attackStyle.BeforeActivating(this, handlers);
+            attackBase.BeforeActivating(this, handlers);
+            ExecuteTriggers("Before Activating");
+        }
+
+
+        private void OnHit()
+        {
+            handlers.Clear();
+
+            attackStyle.OnHit(this, handlers);
+            attackBase.OnHit(this, handlers);
+
+            ExecuteTriggers("On Hit");
+        }
+
+
+        private void AfterActivating()
+        {
+            handlers.Clear();
+
+            attackStyle.AfterActivating(this, handlers);
+            attackBase.AfterActivating(this, handlers);
+
+            ExecuteTriggers("After Activating");
+        }
+
+
+        private void ExecuteTriggers(string triggerTitle)
+        {
+            while (handlers.Count > 0)
+            {
+
+                int selected;
+
+                if (handlers.Count == 1)
+                    selected = 0;
+                else
+                {
+                    // If there are two or more handlers, the player must choose the next to execute.
+                    if (g.isMainGame && isHuman)
+                    {
+                        g.selectionHeader = "Select " + triggerTitle + " trigger to execute first:";
+                        foreach (NamedHandler handler in handlers)
+                            g.selectionItems.Add(handler.name);
+                        g.getUserChoice();
+                        selected = g.selectionResult;
+                    }
+                    else
+                    {
+                        selected = g.SimpleUCTSelect(handlers.Count, this);
+                        if (g.isMainGame)
+                            g.writeToConsole(this + " decides to execute " + handlers[selected].name + ' ' + triggerTitle + " trigger first.");
+                    }
+
+                    if (g.isMainGame)
+                        g.registeredChoices.Add(selected);
+                }
+
+                // Execute it
+                handlers[selected].handler();
+
+                handlers.RemoveAt(selected);
+
+            }
         }
 
         private int getTotalPower()
