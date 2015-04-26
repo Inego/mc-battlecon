@@ -20,17 +20,19 @@ namespace BattleCON
 
     }
 
+
     public enum AnteResult
     {
         Pass,
         AntedTokens,
         AntedFinisher
     }
-    
 
 
     public class Player
     {
+        public CharacterClass c;
+
         public int health;
         public bool cannotDie = false;
         public bool isDead = false;
@@ -76,7 +78,6 @@ namespace BattleCON
         public List<Card> styles = new List<Card>(3);
         public List<Card> clashPool = new List<Card>(4);
 
-
         public int selectedStyle;
         public int selectedBase;
 
@@ -100,11 +101,16 @@ namespace BattleCON
 
         public GameState g;
 
-        public Character c;
-
         public bool isHuman;
 
         List<NamedHandler> handlers = new List<NamedHandler>();
+
+
+
+        public virtual string getDescription()
+        {
+            return "A generic player.";
+        }
 
 
         public void fillFromPlayer(Player player)
@@ -165,26 +171,13 @@ namespace BattleCON
 
         }
 
-        
-        // For cloning
-        public Player(Character c, GameState gs)
-        {
-            this.g = gs;
-            this.c = c;
-        }
 
-
-        public Player(Character c, int position, GameState gs, bool first, bool isHuman)
+        public Player()
         {
-            this.g = gs;
-            this.first = first;
-            this.isHuman = isHuman;
             this.selectedFinisher = -1;
 
             health = 20;
-            this.c = c;
             
-            this.position = position;
             this.hasHit = false;
 
             this.nextBeatPowerModifier = 0;
@@ -196,8 +189,6 @@ namespace BattleCON
             bases.Add(new Drive());
             bases.Add(new Strike());
             bases.Add(new Shot());
-
-            c.init(this);
 
             resetBeat();
         }
@@ -242,6 +233,7 @@ namespace BattleCON
 
         }
 
+
         public MovementResult Advance(int i)
         {
             bool result;
@@ -258,6 +250,7 @@ namespace BattleCON
             return new MovementResult(true, i, result);
         }
 
+
         public MovementResult Retreat(int i)
         {
             if (opponent.position > position)
@@ -266,6 +259,7 @@ namespace BattleCON
                 position += i;
             return new MovementResult(false, i, false);
         }
+
 
         public MovementResult MoveSelf(int i)
         {
@@ -286,6 +280,7 @@ namespace BattleCON
             else
                 return position - 2;
         }
+
 
         public int GetPossibleRetreat()
         {
@@ -380,6 +375,7 @@ namespace BattleCON
 
         }
 
+
         private string movementText(int p, bool self)
         {
             if (p == 0)
@@ -413,17 +409,20 @@ namespace BattleCON
             usedTokens += tokens;
         }
 
+
         internal void drainLife(int p)
         {
             health += opponent.loseLife(p);
 
         }
 
+
         internal int rangeToOpponent()
         {
             int d = position - opponent.position;
             return d < 0 ? -d : d;
         }
+
 
         internal void gainTokens(int number)
         {
@@ -436,6 +435,7 @@ namespace BattleCON
                 usedTokens -= toGain;
             }
         }
+
 
         internal void selectAttackingPair()
         {
@@ -499,6 +499,7 @@ namespace BattleCON
             selectedBase = baseNumber;
 
         }
+
 
         internal virtual AnteResult ante()
         {
@@ -585,15 +586,12 @@ namespace BattleCON
             return AnteResult.Pass;
         }
 
-        internal void AnteEffects()
-        {
-            c.AnteEffects(this);
-        }
 
         internal void RevealEffects()
         {
             attackBase.Reveal(this);
         }
+
 
         internal void selectNextForClash()
         {
@@ -631,6 +629,7 @@ namespace BattleCON
             selectedBase = selected;
 
         }
+
 
         internal void recycle()
         {
@@ -673,11 +672,13 @@ namespace BattleCON
 
         }
 
+
         internal void resolveStartOfBeat()
         {
             attackBase.StartOfBeat(this);
             attackStyle.StartOfBeat(this);
         }
+
 
         internal void attack(bool active)
         {
@@ -763,8 +764,8 @@ namespace BattleCON
                             attackStyle.OnDamage(this);
 
 
-                            opponent.c.OnDamageTaken(opponent);
-                            c.OnDamage(this);
+                            opponent.OnDamageTaken();
+                            OnDamage();
 
                             if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this) || opponent.stunGuardDisabled))
                             {
@@ -826,6 +827,7 @@ namespace BattleCON
             AfterActivating();
             
         }
+
 
         private void BeforeActivating()
         {
@@ -897,6 +899,7 @@ namespace BattleCON
             }
         }
 
+
         private int getTotalPower()
         {
             int basePower = attackBase.getAttackPower(this);
@@ -911,22 +914,22 @@ namespace BattleCON
             attackStyle.EndOfBeat(this);
         }
 
+
         internal void applyCommonProperties()
         {
             attackBase.CommonProperties(this);
             attackStyle.CommonProperties(this);
         }
 
+
         public override string ToString()
         {
-            if (c == null)
-                return "<no character>";
+            if (opponent.c == c)
+                return c.name + (first ? "1" : "2");
             else
-                if (opponent.c == c)
-                    return c.name + (first ? "1" : "2");
-                else
-                    return c.name;
+                return c.name;
         }
+
 
         internal void returnAttackingPair()
         {
@@ -935,6 +938,7 @@ namespace BattleCON
             attackStyle = null;
             attackBase = null;
         }
+
 
         internal void selectNextForClash_MCTS()
         {
@@ -950,6 +954,7 @@ namespace BattleCON
             g.pst = PlayoutStartType.Normal;
             
         }
+
 
         internal void revealAttack()
         {
@@ -1042,9 +1047,9 @@ namespace BattleCON
                 selectedCooldownBase1 = g.moveManager.ParallelSelect(6, this);
                 selectedFinisher = g.moveManager.ParallelSelect(2, this);
             }
-
             
         }
+
 
         internal void applySetupDecisions()
         {
@@ -1064,12 +1069,61 @@ namespace BattleCON
             finisher = selectedFinisher == 0 ? c.finisher1 : c.finisher2;
         }
 
+
         internal bool canAnte()
         {
             if (cannotAnte || availableTokens == 0 && !canAnteFinisher())
                 return false;
 
             return true;
+        }
+
+
+        public virtual void OnDamageTaken()
+        {
+        }
+
+
+        public virtual void OnDamage()
+        {
+        }
+
+
+        public virtual void AnteEffects()
+        {
+        }
+
+
+        internal static Player NewByClass(CharacterClass c)
+        {
+            switch (c.c)
+            {
+                case Character.Eligor:
+                    return new Eligor();
+                case Character.Shekhtur:
+                    return new Shekhtur();
+                default:
+                    return null;
+            }
+        }
+        
+
+        internal static Player New(CharacterClass c, int position, GameState gameState, bool first, bool isHuman)
+        {
+            Player p = Player.NewByClass(c);
+
+            p.position = position;
+            p.g = gameState;
+            p.first = first;
+            p.isHuman = isHuman;
+
+            return p;
+
+        }
+
+        internal static Player Clone(Player player)
+        {
+            return Player.New(player.c, player.position, player.g, player.first, player.isHuman);
         }
     }
 

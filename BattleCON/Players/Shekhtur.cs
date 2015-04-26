@@ -3,44 +3,41 @@ using System.Collections.Generic;
 namespace BattleCON
 {
 
-    public class Shekhtur : Character
+    public class Shekhtur : Player
     {
-        public Shekhtur()
-        {
-            name = "Shekhtur";
-            finisher1 = new SoulBreaker();
-            finisher2 = new CoffinNails();
-
-        }
 
         public override string getDescription()
         {
             return "Shekhtur begins a duel with 3 Malice Tokens. Each time she hits an opponent with an attack, she gains one Malice Token per point of damage dealt. She cannot possess more than 5 Malice Tokens at any time.\nShekhtur can ante Malice Tokens for +1 Priority each.";
         }
 
-        public override void init(Player p)
+
+        public Shekhtur() : base()
         {
-            p.bases.Add(new Brand());
+            c = CharacterClass.CharacterShekhtur;
 
-            p.styles.Add(new Combination());
-            p.styles.Add(new Unleashed());
-            p.styles.Add(new Reaver());
-            p.styles.Add(new Jugular());
-            p.styles.Add(new Spiral());
+            bases.Add(new Brand());
 
-            p.availableTokens = 3;
-            p.usedTokens = 2;
+            styles.Add(new Combination());
+            styles.Add(new Unleashed());
+            styles.Add(new Reaver());
+            styles.Add(new Jugular());
+            styles.Add(new Spiral());
+
+            availableTokens = 3;
+            usedTokens = 2;
         }
 
 
-        public override void OnDamage(Player p)
+        public override void OnDamage()
         {
-            p.gainTokens(p.damageDealt);
+            gainTokens(damageDealt);
         }
 
-        public override void AnteEffects(Player p)
+
+        public override void AnteEffects()
         {
-            p.priorityModifier += p.antedTokens;
+            priorityModifier += antedTokens;
         }
 
 

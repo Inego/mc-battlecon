@@ -4,47 +4,44 @@ using System.Collections.Generic;
 namespace BattleCON
 {
 
-    public class Eligor : Character
+    public class Eligor : Player
     {
 
-        public Eligor()
+        public Eligor() : base()
         {
-            name = "Eligor";
+            c = CharacterClass.CharacterEligor;
 
-            finisher1 = new SheetLightning();
-            finisher2 = new SweetRevenge();
+            bases.Add(new Aegis());
+
+            styles.Add(new Counter());
+            styles.Add(new Vengeful());
+            styles.Add(new Retribution());
+            styles.Add(new Chained());
+            styles.Add(new Martial());
+
+            availableTokens = 2;
+            usedTokens = 3;
         }
 
-        public override void init(Player p)
-        {
-            p.bases.Add(new Aegis());
-
-            p.styles.Add(new Counter());
-            p.styles.Add(new Vengeful());
-            p.styles.Add(new Retribution());
-            p.styles.Add(new Chained());
-            p.styles.Add(new Martial());
-
-            p.availableTokens = 2;
-            p.usedTokens = 3;
-        }
 
         public override string getDescription()
         {
             return "Eligor begins a duel with 2 Vengeance Tokens. Whenever he takes damage from an attack, he gains Vengeance Tokens equal to the damage taken. He has a limit of 5 these tokens.\nEligor can ante Vengeance Tokens for Stun Guard 2 each. He gains Stun Immunity if he antes 5 tokens in a single beat.";
         }
 
-        public override void OnDamageTaken(Player p)
+
+        public override void OnDamageTaken()
         {
-            p.gainTokens(p.damageTaken);
+            gainTokens(damageTaken);
         }
 
-        public override void AnteEffects(Player p)
+
+        public override void AnteEffects()
         {
-            if (p.antedTokens == 5)
-                p.stunImmunity = true;
+            if (antedTokens == 5)
+                stunImmunity = true;
             else
-                p.stunGuard += 2 * p.antedTokens;
+                stunGuard += 2 * antedTokens;
         }
 
     }

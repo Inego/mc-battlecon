@@ -25,70 +25,59 @@ namespace BattleCON
 
         }
 
+    }
+    
 
+    public enum Character
+    {
+        Generic,
+        Shekhtur,
+        Eligor
     }
 
-    
 
-  
-    
-    
-
-
-
-    public abstract class Character
+    public class CharacterClass
     {
+        public Character c;
         public string name;
-
         public Finisher finisher1;
         public Finisher finisher2;
 
-        public static Character shekhtur;
-        public static Character eligor;
+        public static CharacterClass CharacterEligor   = new CharacterClass(Character.Eligor,   "Eligor", new SheetLightning(), new SweetRevenge());
+        public static CharacterClass CharacterShekhtur = new CharacterClass(Character.Shekhtur, "Shekhtur", new SoulBreaker(), new CoffinNails());
+        public static CharacterClass[] characters = new CharacterClass[] {
+            CharacterEligor,
+            CharacterShekhtur
+        };
 
-        public static Character[] characters;
-
-        static Character()
+        public CharacterClass(Character c, string name, Finisher finisher1, Finisher finisher2)
         {
-
-            shekhtur = new Shekhtur();
-            eligor = new Eligor();
-
-            characters = new Character[] {eligor, shekhtur};
-
+            this.c = c;
+            this.name = name;
+            this.finisher1 = finisher1;
+            this.finisher2 = finisher2;
         }
 
-        public abstract string getDescription();
-
-
-        virtual public void init(Player p)
+        internal static CharacterClass From(Character c)
         {
+            switch (c)
+            {
+                case Character.Eligor:
+                    return CharacterEligor;
+                case Character.Shekhtur:
+                    return CharacterShekhtur;
+                default:
+                    return null;
+            }
         }
 
-        virtual public void OnDamage(Player p)
+        internal static CharacterClass getByName(string p)
         {
-        }
-
-        virtual public void OnDamageTaken(Player p)
-        {
-        }
-
-        virtual public void AnteEffects(Player p)
-        {
-        }
-
-        public override string ToString()
-        {
-            return name;
-        }
-
-        internal static Character getByName(string p)
-        {
-            foreach (Character ch in Character.characters)
-                if (ch.name == p)
-                    return ch;
-
+            foreach (CharacterClass c in characters)
+                if (c.name == p)
+                    return c;
             return null;
+
         }
     }
 

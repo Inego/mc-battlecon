@@ -28,8 +28,8 @@ namespace BattleCON
 
     public class GameSettings
     {
-        public Character c1;
-        public Character c2;
+        public CharacterClass c1;
+        public CharacterClass c2;
 
         public int kPlayouts;
     }
@@ -868,14 +868,14 @@ namespace BattleCON
        
  
 
-        public GameState(Character c1, Character c2, GameVariant variant,  BackgroundWorker bw, EventWaitHandle waitHandle)
+        public GameState(CharacterClass c1, CharacterClass c2, GameVariant variant,  BackgroundWorker bw, EventWaitHandle waitHandle)
         {
             beat = 1;
 
             this.variant = variant;
 
-            p1 = new Player(c1, 2, this, true, true);
-            p2 = new Player(c2, 6, this, false, false);
+            p1 = Player.New(c1, 2, this, true, true);
+            p2 = Player.New(c2, 6, this, false, false);
 
             firstToAnte = p1;
 
@@ -900,8 +900,8 @@ namespace BattleCON
         public GameState(GameState gameState)
         {
 
-            p1 = new Player(gameState.p1.c, this);
-            p2 = new Player(gameState.p2.c, this);
+            p1 = Player.Clone(gameState.p1);
+            p2 = Player.Clone(gameState.p2);
 
             variant = gameState.variant;
 

@@ -119,7 +119,7 @@ namespace BattleCON
 
             drawingGraphics.DrawString(p.ToString(), SystemFonts.CaptionFont, p.first ? Brushes.Blue : Brushes.Red, 5, y + 5);
 
-            regionsOnScreen.Add(new CharacterOnScreen(5, y + 5, 50, 15, p.c));
+            regionsOnScreen.Add(new CharacterOnScreen(5, y + 5, 50, 15, p));
 
 
             drawingGraphics.DrawString(p.health.ToString(), boldFont, Brushes.Black, 5, y + 20);
@@ -382,17 +382,17 @@ namespace BattleCON
 
     public class CharacterOnScreen : SomethingOnScreen
     {
-        public Character c;
+        public Player p;
 
         public static int characterCardWidth = 300;
         public static int characterCardHeight = 250;
 
         public static Brush characterCardBkBrush = new SolidBrush(Color.FromArgb(240, Color.PaleGoldenrod));
 
-        public CharacterOnScreen(int x1, int y1, int width, int height, Character c)
+        public CharacterOnScreen(int x1, int y1, int width, int height, Player p)
             : base(x1, y1, width, height)
         {
-            this.c = c;
+            this.p = p;
         }
 
         internal override void highlight(BattleBoard bb)
@@ -411,7 +411,7 @@ namespace BattleCON
 
             g.FillRectangle(characterCardBkBrush, x, y, characterCardWidth, characterCardHeight);
 
-            TextRenderer.DrawText(g, c.getDescription(), SystemFonts.SmallCaptionFont, new Rectangle(x + 5, y + 5, characterCardWidth - 10, characterCardHeight - 10), Color.Black, /*TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |*/ TextFormatFlags.WordBreak);
+            TextRenderer.DrawText(g, p.getDescription(), SystemFonts.SmallCaptionFont, new Rectangle(x + 5, y + 5, characterCardWidth - 10, characterCardHeight - 10), Color.Black, /*TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter |*/ TextFormatFlags.WordBreak);
 
         }
 
