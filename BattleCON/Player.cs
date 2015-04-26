@@ -189,8 +189,7 @@ namespace BattleCON
             bases.Add(new Drive());
             bases.Add(new Strike());
             bases.Add(new Shot());
-
-            resetBeat();
+            
         }
 
 
@@ -1117,13 +1116,15 @@ namespace BattleCON
             p.first = first;
             p.isHuman = isHuman;
 
+            p.resetBeat();
+
             return p;
 
         }
 
-        internal static Player Clone(Player player)
+        internal static Player Clone(Player player, GameState g)
         {
-            return Player.New(player.c, player.position, player.g, player.first, player.isHuman);
+            return Player.New(player.c, player.position, g, player.first, player.isHuman);
         }
     }
 

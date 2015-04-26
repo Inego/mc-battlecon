@@ -22,7 +22,7 @@ namespace BattleCON
             availableTokens = 2;
             usedTokens = 3;
         }
-
+        
 
         public override string getDescription()
         {

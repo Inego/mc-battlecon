@@ -900,8 +900,8 @@ namespace BattleCON
         public GameState(GameState gameState)
         {
 
-            p1 = Player.Clone(gameState.p1);
-            p2 = Player.Clone(gameState.p2);
+            p1 = Player.Clone(gameState.p1, this);
+            p2 = Player.Clone(gameState.p2, this);
 
             variant = gameState.variant;
 
