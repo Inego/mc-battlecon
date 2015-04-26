@@ -33,7 +33,7 @@ namespace BattleCON
         {
             for (int i = 0; i < CharacterClass.characters.Length; i++)
             {
-                cCB.Items.Add(CharacterClass.characters[i]);
+                cCB.Items.Add(CharacterClass.characters[i].name);
             }
 
         }

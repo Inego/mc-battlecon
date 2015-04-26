@@ -32,7 +32,8 @@ namespace BattleCON
     {
         Generic,
         Shekhtur,
-        Eligor
+        Eligor,
+        Marmelee
     }
 
 
@@ -45,9 +46,12 @@ namespace BattleCON
 
         public static CharacterClass CharacterEligor   = new CharacterClass(Character.Eligor,   "Eligor", new SheetLightning(), new SweetRevenge());
         public static CharacterClass CharacterShekhtur = new CharacterClass(Character.Shekhtur, "Shekhtur", new SoulBreaker(), new CoffinNails());
+        public static CharacterClass CharacterMarmelee = new CharacterClass(Character.Marmelee, "Marmelee", new AstralTrance(), new AstralCannon());
+
         public static CharacterClass[] characters = new CharacterClass[] {
             CharacterEligor,
-            CharacterShekhtur
+            CharacterShekhtur,
+            CharacterMarmelee
         };
 
         public CharacterClass(Character c, string name, Finisher finisher1, Finisher finisher2)

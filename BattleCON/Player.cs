@@ -1101,8 +1101,10 @@ namespace BattleCON
                     return new Eligor();
                 case Character.Shekhtur:
                     return new Shekhtur();
+                case Character.Marmelee:
+                    return new Marmelee();
                 default:
-                    return null;
+                    throw new NotImplementedException(c.name + " not implemented!");
             }
         }
         
@@ -1127,5 +1129,8 @@ namespace BattleCON
             return Player.New(player.c, player.position, g, player.first, player.isHuman);
         }
     }
+
+
+    public delegate string CountRepresenter(int i);
 
 }
