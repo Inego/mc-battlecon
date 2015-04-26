@@ -34,6 +34,7 @@ namespace BattleCON
 
         public int SpendConcentration(int size, int cap, CountRepresenter cr)
         {
+            S
             if (size < 0 && concentration < 1
                 || size > 0 && concentration < size)
                 return 0;
@@ -54,19 +55,18 @@ namespace BattleCON
                     for (int i = 1; i <= top; i++)
                         g.selectionItems.Add(cr(i) + " for " + i.ToString() + " concentration");
                 }
-                    
 
-                int newposj;
-                for (int j = 0; j < newPos.Count; j++)
-                {
-                    newposj = newPos[j];
-                    
-                }
-                p.g.getUserChoice();
-                selected = p.g.selectionResult;
+                g.getUserChoice();
+                selected = g.selectionResult;
             }
             else
-                selected = p.g.SimpleUCTSelect(newPos.Count, p);
+            {
+                int count;
+                if (size == -1)
+                    
+                selected = g.SimpleUCTSelect(newPos.Count, p);
+            }
+
 
             if (p.g.isMainGame)
                 p.g.registeredChoices.Add(selected);
