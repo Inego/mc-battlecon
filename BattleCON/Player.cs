@@ -630,7 +630,8 @@ namespace BattleCON
         }
 
 
-        internal void recycle()
+
+        internal virtual void recycle()
         {
             if (attackBase is Finisher)
             {
@@ -638,7 +639,6 @@ namespace BattleCON
                 attackStyle = null;
                 return;
             }
-
 
             // 1. Return from clash pool
 

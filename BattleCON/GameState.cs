@@ -12,8 +12,8 @@ namespace BattleCON
 
     public static class R
     {
-        //static Random rnd = new Random(1);
-        static Random rnd = new Random();
+        static Random rnd = new Random(1);
+        //static Random rnd = new Random();
 
         public static int n(int number)
         {
@@ -524,18 +524,18 @@ namespace BattleCON
                 //int z = 1;
             }
 
-            //if (found.top1 != null)
-            //    Debug.Assert(found.top1.GetOrigin() == s1.current.GetOrigin());
+            if (found.top1 != null)
+                Debug.Assert(found.top1.GetOrigin() == s1.current.GetOrigin());
 
-            //if (found.top2 != null)
-            //    Debug.Assert(found.top2.GetOrigin() == s2.current.GetOrigin());
+            if (found.top2 != null)
+                Debug.Assert(found.top2.GetOrigin() == s2.current.GetOrigin());
 
             // Must update tops even if they are here
             found.top1 = s1.current;
             found.top2 = s2.current;
 
-            //if (s1.current == null || s2.current == null)
-            //    throw new NotImplementedException("crap");
+            if (s1.current == null || s2.current == null)
+                throw new NotImplementedException("crap");
 
             commonEnd = found;
             
@@ -570,6 +570,9 @@ namespace BattleCON
 
             if (pureRandom)
                 return R.n(number);
+
+            if (parallel)
+                throw new NotImplementedException("Da heck");
 
             SimpleStart cn;
 
@@ -628,8 +631,8 @@ namespace BattleCON
 
             sEnd = cn.children[result];
 
-            //if (TraceOrigin() != rootNode)
-            //    throw new NotImplementedException("dam");
+            if (TraceOrigin() != rootNode)
+                throw new NotImplementedException("dam");
 
             return result;
         }
@@ -988,12 +991,12 @@ namespace BattleCON
 
 
                 // Debugging
-                //if (moveManager != null)
-                //{
-                //    NodeStart z = moveManager.TraceOrigin();
-                //    if (z != moveManager.rootNode)
-                //        throw new NotImplementedException("gobshite");
-                //}
+                if (moveManager != null)
+                {
+                    NodeStart z = moveManager.TraceOrigin();
+                    if (z != moveManager.rootNode)
+                        throw new NotImplementedException("gobshite");
+                }
                 // Debugging
 
                 if (p1.isDead)
@@ -1164,7 +1167,7 @@ namespace BattleCON
                 else
                 {
                     moveManager.SingleInitialize();
-                    //moveManager.TraceOrigin();
+                    moveManager.TraceOrigin();
                 }
 
                 Player activePlayer = p1.priority() > p2.priority() ? p1 : p2;
@@ -1322,21 +1325,21 @@ namespace BattleCON
 
                 NodeStart updateResult = copy.updateStats(winner);
 
-                //if(updateResult != startNode)
-                //    throw new NotImplementedException("oops");
+                if (updateResult != startNode)
+                    throw new NotImplementedException("oops");
 
-                //if (startNode is ParallelStart)
-                //{
-                //    if (((ParallelStart)startNode).tree1.games != i+1)
-                //        throw new NotImplementedException("nope 1");
-                //    if (((ParallelStart)startNode).tree2.games != i+1)
-                //        throw new NotImplementedException("nope 2");
-                //}
-                //else
-                //{
-                //    if (((SimpleStart)startNode).games != i + 1)
-                //        throw new NotImplementedException("nope 3");
-                //}
+                if (startNode is ParallelStart)
+                {
+                    if (((ParallelStart)startNode).tree1.games != i + 1)
+                        throw new NotImplementedException("nope 1");
+                    if (((ParallelStart)startNode).tree2.games != i + 1)
+                        throw new NotImplementedException("nope 2");
+                }
+                else
+                {
+                    if (((SimpleStart)startNode).games != i + 1)
+                        throw new NotImplementedException("nope 3");
+                }
 
             }
             

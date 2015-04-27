@@ -34,9 +34,12 @@ namespace BattleCON
 
         public int SpendConcentration(int size, int cap, CountRepresenter cr)
         {
-            S
-            if (size < 0 && concentration < 1
-                || size > 0 && concentration < size)
+            int realCap = concentration / size;
+
+            if (cap != -1)
+                realCap = Math.Min(cap, realCap);
+
+            if (realCap == 0)
                 return 0;
 
             int selected;
@@ -47,42 +50,50 @@ namespace BattleCON
 
                 g.selectionItems.Add("Don't spend");
 
-                if (size > 0)
-                    g.selectionItems.Add(cr(size) + " for " + size.ToString() + " concentration");
-                else
-                {
-                    int top = cap == -1 ? concentration : Math.Min(concentration, cap);
-                    for (int i = 1; i <= top; i++)
-                        g.selectionItems.Add(cr(i) + " for " + i.ToString() + " concentration");
-                }
+                for (int i = 1; i <= realCap; i++)
+                    g.selectionItems.Add(cr(i) + " for " + i.ToString() + " concentration");
 
                 g.getUserChoice();
                 selected = g.selectionResult;
             }
             else
             {
-                int count;
-                if (size == -1)
-                    
-                selected = g.SimpleUCTSelect(newPos.Count, p);
+                if (!g.moveManager.pureRandom && g.moveManager.parallel)
+                    throw new NotImplementedException("nein");
+                selected = g.SimpleUCTSelect(realCap + 1, this);
             }
 
+            concentration -= selected * size;
 
-            if (p.g.isMainGame)
-                p.g.registeredChoices.Add(selected);
 
-            return 0;
+            if (g.isMainGame)
+            {
+                g.registeredChoices.Add(selected);
+                g.writeToConsole(this + " gains " + cr(selected) + " for " + (selected * size) + " concentration.");
+            }
+
+            return selected;
         }
 
+
+        internal override void recycle()
+        {
+            base.recycle();
+
+            if (concentration < 5)
+            {
+                concentration++;
+                if (g.isMainGame)
+                    g.writeToConsole(this + " concentrates.");
+            }
+        }
 
     }
 
 
-    
-
-
     class Meditation : BaseCard
     {
+
         public Meditation()
         {
             name = "Meditation";
@@ -99,9 +110,31 @@ namespace BattleCON
             if (p.g.isMainGame)
                 p.g.writeToConsole(p + "'s Meditation Start of Beat: Buy Soak.");
 
-            int spent = m.SpendConcentration(-1, 1, delegate(int i) {
+            int spent = m.SpendConcentration(1, -1, delegate(int i) {
                 return i.ToString() + " Soak";
             });
+
+            if (spent > 0)
+                p.soak += spent;                
+        }
+
+
+        public override void EndOfBeat(Player p)
+        {
+            Marmelee m = (Marmelee)p;
+
+            if (m.concentration < 5)
+            {
+                m.concentration++;
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Meditation End of Beat: gain 1 Concentration.");
+            }
+            
+        }
+
+        internal override string getDescription()
+        {
+            return "Start of Beat: Spend any number of Concentration counters for Soak 1 each.\nEnd of Beat: Gain one Concentration Counter.";
         }
 
     }
@@ -109,46 +142,85 @@ namespace BattleCON
 
     class Petrifying : StyleCard
     {
+        public Petrifying()
+        {
+            name = "Petrifying";
+        }
 
     }
 
 
     class Magnificent : StyleCard
     {
+        public Magnificent()
+        {
+            name = "Magnificent";
+        }
 
     }
 
 
     class Barrier : StyleCard
     {
+        public Barrier()
+        {
+            hiRange = 1;
+            power = -1;
+            name = "Barrier";
+        }
 
+        internal override string getDescription()
+        {
+            return "Start of Beat: You may spend 4 Concentration. If you do, attacks do not hit you during this beat.\nBefore Activating, range 1: You may spend any number of Concentration Counters to push an opponent at range 1 one space per token.";
+        }
+
+
+        public override void StartOfBeat(Player p)
+        {
+            Marmelee m = (Marmelee)p;
+            int spent = m.SpendConcentration(4, 1, delegate(int i) { return "Immunity to getting hit"; });
+            if (spent > 1)
+            {
+                m.opponent.canHit = false;                
+            }
+        }
     }
 
 
     class Sorceress : StyleCard
     {
-
+        public Sorceress()
+        {
+            name = "Sorceress";
+        }
     }
 
 
     class Nullifying : StyleCard
     {
-
+        public Nullifying()
+        {
+            name = "Nullifying";
+        }
     }
 
 
     internal class AstralTrance : Finisher
     {
-
+        public AstralTrance()
+        {
+            name = "AstralTrance";
+        }
     }
 
 
     internal class AstralCannon : Finisher
     {
-
+        public AstralCannon()
+        {
+            name = "AstralCannon";
+        }
     }
-
-
 
 
 }
