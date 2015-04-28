@@ -530,12 +530,12 @@ namespace BattleCON
             if (found.top2 != null)
                 Debug.Assert(found.top2.GetOrigin() == s2.current.GetOrigin());
 
+            //if (s1.current == null || s2.current == null)
+            //    throw new NotImplementedException("crap");
+
             // Must update tops even if they are here
             found.top1 = s1.current;
             found.top2 = s2.current;
-
-            if (s1.current == null || s2.current == null)
-                throw new NotImplementedException("crap");
 
             commonEnd = found;
             
@@ -571,8 +571,8 @@ namespace BattleCON
             if (pureRandom)
                 return R.n(number);
 
-            if (parallel)
-                throw new NotImplementedException("Da heck");
+            //if (parallel)
+            //    throw new NotImplementedException("Da heck");
 
             SimpleStart cn;
 
@@ -631,8 +631,8 @@ namespace BattleCON
 
             sEnd = cn.children[result];
 
-            if (TraceOrigin() != rootNode)
-                throw new NotImplementedException("dam");
+            //if (TraceOrigin() != rootNode)
+            //    throw new NotImplementedException("dam");
 
             return result;
         }
@@ -868,6 +868,10 @@ namespace BattleCON
         
         public MoveManager moveManager;
         public bool terminated;
+        
+        // Beat-specific variables reflecting various events
+        public Player activePlayer;
+        public Player activePlayerOverride;
        
  
 
@@ -933,6 +937,8 @@ namespace BattleCON
 
             registeredChoices = g.registeredChoices;
 
+            activePlayerOverride = null;
+
             // MCTS
             this.pst = pst;
             this.playoutStartPlayer = playoutStartPlayer.first ? p1 : p2;
@@ -991,12 +997,12 @@ namespace BattleCON
 
 
                 // Debugging
-                if (moveManager != null)
-                {
-                    NodeStart z = moveManager.TraceOrigin();
-                    if (z != moveManager.rootNode)
-                        throw new NotImplementedException("gobshite");
-                }
+                //if (moveManager != null)
+                //{
+                //    NodeStart z = moveManager.TraceOrigin();
+                //    if (z != moveManager.rootNode)
+                //        throw new NotImplementedException("gobshite");
+                //}
                 // Debugging
 
                 if (p1.isDead)
@@ -1131,7 +1137,10 @@ namespace BattleCON
                     }
 
                     if (moveManager != null)
-                        moveManager.ParallelInitialize();
+                    {
+                        if (p1.bases.Count > 1 && p2.bases.Count > 1)
+                            moveManager.ParallelInitialize();                        
+                    }
 
                     p2.selectNextForClash();
                     p1.selectNextForClash();
@@ -1167,10 +1176,10 @@ namespace BattleCON
                 else
                 {
                     moveManager.SingleInitialize();
-                    moveManager.TraceOrigin();
+                    //moveManager.TraceOrigin();
                 }
 
-                Player activePlayer = p1.priority() > p2.priority() ? p1 : p2;
+                activePlayer = p1.priority() > p2.priority() ? p1 : p2;
                 Player reactivePlayer = activePlayer.opponent;
 
                 if (isMainGame)
@@ -1181,6 +1190,12 @@ namespace BattleCON
 
                 activePlayer.resolveStartOfBeat();
                 reactivePlayer.resolveStartOfBeat();
+
+                if (activePlayerOverride == reactivePlayer)
+                {
+                    activePlayer = reactivePlayer;
+                    reactivePlayer = activePlayer.opponent;
+                }
 
 
                 if (!activePlayer.isStunned)
@@ -1223,6 +1238,9 @@ namespace BattleCON
 
             p1.resetBeat();
             p2.resetBeat();
+
+            // Clear the beat event variables
+            activePlayerOverride = null;
 
             beat++;
         }
@@ -1325,21 +1343,21 @@ namespace BattleCON
 
                 NodeStart updateResult = copy.updateStats(winner);
 
-                if (updateResult != startNode)
-                    throw new NotImplementedException("oops");
+                //if (updateResult != startNode)
+                //    throw new NotImplementedException("oops");
 
-                if (startNode is ParallelStart)
-                {
-                    if (((ParallelStart)startNode).tree1.games != i + 1)
-                        throw new NotImplementedException("nope 1");
-                    if (((ParallelStart)startNode).tree2.games != i + 1)
-                        throw new NotImplementedException("nope 2");
-                }
-                else
-                {
-                    if (((SimpleStart)startNode).games != i + 1)
-                        throw new NotImplementedException("nope 3");
-                }
+                //if (startNode is ParallelStart)
+                //{
+                //    if (((ParallelStart)startNode).tree1.games != i + 1)
+                //        throw new NotImplementedException("nope 1");
+                //    if (((ParallelStart)startNode).tree2.games != i + 1)
+                //        throw new NotImplementedException("nope 2");
+                //}
+                //else
+                //{
+                //    if (((SimpleStart)startNode).games != i + 1)
+                //        throw new NotImplementedException("nope 3");
+                //}
 
             }
             

@@ -72,6 +72,8 @@ namespace BattleCON
         public int powerModifier;
         public int priorityModifier;
 
+        public int hiRangeModifier;
+
         public int nextBeatPowerModifier;
 
         public List<Card> bases = new List<Card>(5);
@@ -113,7 +115,7 @@ namespace BattleCON
         }
 
 
-        public void fillFromPlayer(Player player)
+        public virtual void fillFromPlayer(Player player)
         {
             health = player.health;
             cannotDie = player.cannotDie;
@@ -141,6 +143,7 @@ namespace BattleCON
             powerModifier = player.powerModifier;
             priorityModifier = player.priorityModifier;
             nextBeatPowerModifier = player.nextBeatPowerModifier;
+            hiRangeModifier = player.hiRangeModifier;
 
             canMoveNextBeat = player.canMoveNextBeat;
             canMove = player.canMove;
@@ -220,6 +223,7 @@ namespace BattleCON
                 g.writeToConsole(this + " has " + powerModifier + " power next beat.");
 
             nextBeatPowerModifier = 0;
+            hiRangeModifier = 0;
 
             canMove = canMoveNextBeat;
 
@@ -272,7 +276,7 @@ namespace BattleCON
         }
 
 
-        public int GetPossibleAdvance()
+        public int GetPossibleAdvance(bool self)
         {
             if (opponent.position > position)
                 return 6 - position;
@@ -281,12 +285,53 @@ namespace BattleCON
         }
 
 
-        public int GetPossibleRetreat()
+        public int GetPossibleRetreat(bool self)
         {
             if (opponent.position > position)
                 return position - 1;
             else
                 return 7 - position;
+        }
+
+
+        public void Teleport()
+        {
+
+            if (!canMove)
+                return;
+
+            List<int> moves = new List<int>(5);
+
+            for (int i = 1; i <= 7; i++)
+            {
+                if (i == position || i == opponent.position)
+                    continue;
+                moves.Add(i);
+            }
+
+            int selectedMove;
+
+            if (g.isMainGame && isHuman)
+            {
+                g.selectionHeader = "Select the place to move to:";
+                foreach (int i in moves)
+                    g.selectionItems.Add("Space " + i);
+                g.getUserChoice();
+                selectedMove = g.selectionResult;
+
+            }
+            else
+            {
+                selectedMove = g.SimpleUCTSelect(moves.Count, this);
+            }
+
+            if (g.isMainGame)
+                g.registeredChoices.Add(selectedMove);
+            
+            position = moves[selectedMove];
+
+            if (g.isMainGame)
+                g.writeToConsole(this + " moves to space " + position);
         }
 
 
@@ -308,7 +353,7 @@ namespace BattleCON
 
             if (direction == Direction.Both || direction == Direction.Forward)
             {
-                maxPossible = p.GetPossibleAdvance();
+                maxPossible = p.GetPossibleAdvance(self);
 
                 maxMoves = Math.Min(maxPossible, hiRange);
                 for (i = Math.Min(loRange, maxPossible); i <= maxMoves; i++)
@@ -318,7 +363,7 @@ namespace BattleCON
 
             if (direction == Direction.Both || direction == Direction.Backward)
             {
-                maxPossible = p.GetPossibleRetreat();
+                maxPossible = p.GetPossibleRetreat(self);
 
                 
                 maxMoves = Math.Min(maxPossible, hiRange);
@@ -696,7 +741,7 @@ namespace BattleCON
                 int dst = rangeToOpponent();
 
                 if (dst >= attackBase.lowRange + attackStyle.lowRange
-                    && dst <= attackBase.hiRange + attackStyle.hiRange)
+                    && dst <= attackBase.hiRange + attackStyle.hiRange + hiRangeModifier)
                 {
                     if (g.isMainGame)
                         g.writeToConsole(this + " hits.");
@@ -777,7 +822,7 @@ namespace BattleCON
                                         g.writeToConsole(opponent + "'s Stun Guard is disabled.");
                                 }
 
-                                opponent.isStunned = true;
+                                opponent.BecomeStunned();
                             }
                             else
                             {
@@ -1127,6 +1172,16 @@ namespace BattleCON
         internal static Player Clone(Player player, GameState g)
         {
             return Player.New(player.c, player.position, g, player.first, player.isHuman);
+        }
+
+        internal virtual void BecomeStunned()
+        {
+            isStunned = true;
+        }
+
+        internal virtual void Draw(System.Drawing.Graphics drawingGraphics, int y)
+        {
+            
         }
     }
 

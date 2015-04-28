@@ -327,7 +327,7 @@ namespace BattleCON
 
         public override void OnDamage(Player p)
         {
-            p.opponent.isStunned = true;
+            p.opponent.BecomeStunned();
             p.opponent.cannotAnte = true;
 
         }
@@ -352,7 +352,7 @@ namespace BattleCON
 
         public override void OnDamage(Player p)
         {
-            p.opponent.isStunned = true;
+            p.opponent.BecomeStunned();
             p.opponent.soakDisabled = true;
             p.opponent.stunGuardDisabled = true;
 

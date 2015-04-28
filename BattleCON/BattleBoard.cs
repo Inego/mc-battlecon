@@ -161,6 +161,8 @@ namespace BattleCON
                 drawCard(p.c.finisher2, cooldownOffset + 200, y + 100, CardBorderStyle.finisher, highlightToSelect);
             }
 
+            p.Draw(drawingGraphics, y);
+
         }
 
         public enum CardBorderStyle

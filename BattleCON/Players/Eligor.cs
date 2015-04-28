@@ -131,7 +131,7 @@ namespace BattleCON
         public override void StartOfBeat(Player p)
         {
             if (p.opponent.attackBase.name == p.attackBase.name)
-                p.opponent.isStunned = true;
+                p.opponent.BecomeStunned();
         }
 
         public override void BeforeActivating(Player p, List<NamedHandler> handlers)
@@ -238,7 +238,7 @@ namespace BattleCON
         public override void BeforeActivating(Player p, List<NamedHandler> handlers)
         {
             // Discard any number of Vengeance tokens to pull the opponent 1 space per token discarded
-            int maxNumber = Math.Min(p.availableTokens, p.opponent.GetPossibleAdvance());
+            int maxNumber = Math.Min(p.availableTokens, p.opponent.GetPossibleAdvance(false));
             if (maxNumber > 0)
             {
                 addHandler(handlers, delegate()
