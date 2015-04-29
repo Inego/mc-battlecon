@@ -12,8 +12,8 @@ namespace BattleCON
 
     public static class R
     {
-        static Random rnd = new Random(1);
-        //static Random rnd = new Random();
+        //static Random rnd = new Random(1);
+        static Random rnd = new Random();
 
         public static int n(int number)
         {
@@ -39,37 +39,64 @@ namespace BattleCON
     {
         private SimpleStart node;
         private bool pureRandom = false;
+        private GameState g;
+        private bool suboptimal = false;
 
-        public BestSequenceExtractor(SimpleStart initialNode)
+        public BestSequenceExtractor(GameState g, SimpleStart initialNode)
         {
             node = initialNode;
+            this.g = g;
         }
 
-        public BestSequenceExtractor(ParallelStart rNode, Player player)
+        public BestSequenceExtractor(GameState g, ParallelStart rNode, Player player)
         {
             node = (player.first ? rNode.tree1 : rNode.tree2);
+            this.g = g;
+            suboptimal = true;
         }
 
         public int getNextBest(int number)
         {
+            int result = -1;
+
             if (pureRandom)
-                return R.n(number);
+            {
+                result = R.n(number);
+                if (GameState.DEBUG_MESSAGES)
+                    g.writeDebug("Pure random, selected " + result + " from " + number);
+                return result;
+            }
 
             if (node == null || node.children == null)
             {
                 pureRandom = true;
-                return R.n(number);
+                result = R.n(number);
+                if (GameState.DEBUG_MESSAGES)
+                    g.writeDebug("SWITCHED to Pure random, selected " + result + " from " + number);
+                return result;
             }
 
-
-            int result = -1;
-
             double best = -1;
+            int games = 0;
+            bool hasVoid = false;
 
             for (int i = 0; i < node.children.Length; i++)
             {
-                if (node.children[i] == null)
+                if (GameState.DEBUG_MESSAGES)
+                {
+                    if (node.children[i] == null)
+                        g.writeDebug(i.ToString() + "  NULL");
+                    else
+                        g.writeDebug(i.ToString() + "  " + node.children[i].winrate + " " + node.children[i].games);
+                }
+
+                if (node.children[i] == null || node.children[i].games == 0)
+                {
+                    hasVoid = true;
                     continue;
+                }
+
+                games += node.children[i].games;
 
                 if (node.children[i].winrate > best)
                 {
@@ -79,13 +106,19 @@ namespace BattleCON
 
             }
 
-            if (result == -1)
+            if (result == -1 || hasVoid)
             {
                 pureRandom = true;
-                return R.n(number);
+                result = R.n(number);
+                if (GameState.DEBUG_MESSAGES)
+                    g.writeDebug("Couldn't find a suitable move, SWITCHED to Pure random, selected " + result + " from " + number);
+                return result;
             }
 
             node = node.children[result].next as SimpleStart;
+
+            if (GameState.DEBUG_MESSAGES)
+                g.writeDebug("SELECTED " + result + " from " + number);
             
             return result;
 
@@ -111,11 +144,7 @@ namespace BattleCON
                 node = sEnd.next as SimpleStart;
             }
 
-
-
-
         }
-
 
     }
 
@@ -1325,7 +1354,7 @@ namespace BattleCON
 
             for (int i = 1; i <= MAX_PLAYOUTS; i++)
             {
-                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0)
+                if (i == 1 || i % PLAYOUT_SCREEN_UPDATE_RATE == 0 || i == MAX_PLAYOUTS)
                 {
                     if (terminated)
                         return;
@@ -1376,86 +1405,11 @@ namespace BattleCON
             
             MCTS_playouts(player, PlayoutStartType.AttackPairSelection, this, rNode);
 
-            SimpleStart copyRootNode = (player == p1 ? rNode.tree1 : rNode.tree2);
-
-            int styleNumber = -1;
-            int baseNumber = -1;
-
-            // DEBUG
-
-            SimpleEnd styleEnd;
-            SimpleStart baseStart;
-            SimpleEnd baseEnd;
-
-            List<DebugNodeComparable> pairs = new List<DebugNodeComparable>();
-            
-            for (int i = 0; i < copyRootNode.children.Length; i++)
-            {
-
-                styleEnd = copyRootNode.children[i];
-
-                baseStart = (SimpleStart)styleEnd.next;
-
-                if (baseStart.children == null)
-                    continue;
-
-                for (int j = 0; j < baseStart.children.Length; j++)
-                {
-                    baseEnd = baseStart.children[j];
-
-                    if (baseEnd == null)
-                        continue;
-                    
-                    pairs.Add(new DebugNodeComparable(player.styles[i].name + " " + player.bases[j], baseEnd.games, baseEnd.winrate));
-
-                }
-
-            }
-
-            pairs.Sort();
-
-            if (DEBUG_MESSAGES)
-            {
-                foreach (DebugNodeComparable d in pairs)
-                {
-                    writeToConsole(d.ToString());
-                }
-            }
-
-            // DEBUG
+            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player);
 
 
 
-            double best = -1;
-
-            SimpleEnd sn;
-
-            for (int i = 0; i < copyRootNode.children.Length; i++)
-            {
-                sn = copyRootNode.children[i];
-                if (sn.winrate > best)
-                {
-                    best = sn.winrate;
-                    styleNumber = i;
-                }
-            }
-
-            styleEnd = copyRootNode.children[styleNumber];
-            baseStart = (SimpleStart)styleEnd.next;
-
-            best = -1;
-
-            for (int i = 0; i < baseStart.children.Length; i++)
-            {
-                sn = baseStart.children[i]; 
-                if (sn.winrate > best)
-                {
-                    best = sn.winrate;
-                    baseNumber = i;
-                }
-            }
-
-            return new AttackingPair(styleNumber, baseNumber);
+            return new AttackingPair(b.getNextBest(player.styles.Count), b.getNextBest(player.bases.Count));
             
         }
 
@@ -1467,7 +1421,7 @@ namespace BattleCON
             MCTS_playouts(player, PlayoutStartType.AnteSelection, this, rNode);
 
 
-            BestSequenceExtractor b = new BestSequenceExtractor(rNode, player);
+            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player);
 
             b.SelectFixed(player.selectedStyle);
             b.SelectFixed(player.selectedBase);
@@ -1484,7 +1438,7 @@ namespace BattleCON
             
             MCTS_playouts(player, PlayoutStartType.ClashResolution, this, rNode);
 
-            BestSequenceExtractor b = new BestSequenceExtractor(rNode, player);
+            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player);
 
             return b.getNextBest(number);
 
@@ -1498,7 +1452,7 @@ namespace BattleCON
 
             MCTS_playouts(p, PlayoutStartType.BeatResolution, checkPoint, rNode);
 
-            BestSequenceExtractor b = new BestSequenceExtractor(rNode);
+            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode);
 
             return b.getNextBest(number);
 
@@ -1534,7 +1488,7 @@ namespace BattleCON
 
             MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this, rNode);
 
-            BestSequenceExtractor e = new BestSequenceExtractor(rNode, player);
+            BestSequenceExtractor e = new BestSequenceExtractor(this, rNode, player);
 
             player.selectedCooldownStyle2 = e.getNextBest(5);
             player.selectedCooldownStyle1 = e.getNextBest(4);
@@ -1544,6 +1498,11 @@ namespace BattleCON
             
         }
 
+
+        internal void writeDebug(string p)
+        {
+            writeToConsole("[DEBUG] " + p);
+        }
     }
 
 

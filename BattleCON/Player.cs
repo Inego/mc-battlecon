@@ -811,7 +811,7 @@ namespace BattleCON
                             opponent.OnDamageTaken();
                             OnDamage();
 
-                            if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this) || opponent.stunGuardDisabled))
+                            if (!opponent.isStunned && !opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this) || opponent.stunGuardDisabled))
                             {
 
                                 if (g.isMainGame && active && opponent.stunGuard > 0)
