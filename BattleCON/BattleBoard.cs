@@ -11,9 +11,6 @@ using System.Windows.Forms;
 namespace BattleCON
 {
 
-    
-
-
     public partial class BattleBoard : UserControl
     {
         private bool initializationComplete;
@@ -74,7 +71,7 @@ namespace BattleCON
                 backbufferGraphics2.Dispose();
             }
 
-            // Create new backbufferGrpahics that matches the current size of buffer.
+            // Create new backbufferGraphics that matches the current size of buffer.
             backbufferGraphics = backbufferContext.Allocate(this.CreateGraphics(),
                 new Rectangle(0, 0, Math.Max(this.Width, 1), Math.Max(this.Height, 1)));
 
@@ -103,8 +100,6 @@ namespace BattleCON
         public const int cardSpacing= 5;
         public const int cooldownOffset = 50;
 
-
-
         private Font playerFont = new Font(FontFamily.GenericSerif, 32);
         private Font boldFont = new Font(FontFamily.GenericSansSerif, 12, FontStyle.Bold);
         
@@ -113,7 +108,7 @@ namespace BattleCON
         public SomethingOnScreen currentRegion = null;
 
 
-        private void DrawPlayer(Player p, int y)
+        private void DrawPlayer(Player p, int y, int battleSpaceY)
         {
             drawingGraphics.DrawRectangle(Pens.Black, 0, y, playerPanelWidth, playerPanelHeight);
 
@@ -147,7 +142,6 @@ namespace BattleCON
             drawCard(p.CooldownStyle1, cooldownOffset + cardSpacing + cardWidth, y + 80, CardBorderStyle.cooldown, false);
             drawCard(p.CooldownBase1, cooldownOffset + cardSpacing + cardWidth, y + 100, CardBorderStyle.cooldown, false);
 
-
             if (p.finisher != null)
             {
                 drawCard(p.finisher, cooldownOffset + 200, y + 80, p.finisherPlayed ? CardBorderStyle.finisherPlayed : CardBorderStyle.finisher, false);
@@ -161,7 +155,7 @@ namespace BattleCON
                 drawCard(p.c.finisher2, cooldownOffset + 200, y + 100, CardBorderStyle.finisher, highlightToSelect);
             }
 
-            p.Draw(drawingGraphics, y);
+            p.Draw(drawingGraphics, y, battleSpaceY);
 
         }
 
@@ -279,9 +273,10 @@ namespace BattleCON
 
             if (gs != null)
             {
-                DrawPlayer(gs.p2, 0);
-                DrawBattleSpace(playerPanelHeight + panelsVertSpacing);
-                DrawPlayer(gs.p1, playerPanelHeight + battleSpaceHeight + 2 * panelsVertSpacing);
+                int battleSpaceY = playerPanelHeight + panelsVertSpacing;
+                DrawPlayer(gs.p2, 0, battleSpaceY);
+                DrawBattleSpace(battleSpaceY);
+                DrawPlayer(gs.p1, playerPanelHeight + battleSpaceHeight + 2 * panelsVertSpacing, battleSpaceY);
 
             }
 
@@ -450,7 +445,6 @@ namespace BattleCON
         }
 
 
-
         internal override void highlight(BattleBoard bb)
         {
             int x = bb.mouseX;
@@ -477,17 +471,11 @@ namespace BattleCON
             drawStripe(g, "power", x, y + 40, powerBrush, c.getPowerText());
             drawStripe(g, "priority", x, y + 80, priorityBrush, c.getPriorityText());
 
-
-
             int descYBegin = 160;
 
             Rectangle descRect = new Rectangle(x + 5, y + descYBegin, screenCardWidth - 10, screenCardHeight - descYBegin - 5);
 
-
             TextRenderer.DrawText(g, c.getDescription(), SystemFonts.SmallCaptionFont, descRect, Color.Black, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
-
-
-
 
         }
     }

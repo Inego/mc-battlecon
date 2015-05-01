@@ -68,6 +68,7 @@
     </Compile>
     <Compile Include="GameState.cs" />
     <Compile Include="Player.cs" />
+    <Compile Include="Players\Karin.cs" />
     <Compile Include="Players\Marmelee.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

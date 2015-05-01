@@ -109,7 +109,7 @@ namespace BattleCON
             }
         }
 
-        internal override void Draw(Graphics drawingGraphics, int y)
+        internal override void Draw(Graphics drawingGraphics, int y, int battleSpaceY)
         {
             drawingGraphics.DrawString("Concentration: " + concentration, SystemFonts.DefaultFont, Brushes.Black, 5, y + 130);
         }

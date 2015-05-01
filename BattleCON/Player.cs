@@ -1148,6 +1148,8 @@ namespace BattleCON
                     return new Shekhtur();
                 case Character.Marmelee:
                     return new Marmelee();
+                case Character.Karin:
+                    return new Karin();
                 default:
                     throw new NotImplementedException(c.name + " not implemented!");
             }
@@ -1163,10 +1165,17 @@ namespace BattleCON
             p.first = first;
             p.isHuman = isHuman;
 
+
+            p.init();
+
             p.resetBeat();
 
             return p;
 
+        }
+
+        public virtual void init()
+        {
         }
 
         internal static Player Clone(Player player, GameState g)
@@ -1179,7 +1188,7 @@ namespace BattleCON
             isStunned = true;
         }
 
-        internal virtual void Draw(System.Drawing.Graphics drawingGraphics, int y)
+        internal virtual void Draw(System.Drawing.Graphics drawingGraphics, int y, int battleSpaceY)
         {
             
         }
