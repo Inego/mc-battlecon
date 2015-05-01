@@ -1165,7 +1165,7 @@ namespace BattleCON
                 }
 
 
-                while (p1.priority() == p2.priority())
+                while (p1.priority() == p2.priority() && !(p1.attackBase is Finisher || p2.attackBase is Finisher))
                 {
 
                     if (isMainGame)
@@ -1225,7 +1225,10 @@ namespace BattleCON
                     //moveManager.TraceOrigin();
                 }
 
-                activePlayer = p1.priority() > p2.priority() ? p1 : p2;
+                int priority1 = p1.priority();
+                int priority2 = p2.priority();
+
+                activePlayer = (priority1 > priority2 || priority1 == priority2 && p1.attackBase is Finisher) ? p1 : p2;
                 Player reactivePlayer = activePlayer.opponent;
 
                 if (isMainGame)
