@@ -48,11 +48,11 @@ namespace BattleCON
             this.g = g;
         }
 
-        public BestSequenceExtractor(GameState g, ParallelStart rNode, Player player)
+        public BestSequenceExtractor(GameState g, ParallelStart rNode, Player player, bool suboptimal)
         {
             node = (player.first ? rNode.tree1 : rNode.tree2);
             this.g = g;
-            suboptimal = true;
+            this.suboptimal = suboptimal && R.n(3) == 0;
         }
 
         public int getNextBest(int number)
@@ -111,9 +111,26 @@ namespace BattleCON
                 pureRandom = true;
                 result = R.n(number);
                 if (GameState.DEBUG_MESSAGES)
-                    g.writeDebug("Couldn't find a suitable move, SWITCHED to Pure random, selected " + result + " from " + number);
+                    g.writeDebug("Can't find a move, SWITCHED to random, selected " + result + " from " + number);
                 return result;
             }
+
+            if (suboptimal)
+            {
+                if (GameState.DEBUG_MESSAGES)
+                    g.writeDebug("Choosing a suboptimal move");
+                int our = R.n(games);
+                int cumulative = 0;
+                result = -1;
+                while(true)
+                {
+                    result++;
+                    cumulative += node.children[result].games;
+                    if (our < cumulative)
+                        break;
+                }
+            }
+            
 
             node = node.children[result].next as SimpleStart;
 
@@ -1405,7 +1422,7 @@ namespace BattleCON
             
             MCTS_playouts(player, PlayoutStartType.AttackPairSelection, this, rNode);
 
-            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player);
+            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player, true);
 
 
 
@@ -1421,7 +1438,7 @@ namespace BattleCON
             MCTS_playouts(player, PlayoutStartType.AnteSelection, this, rNode);
 
 
-            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player);
+            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player, false);
 
             b.SelectFixed(player.selectedStyle);
             b.SelectFixed(player.selectedBase);
@@ -1438,7 +1455,7 @@ namespace BattleCON
             
             MCTS_playouts(player, PlayoutStartType.ClashResolution, this, rNode);
 
-            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player);
+            BestSequenceExtractor b = new BestSequenceExtractor(this, rNode, player, true);
 
             return b.getNextBest(number);
 
@@ -1488,7 +1505,7 @@ namespace BattleCON
 
             MCTS_playouts(player, PlayoutStartType.SetupCardsSelection, this, rNode);
 
-            BestSequenceExtractor e = new BestSequenceExtractor(this, rNode, player);
+            BestSequenceExtractor e = new BestSequenceExtractor(this, rNode, player, true);
 
             player.selectedCooldownStyle2 = e.getNextBest(5);
             player.selectedCooldownStyle1 = e.getNextBest(4);
@@ -1501,7 +1518,7 @@ namespace BattleCON
 
         internal void writeDebug(string p)
         {
-            writeToConsole("[DEBUG] " + p);
+            writeToConsole("[D] " + p);
         }
     }
 
