@@ -21,20 +21,23 @@ namespace BattleCON
             InitializeComponent();
         }
 
+
         private void GameSetupForm_Load(object sender, EventArgs e)
         {
             initializeCharacterCB(character1CB);
             initializeCharacterCB(character2CB);
         }
 
+
         private void initializeCharacterCB(ComboBox cCB)
         {
-            for (int i = 0; i < Character.characters.Length; i++)
+            for (int i = 0; i < CharacterClass.characters.Length; i++)
             {
-                cCB.Items.Add(Character.characters[i]);
+                cCB.Items.Add(CharacterClass.characters[i].name);
             }
 
         }
+
 
         private void reverseCharactersBtn_Click(object sender, EventArgs e)
         {
@@ -52,7 +55,7 @@ namespace BattleCON
 
             gameSettings = new GameSettings();
 
-            Character c1 = Character.getByName(character1CB.Text);
+            CharacterClass c1 = CharacterClass.getByName(character1CB.Text);
 
             if (c1 == null)
             {
@@ -60,7 +63,7 @@ namespace BattleCON
                 return;
             }
 
-            Character c2 = Character.getByName(character2CB.Text);
+            CharacterClass c2 = CharacterClass.getByName(character2CB.Text);
 
             if (c2 == null)
             {

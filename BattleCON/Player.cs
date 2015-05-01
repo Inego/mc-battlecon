@@ -20,17 +20,19 @@ namespace BattleCON
 
     }
 
+
     public enum AnteResult
     {
         Pass,
         AntedTokens,
         AntedFinisher
     }
-    
 
 
     public class Player
     {
+        public CharacterClass c;
+
         public int health;
         public bool cannotDie = false;
         public bool isDead = false;
@@ -70,12 +72,13 @@ namespace BattleCON
         public int powerModifier;
         public int priorityModifier;
 
+        public int hiRangeModifier;
+
         public int nextBeatPowerModifier;
 
         public List<Card> bases = new List<Card>(5);
         public List<Card> styles = new List<Card>(3);
         public List<Card> clashPool = new List<Card>(4);
-
 
         public int selectedStyle;
         public int selectedBase;
@@ -100,14 +103,19 @@ namespace BattleCON
 
         public GameState g;
 
-        public Character c;
-
         public bool isHuman;
 
         List<NamedHandler> handlers = new List<NamedHandler>();
 
 
-        public void fillFromPlayer(Player player)
+
+        public virtual string getDescription()
+        {
+            return "A generic player.";
+        }
+
+
+        public virtual void fillFromPlayer(Player player)
         {
             health = player.health;
             cannotDie = player.cannotDie;
@@ -135,6 +143,7 @@ namespace BattleCON
             powerModifier = player.powerModifier;
             priorityModifier = player.priorityModifier;
             nextBeatPowerModifier = player.nextBeatPowerModifier;
+            hiRangeModifier = player.hiRangeModifier;
 
             canMoveNextBeat = player.canMoveNextBeat;
             canMove = player.canMove;
@@ -165,26 +174,13 @@ namespace BattleCON
 
         }
 
-        
-        // For cloning
-        public Player(Character c, GameState gs)
-        {
-            this.g = gs;
-            this.c = c;
-        }
 
-
-        public Player(Character c, int position, GameState gs, bool first, bool isHuman)
+        public Player()
         {
-            this.g = gs;
-            this.first = first;
-            this.isHuman = isHuman;
             this.selectedFinisher = -1;
 
             health = 20;
-            this.c = c;
             
-            this.position = position;
             this.hasHit = false;
 
             this.nextBeatPowerModifier = 0;
@@ -196,10 +192,7 @@ namespace BattleCON
             bases.Add(new Drive());
             bases.Add(new Strike());
             bases.Add(new Shot());
-
-            c.init(this);
-
-            resetBeat();
+            
         }
 
 
@@ -230,6 +223,7 @@ namespace BattleCON
                 g.writeToConsole(this + " has " + powerModifier + " power next beat.");
 
             nextBeatPowerModifier = 0;
+            hiRangeModifier = 0;
 
             canMove = canMoveNextBeat;
 
@@ -241,6 +235,7 @@ namespace BattleCON
             priorityModifier = 0;
 
         }
+
 
         public MovementResult Advance(int i)
         {
@@ -258,6 +253,7 @@ namespace BattleCON
             return new MovementResult(true, i, result);
         }
 
+
         public MovementResult Retreat(int i)
         {
             if (opponent.position > position)
@@ -266,6 +262,7 @@ namespace BattleCON
                 position += i;
             return new MovementResult(false, i, false);
         }
+
 
         public MovementResult MoveSelf(int i)
         {
@@ -279,7 +276,7 @@ namespace BattleCON
         }
 
 
-        public int GetPossibleAdvance()
+        public int GetPossibleAdvance(bool self)
         {
             if (opponent.position > position)
                 return 6 - position;
@@ -287,12 +284,54 @@ namespace BattleCON
                 return position - 2;
         }
 
-        public int GetPossibleRetreat()
+
+        public int GetPossibleRetreat(bool self)
         {
             if (opponent.position > position)
                 return position - 1;
             else
                 return 7 - position;
+        }
+
+
+        public void Teleport()
+        {
+
+            if (!canMove)
+                return;
+
+            List<int> moves = new List<int>(5);
+
+            for (int i = 1; i <= 7; i++)
+            {
+                if (i == position || i == opponent.position)
+                    continue;
+                moves.Add(i);
+            }
+
+            int selectedMove;
+
+            if (g.isMainGame && isHuman)
+            {
+                g.selectionHeader = "Select the place to move to:";
+                foreach (int i in moves)
+                    g.selectionItems.Add("Space " + i);
+                g.getUserChoice();
+                selectedMove = g.selectionResult;
+
+            }
+            else
+            {
+                selectedMove = g.SimpleUCTSelect(moves.Count, this);
+            }
+
+            if (g.isMainGame)
+                g.registeredChoices.Add(selectedMove);
+            
+            position = moves[selectedMove];
+
+            if (g.isMainGame)
+                g.writeToConsole(this + " moves to space " + position);
         }
 
 
@@ -314,7 +353,7 @@ namespace BattleCON
 
             if (direction == Direction.Both || direction == Direction.Forward)
             {
-                maxPossible = p.GetPossibleAdvance();
+                maxPossible = p.GetPossibleAdvance(self);
 
                 maxMoves = Math.Min(maxPossible, hiRange);
                 for (i = Math.Min(loRange, maxPossible); i <= maxMoves; i++)
@@ -324,7 +363,7 @@ namespace BattleCON
 
             if (direction == Direction.Both || direction == Direction.Backward)
             {
-                maxPossible = p.GetPossibleRetreat();
+                maxPossible = p.GetPossibleRetreat(self);
 
                 
                 maxMoves = Math.Min(maxPossible, hiRange);
@@ -380,6 +419,7 @@ namespace BattleCON
 
         }
 
+
         private string movementText(int p, bool self)
         {
             if (p == 0)
@@ -413,17 +453,20 @@ namespace BattleCON
             usedTokens += tokens;
         }
 
+
         internal void drainLife(int p)
         {
             health += opponent.loseLife(p);
 
         }
 
+
         internal int rangeToOpponent()
         {
             int d = position - opponent.position;
             return d < 0 ? -d : d;
         }
+
 
         internal void gainTokens(int number)
         {
@@ -436,6 +479,7 @@ namespace BattleCON
                 usedTokens -= toGain;
             }
         }
+
 
         internal void selectAttackingPair()
         {
@@ -499,6 +543,7 @@ namespace BattleCON
             selectedBase = baseNumber;
 
         }
+
 
         internal virtual AnteResult ante()
         {
@@ -585,15 +630,12 @@ namespace BattleCON
             return AnteResult.Pass;
         }
 
-        internal void AnteEffects()
-        {
-            c.AnteEffects(this);
-        }
 
         internal void RevealEffects()
         {
             attackBase.Reveal(this);
         }
+
 
         internal void selectNextForClash()
         {
@@ -632,7 +674,9 @@ namespace BattleCON
 
         }
 
-        internal void recycle()
+
+
+        internal virtual void recycle()
         {
             if (attackBase is Finisher)
             {
@@ -640,7 +684,6 @@ namespace BattleCON
                 attackStyle = null;
                 return;
             }
-
 
             // 1. Return from clash pool
 
@@ -673,11 +716,13 @@ namespace BattleCON
 
         }
 
+
         internal void resolveStartOfBeat()
         {
             attackBase.StartOfBeat(this);
             attackStyle.StartOfBeat(this);
         }
+
 
         internal void attack(bool active)
         {
@@ -696,7 +741,7 @@ namespace BattleCON
                 int dst = rangeToOpponent();
 
                 if (dst >= attackBase.lowRange + attackStyle.lowRange
-                    && dst <= attackBase.hiRange + attackStyle.hiRange)
+                    && dst <= attackBase.hiRange + attackStyle.hiRange + hiRangeModifier)
                 {
                     if (g.isMainGame)
                         g.writeToConsole(this + " hits.");
@@ -763,10 +808,10 @@ namespace BattleCON
                             attackStyle.OnDamage(this);
 
 
-                            opponent.c.OnDamageTaken(opponent);
-                            c.OnDamage(this);
+                            opponent.OnDamageTaken();
+                            OnDamage();
 
-                            if (!opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this) || opponent.stunGuardDisabled))
+                            if (!opponent.isStunned && !opponent.stunImmunity && (opponent.stunGuard < damageDealt || attackBase.ignoresStunGuard(this) || opponent.stunGuardDisabled))
                             {
 
                                 if (g.isMainGame && active && opponent.stunGuard > 0)
@@ -777,7 +822,7 @@ namespace BattleCON
                                         g.writeToConsole(opponent + "'s Stun Guard is disabled.");
                                 }
 
-                                opponent.isStunned = true;
+                                opponent.BecomeStunned();
                             }
                             else
                             {
@@ -826,6 +871,7 @@ namespace BattleCON
             AfterActivating();
             
         }
+
 
         private void BeforeActivating()
         {
@@ -897,6 +943,7 @@ namespace BattleCON
             }
         }
 
+
         private int getTotalPower()
         {
             int basePower = attackBase.getAttackPower(this);
@@ -911,22 +958,22 @@ namespace BattleCON
             attackStyle.EndOfBeat(this);
         }
 
+
         internal void applyCommonProperties()
         {
             attackBase.CommonProperties(this);
             attackStyle.CommonProperties(this);
         }
 
+
         public override string ToString()
         {
-            if (c == null)
-                return "<no character>";
+            if (opponent.c == c)
+                return c.name + (first ? "1" : "2");
             else
-                if (opponent.c == c)
-                    return c.name + (first ? "1" : "2");
-                else
-                    return c.name;
+                return c.name;
         }
+
 
         internal void returnAttackingPair()
         {
@@ -935,6 +982,7 @@ namespace BattleCON
             attackStyle = null;
             attackBase = null;
         }
+
 
         internal void selectNextForClash_MCTS()
         {
@@ -950,6 +998,7 @@ namespace BattleCON
             g.pst = PlayoutStartType.Normal;
             
         }
+
 
         internal void revealAttack()
         {
@@ -1042,9 +1091,9 @@ namespace BattleCON
                 selectedCooldownBase1 = g.moveManager.ParallelSelect(6, this);
                 selectedFinisher = g.moveManager.ParallelSelect(2, this);
             }
-
             
         }
+
 
         internal void applySetupDecisions()
         {
@@ -1064,6 +1113,7 @@ namespace BattleCON
             finisher = selectedFinisher == 0 ? c.finisher1 : c.finisher2;
         }
 
+
         internal bool canAnte()
         {
             if (cannotAnte || availableTokens == 0 && !canAnteFinisher())
@@ -1071,6 +1121,71 @@ namespace BattleCON
 
             return true;
         }
+
+
+        public virtual void OnDamageTaken()
+        {
+        }
+
+
+        public virtual void OnDamage()
+        {
+        }
+
+
+        public virtual void AnteEffects()
+        {
+        }
+
+
+        internal static Player NewByClass(CharacterClass c)
+        {
+            switch (c.c)
+            {
+                case Character.Eligor:
+                    return new Eligor();
+                case Character.Shekhtur:
+                    return new Shekhtur();
+                case Character.Marmelee:
+                    return new Marmelee();
+                default:
+                    throw new NotImplementedException(c.name + " not implemented!");
+            }
+        }
+        
+
+        internal static Player New(CharacterClass c, int position, GameState gameState, bool first, bool isHuman)
+        {
+            Player p = Player.NewByClass(c);
+
+            p.position = position;
+            p.g = gameState;
+            p.first = first;
+            p.isHuman = isHuman;
+
+            p.resetBeat();
+
+            return p;
+
+        }
+
+        internal static Player Clone(Player player, GameState g)
+        {
+            return Player.New(player.c, player.position, g, player.first, player.isHuman);
+        }
+
+        internal virtual void BecomeStunned()
+        {
+            isStunned = true;
+        }
+
+        internal virtual void Draw(System.Drawing.Graphics drawingGraphics, int y)
+        {
+            
+        }
     }
+
+
+    public delegate string CountRepresenter(int i);
 
 }
