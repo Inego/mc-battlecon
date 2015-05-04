@@ -111,7 +111,38 @@ namespace BattleCON
         internal void TeleportJager()
         {
 
-            List<int> positions = new List<int>(7);
+            List<int> moves = new List<int>(7);
+
+            for (int i = 1; i <= 7; i++)
+            {
+                if (g.SpaceOccupied(i))
+                    continue;
+                moves.Add(i);
+            }
+
+            int selectedMove;
+
+            if (g.isMainGame && isHuman)
+            {
+                g.selectionHeader = "Select the place to move Jager to:";
+                foreach (int i in moves)
+                    g.selectionItems.Add("Space " + i);
+                g.getUserChoice();
+                selectedMove = g.selectionResult;
+
+            }
+            else
+            {
+                selectedMove = g.SimpleUCTSelect(moves.Count, this);
+            }
+
+            if (g.isMainGame)
+                g.registeredChoices.Add(selectedMove);
+
+            position = moves[selectedMove];
+
+            if (g.isMainGame)
+                g.writeToConsole(this + " moves Jager to space " + position);
         }
     }
     
@@ -205,7 +236,7 @@ namespace BattleCON
             addHandler(handlers, delegate()
             {
                 Karin k = (Karin)p;
-                bool withOpponent = (p.opponent.position == k.jager && p.opponent.canMove);
+                bool withOpponent = (p.opponent.position == k.jager && !p.opponent.ignoresAppliedMovement);
                 k.TeleportJager();
                 if (withOpponent)
                     p.opponent.position = k.jager;
@@ -226,6 +257,15 @@ namespace BattleCON
         {
             return "Start of Beat: Advance 1 or 2 spaces.\nOn Hit: Retreat 2 spaces. If the opponent is in the same space as Jager, he is stunned.\nEnd of Beat: Move up to 1 space.";
         }
+
+        public override void StartOfBeat(Player p, List<NamedHandler> handlers)
+        {
+            addHandler(handlers, delegate()
+            {
+
+            });
+        }
+
     }
 
     class FullMoon : StyleCard

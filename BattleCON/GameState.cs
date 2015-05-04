@@ -1523,6 +1523,13 @@ namespace BattleCON
         {
             writeToConsole("[D] " + p);
         }
+
+        internal bool SpaceOccupied(int position)
+        {
+            if (p1.position == position || p2.position == position)
+                return true;
+            return false;
+        }
     }
 
 

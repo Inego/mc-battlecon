@@ -129,7 +129,7 @@ namespace BattleCON
             priority = 3;
         }
 
-        public override void StartOfBeat(Player p)
+        public override void StartOfBeat(Player p, List<NamedHandler> handlers)
         {
             Marmelee m = (Marmelee)p;
 
@@ -181,7 +181,7 @@ namespace BattleCON
         }
 
 
-        public override void StartOfBeat(Player p)
+        public override void StartOfBeat(Player p, List<NamedHandler> handlers)
         {
             Marmelee m = (Marmelee)p;
             if (p.g.activePlayer != p)
@@ -268,7 +268,7 @@ namespace BattleCON
         }
 
 
-        public override void StartOfBeat(Player p)
+        public override void StartOfBeat(Player p, List<NamedHandler> handlers)
         {
             Marmelee m = (Marmelee)p;
             int spent = m.SpendConcentration(4, 1, delegate(int i) { return "Immunity to getting hit"; });
@@ -355,9 +355,12 @@ namespace BattleCON
             return "Start of Beat: Retreat 1 space.\nOn Hit: You may spend any number of Concentration Counters to weaken the opponent 1 Power per token spent.";
         }
 
-        public override void StartOfBeat(Player p)
+        public override void StartOfBeat(Player p, List<NamedHandler> handlers)
         {
-            p.UniversalMove(true, Direction.Backward, 1, 1);
+            addHandler(handlers, delegate()
+            {
+                p.UniversalMove(true, Direction.Backward, 1, 1);
+            });
         }
 
 
@@ -435,7 +438,7 @@ namespace BattleCON
         }
 
 
-        public override void StartOfBeat(Player p)
+        public override void StartOfBeat(Player p, List<NamedHandler> handlers)
         {
             Marmelee m = (Marmelee)p;
 

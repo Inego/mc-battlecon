@@ -304,7 +304,7 @@ namespace BattleCON
 
             for (int i = 1; i <= 7; i++)
             {
-                if (i == position || i == opponent.position)
+                if (g.SpaceOccupied(i))
                     continue;
                 moves.Add(i);
             }
@@ -719,8 +719,10 @@ namespace BattleCON
 
         internal void resolveStartOfBeat()
         {
-            attackBase.StartOfBeat(this);
-            attackStyle.StartOfBeat(this);
+            handlers.Clear();
+            attackStyle.StartOfBeat(this, handlers);
+            attackBase.StartOfBeat(this, handlers);
+            ExecuteTriggers("Start of Beat");
         }
 
 

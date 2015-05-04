@@ -51,7 +51,7 @@ namespace BattleCON
 
         }
 
-        virtual public void StartOfBeat(Player p)
+        virtual public void StartOfBeat(Player p, List<NamedHandler> handlers)
         {
 
         }

@@ -128,7 +128,7 @@ namespace BattleCON
             priority = -1;
         }
 
-        public override void StartOfBeat(Player p)
+        public override void StartOfBeat(Player p, List<NamedHandler> handlers)
         {
             if (p.opponent.attackBase.name == p.attackBase.name)
                 p.opponent.BecomeStunned();

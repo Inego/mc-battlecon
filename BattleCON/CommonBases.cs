@@ -151,16 +151,17 @@ namespace BattleCON
             priority = 1;
         }
 
-        public override void StartOfBeat(Player p)
+
+        public override void StartOfBeat(Player p, List<NamedHandler> handlers)
         {
-            if (p.g.isMainGame)
-                p.g.writeToConsole(p + "'s Burst at Start of Beat: Retreat 1 or 2 spaces");
-
-
-            // Retreat 1 or 2 spaces
-            p.UniversalMove(true, Direction.Backward, 1, 2);
-
+            addHandler(handlers, delegate() { 
+                if (p.g.isMainGame)
+                    p.g.writeToConsole(p + "'s Burst at Start of Beat: Retreat 1 or 2 spaces");
+                // Retreat 1 or 2 spaces
+                p.UniversalMove(true, Direction.Backward, 1, 2);
+            });
         }
+
 
         internal override string getDescription()
         {
